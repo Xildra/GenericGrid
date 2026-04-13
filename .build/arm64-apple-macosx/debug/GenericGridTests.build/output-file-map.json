@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/primary.swiftdeps"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Tests/GenericGridTests/GenericGridTests.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests.dia"
+  }
+}

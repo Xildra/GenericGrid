@@ -1,0 +1,40 @@
+//
+//  GridBackgroundLayer.swift
+//  GenericGrid Module
+//
+//  Canvas-drawn grid lines with rounded border.
+//
+
+import SwiftUI
+
+@available(iOS 17.0, macOS 14.0, *)
+struct GridBackgroundLayer: View {
+    let rows: Int
+    let cols: Int
+    let cellSize: CGFloat
+
+    private var W: CGFloat { CGFloat(cols) * cellSize }
+    private var H: CGFloat { CGFloat(rows) * cellSize }
+
+    var body: some View {
+        Canvas { ctx, size in
+            let sep = GraphicsContext.Shading.color(.secondary.opacity(0.3))
+            for r in 0...rows {
+                var p = Path(); let y = CGFloat(r) * cellSize
+                p.move(to: .init(x: 0, y: y))
+                p.addLine(to: .init(x: size.width, y: y))
+                ctx.stroke(p, with: sep, lineWidth: 0.5)
+            }
+            for c in 0...cols {
+                var p = Path(); let x = CGFloat(c) * cellSize
+                p.move(to: .init(x: x, y: 0))
+                p.addLine(to: .init(x: x, y: size.height))
+                ctx.stroke(p, with: sep, lineWidth: 0.5)
+            }
+        }
+        .frame(width: W, height: H)
+        .background(.background)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.separator, lineWidth: 0.5))
+    }
+}

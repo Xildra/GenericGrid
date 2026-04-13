@@ -1,0 +1,912 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.xctest/Contents/MacOS/GenericGridPackageTests",
+      "packagePath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid",
+      "productName" : "GenericGridPackageTests"
+    }
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.GenericGrid-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/sources",
+      "importPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Config/GridCanvasConfig.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Engine/GridEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Extensions/Color+Hex.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/GenericGrid.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridCell.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridInteraction.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridZoneDefinition.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/ZoneRule.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridItemType.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridPlaceable.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericGridView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericStatsBlock.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridBackgroundLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridGestureLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridItemsLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridPreviewLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridZoneOverlayLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "GenericGrid",
+      "moduleOutputPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGrid.swiftmodule",
+      "objects" : [
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer.swift.o",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/include/GenericGrid-Swift.h",
+        "-color-diagnostics",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "genericgrid"
+      ],
+      "outputFileMapPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGrid.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Config/GridCanvasConfig.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Engine/GridEngine.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Extensions/Color+Hex.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/GenericGrid.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridCell.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridInteraction.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridZoneDefinition.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/ZoneRule.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridItemType.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridPlaceable.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericGridView.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericStatsBlock.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridBackgroundLayer.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridGestureLayer.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridItemsLayer.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridPreviewLayer.swift",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridZoneOverlayLayer.swift"
+      ],
+      "tempsPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.GenericGridPackageTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/sources",
+      "importPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGridTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "GenericGridPackageTests",
+      "moduleOutputPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGridPackageTests.swiftmodule",
+      "objects" : [
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/include/GenericGridPackageTests-Swift.h",
+        "-color-diagnostics",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "genericgrid"
+      ],
+      "outputFileMapPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGridPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.GenericGridTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/sources",
+      "importPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Tests/GenericGridTests/GenericGridTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGrid.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "GenericGridTests",
+      "moduleOutputPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGridTests.swiftmodule",
+      "objects" : [
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-color-diagnostics",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "genericgrid"
+      ],
+      "outputFileMapPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules/GenericGridTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Tests/GenericGridTests/GenericGridTests.swift"
+      ],
+      "tempsPath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "GenericGrid" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "GenericGrid",
+      "-package-name",
+      "genericgrid",
+      "-c",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Config/GridCanvasConfig.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Engine/GridEngine.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Extensions/Color+Hex.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/GenericGrid.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridCell.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridInteraction.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridZoneDefinition.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/ZoneRule.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridItemType.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridPlaceable.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericGridView.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericStatsBlock.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridBackgroundLayer.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridGestureLayer.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridItemsLayer.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridPreviewLayer.swift",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridZoneOverlayLayer.swift",
+      "-I",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/include/GenericGrid-Swift.h",
+      "-color-diagnostics",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "genericgrid",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "GenericGridPackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "GenericGridPackageTests",
+      "-package-name",
+      "genericgrid",
+      "-c",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.derived/runner.swift",
+      "-I",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/include/GenericGridPackageTests-Swift.h",
+      "-color-diagnostics",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "genericgrid",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "GenericGridTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "GenericGridTests",
+      "-package-name",
+      "genericgrid",
+      "-c",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Tests/GenericGridTests/GenericGridTests.swift",
+      "-I",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-color-diagnostics",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "genericgrid",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "GenericGrid" : [
+
+    ],
+    "GenericGridPackageTests" : [
+      "GenericGridTests",
+      "GenericGrid"
+    ],
+    "GenericGridTests" : [
+      "GenericGrid"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Config/GridCanvasConfig.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Engine/GridEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Extensions/Color+Hex.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/GenericGrid.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridCell.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridInteraction.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridZoneDefinition.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/ZoneRule.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridItemType.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridPlaceable.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericGridView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericStatsBlock.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridBackgroundLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridGestureLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridItemsLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridPreviewLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridZoneOverlayLayer.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/sources"
+    },
+    "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/sources"
+    },
+    "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/GenericGridTests.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridPackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Tests/GenericGridTests/GenericGridTests.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGridTests.build/sources"
+    },
+    "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

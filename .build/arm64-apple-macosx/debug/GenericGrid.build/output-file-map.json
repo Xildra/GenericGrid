@@ -1,0 +1,124 @@
+{
+  "": {
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/primary.swiftdeps"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Config/GridCanvasConfig.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCanvasConfig.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Engine/GridEngine.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridEngine.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Extensions/Color+Hex.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/Color+Hex.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/GenericGrid.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGrid.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridCell.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridCell.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridInteraction.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridInteraction.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridZoneDefinition.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneDefinition.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/ZoneRule.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/ZoneRule.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridItemType.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemType.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridPlaceable.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPlaceable.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericGridView.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericGridView.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericStatsBlock.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GenericStatsBlock.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridBackgroundLayer.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridBackgroundLayer.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridGestureLayer.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridGestureLayer.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridItemsLayer.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridItemsLayer.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridPreviewLayer.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridPreviewLayer.dia"
+  },
+  "/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridZoneOverlayLayer.swift": {
+    "dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer.d",
+    "object": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer.swift.o",
+    "swiftmodule": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer~partial.swiftmodule",
+    "swift-dependencies": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer.swiftdeps",
+    "diagnostics": "/Users/adm_loc_g.gibier/Desktop/GenericGrid/.build/arm64-apple-macosx/debug/GenericGrid.build/GridZoneOverlayLayer.dia"
+  }
+}

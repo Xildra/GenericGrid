@@ -1,0 +1,17 @@
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Config/GridCanvasConfig.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Engine/GridEngine.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Extensions/Color+Hex.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/GenericGrid.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridCell.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridInteraction.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/GridZoneDefinition.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Models/ZoneRule.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridItemType.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Protocols/GridPlaceable.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericGridView.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GenericStatsBlock.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridBackgroundLayer.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridGestureLayer.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridItemsLayer.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridPreviewLayer.swift
+/Users/adm_loc_g.gibier/Desktop/GenericGrid/Sources/GenericGrid/Views/GridZoneOverlayLayer.swift
