@@ -22,6 +22,8 @@ public struct GridConfigGeneratorView: View {
     @State private var config: GridCanvasConfig
     @State private var editingZone: GridZoneDefinition?
     @State private var showZoneSheet = false
+    @State private var showRowLabelsSheet = false
+    @State private var showColLabelsSheet = false
     @State private var showImporter = false
     @State private var importError: String?
     @State private var saveSuccess = false
@@ -73,6 +75,24 @@ public struct GridConfigGeneratorView: View {
                 }
             }
         }
+        .sheet(isPresented: $showRowLabelsSheet) {
+            LabelsEditorSheet(
+                kind: "Row",
+                count: config.rows,
+                labels: config.rowLabels ?? []
+            ) { saved in
+                config.rowLabels = saved
+            }
+        }
+        .sheet(isPresented: $showColLabelsSheet) {
+            LabelsEditorSheet(
+                kind: "Column",
+                count: config.cols,
+                labels: config.colLabels ?? []
+            ) { saved in
+                config.colLabels = saved
+            }
+        }
         .fileImporter(
             isPresented: $showImporter,
             allowedContentTypes: [.json],
@@ -99,6 +119,10 @@ public struct GridConfigGeneratorView: View {
             zonesListSection
         }
 		.navigationTitle("Aircraft Configuration Maker")
+		#if os(iOS)
+		.navigationBarTitleDisplayMode(.inline)
+		#endif
+
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -141,33 +165,43 @@ public struct GridConfigGeneratorView: View {
 
     private var labelsSection: some View {
         Section("Labels") {
-            Toggle("Custom row labels", isOn: Binding(
-                get: { config.rowLabels != nil },
-                set: { on in
-                    config.rowLabels = on
-                        ? (0..<config.rows).map { "\($0 + 1)" }
-                        : nil
+            Button {
+                if config.rowLabels == nil {
+                    config.rowLabels = (0..<config.rows).map { "\($0 + 1)" }
                 }
-            ))
-            if let labels = config.rowLabels {
-                LabelsEditor(kind: "Row", count: config.rows, labels: labels) {
-                    config.rowLabels = $0
+                showRowLabelsSheet = true
+            } label: {
+                HStack {
+                    Text("Row labels")
+                    Spacer()
+                    if config.rowLabels != nil {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    }
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.tertiary)
                 }
             }
+            .tint(.primary)
 
-            Toggle("Custom column labels", isOn: Binding(
-                get: { config.colLabels != nil },
-                set: { on in
-                    config.colLabels = on
-                        ? (0..<config.cols).map { config.colLabel(at: $0) }
-                        : nil
+            Button {
+                if config.colLabels == nil {
+                    config.colLabels = (0..<config.cols).map { config.colLabel(at: $0) }
                 }
-            ))
-            if let labels = config.colLabels {
-                LabelsEditor(kind: "Col", count: config.cols, labels: labels) {
-                    config.colLabels = $0
+                showColLabelsSheet = true
+            } label: {
+                HStack {
+                    Text("Column labels")
+                    Spacer()
+                    if config.colLabels != nil {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    }
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.tertiary)
                 }
             }
+            .tint(.primary)
         }
     }
 

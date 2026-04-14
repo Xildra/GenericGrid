@@ -41,7 +41,10 @@ struct ConfigGridPreviewView: View {
                     }
                 }
                 .frame(width: W, height: H)
-                .padding(16)
+                .frame(
+                    minWidth: geo.size.width,
+                    minHeight: geo.size.height
+                )
             }
         }
         .background(.background.secondary)

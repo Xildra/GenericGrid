@@ -4,30 +4,66 @@
 //
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
-//  Inline editor for custom row / column labels.
+//  Sheet editor for custom row / column labels.
 //
 
 import SwiftUI
 
 @available(iOS 17.0, macOS 14.0, *)
-struct LabelsEditor: View {
+struct LabelsEditorSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
     let kind: String
     let count: Int
-    let labels: [String]
-    let onChange: ([String]) -> Void
+    @State private var labels: [String]
+    let onSave: ([String]) -> Void
+
+    init(kind: String, count: Int, labels: [String], onSave: @escaping ([String]) -> Void) {
+        self.kind = kind
+        self.count = count
+        self.onSave = onSave
+        // Pad to count if needed
+        var padded = labels
+        while padded.count < count { padded.append("") }
+        self.labels = padded
+    }
 
     var body: some View {
-        ForEach(0..<min(count, labels.count), id: \.self) { i in
-            TextField("\(kind) \(i)", text: Binding(
-                get: { i < labels.count ? labels[i] : "" },
-                set: { newVal in
-                    var copy = labels
-                    while copy.count <= i { copy.append("") }
-                    copy[i] = newVal
-                    onChange(copy)
+        NavigationStack {
+            List {
+                ForEach(0..<count, id: \.self) { i in
+                    HStack {
+                        Text("\(i)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 28, alignment: .trailing)
+                        TextField("\(kind) \(i)", text: $labels[i])
+                    }
                 }
-            ))
-            .font(.caption)
+            }
+            .navigationTitle("\(kind) Labels")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        onSave(labels)
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .destructiveAction) {
+                    Button("Reset", role: .destructive) {
+                        dismiss()
+                    }
+                }
+            }
         }
+        #if os(iOS)
+        .presentationDetents([.medium, .large])
+        #endif
     }
 }
