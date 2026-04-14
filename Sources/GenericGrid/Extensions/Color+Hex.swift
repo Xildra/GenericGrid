@@ -21,4 +21,25 @@ public extension Color {
             blue:  Double( rgb        & 0xFF) / 255
         )
     }
+
+    /// Converts a SwiftUI Color to a hex string (e.g. `"#FF5733"`).
+    /// Returns `nil` if the colour cannot be resolved to RGB components.
+    func toHex() -> String? {
+        #if canImport(UIKit)
+        let ui = UIColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard ui.getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
+        #elseif canImport(AppKit)
+        guard let ns = NSColor(self).usingColorSpace(.sRGB) else { return nil }
+        let r = ns.redComponent
+        let g = ns.greenComponent
+        let b = ns.blueComponent
+        #endif
+        return String(
+            format: "#%02X%02X%02X",
+            Int((r * 255).rounded()),
+            Int((g * 255).rounded()),
+            Int((b * 255).rounded())
+        )
+    }
 }

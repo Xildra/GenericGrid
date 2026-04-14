@@ -36,8 +36,8 @@ public struct GridConfigGeneratorView: View {
 
     /// Creates the generator with an empty default config.
     public init(onExport: ((URL) -> Void)? = nil) {
-        self._config = State(initialValue: .default)
-        self._sourceURL = State(initialValue: nil)
+        config = .default
+        sourceURL = nil
         self.onExport = onExport
     }
 
@@ -46,8 +46,8 @@ public struct GridConfigGeneratorView: View {
     /// On export the file is written back to the same URL.
     public init(url: URL?, onExport: ((URL) -> Void)? = nil) {
         let loaded = url.flatMap { GridCanvasConfig.load(url: $0) } ?? .default
-        self._config = State(initialValue: loaded)
-        self._sourceURL = State(initialValue: url)
+        config = loaded
+        sourceURL = url
         self.onExport = onExport
     }
 
@@ -559,14 +559,15 @@ private struct LabelsEditor: View {
 private struct ZoneEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
-    @State private var id: String
+    @State private var id = UUID()
     @State private var label: String
     @State private var rule: ZoneRule
     @State private var rowStart: Int
     @State private var rowEnd: Int
     @State private var colStart: Int
     @State private var colEnd: Int
-    @State private var colorHex: String
+    @State private var zoneColor: Color
+    @State private var hasColor: Bool
     @State private var allowedTypeNames: String
 
     private let isNew: Bool
@@ -581,29 +582,22 @@ private struct ZoneEditorSheet: View {
         self.onSave = onSave
         self.isNew = zone == nil
 
-        let z = zone ?? GridZoneDefinition(
-            id: "zone_\(Int.random(in: 1000...9999))",
-            label: "New Zone",
-            rule: .free,
-            rowStart: 0, rowEnd: min(3, maxRows),
-            colStart: 0, colEnd: min(3, maxCols)
-        )
-        _id       = State(initialValue: z.id)
-        _label    = State(initialValue: z.label)
-        _rule     = State(initialValue: z.rule)
-        _rowStart = State(initialValue: z.rowStart)
-        _rowEnd   = State(initialValue: z.rowEnd)
-        _colStart = State(initialValue: z.colStart)
-        _colEnd   = State(initialValue: z.colEnd)
-        _colorHex = State(initialValue: z.colorHex ?? "")
-        _allowedTypeNames = State(initialValue: (z.allowedTypeNames ?? []).joined(separator: ", "))
+        let z = zone ?? GridZoneDefinition(rowEnd: min(3, maxRows), colEnd: min(3, maxCols))
+        label = z.label
+        rule = z.rule
+        rowStart = z.rowStart
+        rowEnd   = z.rowEnd
+        colStart = z.colStart
+        colEnd   = z.colEnd
+        hasColor = z.colorHex != nil
+        zoneColor = z.color ?? .gray
+        allowedTypeNames = (z.allowedTypeNames ?? []).joined(separator: ", ")
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Identity") {
-                    TextField("ID", text: $id)
                     TextField("Label", text: $label)
                 }
 
@@ -632,15 +626,29 @@ private struct ZoneEditorSheet: View {
                 }
 
                 Section("Appearance") {
-                    TextField("Color hex (e.g. #FF5733)", text: $colorHex)
-                    if !colorHex.isEmpty {
-                        HStack {
-                            Text("Preview")
-                            Spacer()
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color(hex: colorHex))
-                                .frame(width: 40, height: 24)
+                    HStack {
+                        Text("Zone color")
+                        Spacer()
+                        if hasColor {
+                            ColorPicker("", selection: $zoneColor, supportsOpacity: false)
+                                .labelsHidden()
+                                .frame(width: 32, height: 32)
                         }
+                        Button {
+                            withAnimation {
+                                if hasColor {
+                                    hasColor = false
+                                } else {
+                                    hasColor = true
+                                    zoneColor = .gray
+                                }
+                            }
+                        } label: {
+                            Image(systemName: hasColor ? "circle.slash" : "circle.slash.fill")
+                                .font(.title3)
+                                .foregroundStyle(hasColor ? Color.secondary : Color.red)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -659,21 +667,23 @@ private struct ZoneEditorSheet: View {
                             .map { $0.trimmingCharacters(in: .whitespaces) }
                             .filter { !$0.isEmpty }
 
-                        let zone = GridZoneDefinition(
-                            id: id,
+                        let hex: String? = hasColor ? zoneColor.toHex() : nil
+
+                        var zone = GridZoneDefinition(
                             label: label,
                             rule: rule,
                             rowStart: rowStart,
                             rowEnd: rowEnd,
                             colStart: colStart,
                             colEnd: colEnd,
-                            colorHex: colorHex.isEmpty ? nil : colorHex,
+                            colorHex: hex,
                             allowedTypeNames: types.isEmpty ? nil : types
                         )
+                        zone.id = id
                         onSave(zone)
                         dismiss()
                     }
-                    .disabled(id.isEmpty || label.isEmpty || rowEnd <= rowStart || colEnd <= colStart)
+                    .disabled(label.isEmpty || rowEnd <= rowStart || colEnd <= colStart)
                 }
             }
         }

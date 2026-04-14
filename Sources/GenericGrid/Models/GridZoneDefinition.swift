@@ -11,7 +11,7 @@
 import SwiftUI
 
 public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
-    public var id: String
+	public var id = UUID()
     public var label: String
     public var rule: ZoneRule
 
@@ -28,10 +28,10 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
     /// For `.restricted` zones: names of the item types that are allowed.
     public var allowedTypeNames: [String]?
 
-    public init(id: String, label: String, rule: ZoneRule,
-                rowStart: Int, rowEnd: Int, colStart: Int, colEnd: Int,
+	public init(label: String = "New Zone", rule: ZoneRule = .free,
+                rowStart: Int = 0, rowEnd: Int, colStart: Int = 0, colEnd: Int,
                 colorHex: String? = nil, allowedTypeNames: [String]? = nil) {
-        self.id = id; self.label = label; self.rule = rule
+        self.label = label; self.rule = rule
         self.rowStart = rowStart; self.rowEnd = rowEnd
         self.colStart = colStart; self.colEnd = colEnd
         self.colorHex = colorHex; self.allowedTypeNames = allowedTypeNames
