@@ -252,7 +252,7 @@ public struct GridConfigGeneratorView: View {
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(zone.label).font(.headline)
-                    Text("\(zone.rule.rawValue) — [\(zone.rowStart)..<\(zone.rowEnd), \(zone.colStart)..<\(zone.colEnd)]")
+                    Text(zone.rule.rawValue))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
