@@ -52,23 +52,13 @@ public struct GridConfigGeneratorView: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Live grid preview (top half)
-                gridPreview
-                    .frame(minHeight: 220)
-
-                Divider()
-
-                // Form controls (bottom half, scrollable)
-                Form {
-                    generalSection
-                    labelsSection
-                    zonesListSection
-                    exportSection
-                }
+        NavigationSplitView {
+            Form {
+                generalSection
+                labelsSection
+                zonesListSection
             }
-            .navigationTitle("Config Generator")
+            .navigationTitle("Config")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -77,38 +67,66 @@ public struct GridConfigGeneratorView: View {
                     Button {
                         showImporter = true
                     } label: {
-                        Label("Import JSON", systemImage: "doc.badge.plus")
+                        Label("Import", systemImage: "square.and.arrow.down")
                     }
                 }
+                #if os(iOS)
+                ToolbarItem(placement: .bottomBar) {
+                    saveButton
+                }
+                #else
+                ToolbarItem(placement: .secondaryAction) {
+                    saveButton
+                }
+                #endif
             }
-            .sheet(isPresented: $showZoneSheet) {
-                ZoneEditorSheet(
-                    zone: editingZone,
-                    maxRows: config.rows,
-                    maxCols: config.cols
-                ) { saved in
-                    if let idx = config.zones.firstIndex(where: { $0.id == saved.id }) {
-                        config.zones[idx] = saved
-                    } else {
-                        config.zones.append(saved)
-                    }
+        } detail: {
+            gridPreview
+                .navigationTitle(config.title ?? "Preview")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+        }
+        .sheet(isPresented: $showZoneSheet) {
+            ZoneEditorSheet(
+                zone: editingZone,
+                maxRows: config.rows,
+                maxCols: config.cols
+            ) { saved in
+                if let idx = config.zones.firstIndex(where: { $0.id == saved.id }) {
+                    config.zones[idx] = saved
+                } else {
+                    config.zones.append(saved)
                 }
             }
-            .fileImporter(
-                isPresented: $showImporter,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false
-            ) { result in
-                handleImport(result)
-            }
-            .alert("Import Error", isPresented: Binding(
-                get: { importError != nil },
-                set: { if !$0 { importError = nil } }
-            )) {
-                Button("OK") { importError = nil }
-            } message: {
-                Text(importError ?? "")
-            }
+        }
+        .fileImporter(
+            isPresented: $showImporter,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            handleImport(result)
+        }
+        .alert("Import Error", isPresented: Binding(
+            get: { importError != nil },
+            set: { if !$0 { importError = nil } }
+        )) {
+            Button("OK") { importError = nil }
+        } message: {
+            Text(importError ?? "")
+        }
+    }
+
+    // MARK: - Save button
+
+    private var saveButton: some View {
+        Button {
+            saveAndExport()
+        } label: {
+            Label(
+                saveSuccess ? "Saved" : "Save",
+                systemImage: saveSuccess ? "checkmark.circle.fill" : "square.and.arrow.up"
+            )
         }
     }
 
@@ -249,43 +267,28 @@ public struct GridConfigGeneratorView: View {
         .tint(.primary)
     }
 
-    // MARK: - Export
-
-    private var exportSection: some View {
-        Section("Export") {
-            Button {
-                saveAndExport()
-            } label: {
-                Label(
-                    saveSuccess ? "Saved!" : "Save JSON",
-                    systemImage: saveSuccess ? "checkmark.circle.fill" : "square.and.arrow.down"
-                )
-            }
-
-            if sourceURL != nil {
-                Text(sourceURL!.lastPathComponent)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-
-            // Inline JSON preview
-            DisclosureGroup("Show JSON") {
-                ScrollView(.horizontal) {
-                    Text(jsonString)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                        .padding(8)
-                }
-                .frame(maxHeight: 260)
-            }
-        }
-    }
-
     // MARK: - Save
+
+    /// Returns `<Application Support>/<AppName>/Configurations/`, creating it if needed.
+    /// e.g. for an app named "YourApplication" → `…/YourApplication/Configurations/`
+    private static var configurationsDirectory: URL? {
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? Bundle.main.bundleIdentifier ?? "GenericGrid"
+        let dir = appSupport
+            .appendingPathComponent(appName, isDirectory: true)
+            .appendingPathComponent("Configurations", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: dir.path) {
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        return dir
+    }
 
     /// Writes the current config to disk and calls `onExport` with the URL.
     /// If a `sourceURL` was provided the file is overwritten in-place,
-    /// otherwise a new file is created in the temporary directory.
+    /// otherwise a new file is created in `<AppName>/Configurations/`.
     private func saveAndExport() {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -295,15 +298,20 @@ public struct GridConfigGeneratorView: View {
         if let sourceURL {
             destination = sourceURL
         } else {
+            guard let dir = Self.configurationsDirectory else {
+                importError = "Unable to access Documents directory."
+                return
+            }
             let name = (config.title ?? "grid_config")
                 .replacingOccurrences(of: " ", with: "_")
                 .lowercased()
-            destination = FileManager.default.temporaryDirectory
-                .appendingPathComponent("\(name).json")
+            destination = dir.appendingPathComponent("\(name).json")
         }
 
         do {
             try data.write(to: destination, options: .atomic)
+            // Update sourceURL so subsequent saves overwrite the same file
+            sourceURL = destination
             withAnimation { saveSuccess = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 withAnimation { saveSuccess = false }
