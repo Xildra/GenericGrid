@@ -163,6 +163,23 @@ public struct GridConfigGeneratorView: View {
 
     // MARK: - Labels
 
+    /// Returns `true` if every label differs from its default value.
+    private func allRowLabelsEdited() -> Bool {
+        guard let labels = config.rowLabels else { return false }
+        let defaults = (0..<config.rows).map { "\($0 + 1)" }
+        guard labels.count >= config.rows else { return false }
+        return (0..<config.rows).allSatisfy { labels[$0] != defaults[$0] }
+    }
+
+    private func allColLabelsEdited() -> Bool {
+        guard let labels = config.colLabels else { return false }
+        let defaults = (0..<config.cols).map { idx in
+            idx < 26 ? String(UnicodeScalar(65 + idx)!) : "\(idx)"
+        }
+        guard labels.count >= config.cols else { return false }
+        return (0..<config.cols).allSatisfy { labels[$0] != defaults[$0] }
+    }
+
     private var labelsSection: some View {
         Section("Labels") {
             Button {
@@ -175,8 +192,13 @@ public struct GridConfigGeneratorView: View {
                     Text("Row labels")
                     Spacer()
                     if config.rowLabels != nil {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                        if allRowLabelsEdited() {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                        } else {
+                            Image(systemName: "hand.draw.fill")
+                                .foregroundStyle(.orange)
+                        }
                     }
                     Image(systemName: "chevron.right")
                         .foregroundStyle(.tertiary)
@@ -194,8 +216,13 @@ public struct GridConfigGeneratorView: View {
                     Text("Column labels")
                     Spacer()
                     if config.colLabels != nil {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                        if allColLabelsEdited() {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                        } else {
+                            Image(systemName: "hand.draw.fill")
+                                .foregroundStyle(.orange)
+                        }
                     }
                     Image(systemName: "chevron.right")
                         .foregroundStyle(.tertiary)

@@ -15,32 +15,69 @@ struct ConfigGridPreviewView: View {
     @Binding var config: GridCanvasConfig
     var onEditZone: (GridZoneDefinition) -> Void
 
+    private var hasLabels: Bool {
+        config.rowLabels != nil || config.colLabels != nil
+    }
+    private let labelMargin: CGFloat = 28
+
     var body: some View {
         GeometryReader { geo in
-            let cs = cellSize(in: geo.size)
+            let margin: CGFloat = hasLabels ? labelMargin : 0
+            let cs = cellSize(in: geo.size, margin: margin)
             let W  = CGFloat(config.cols) * cs
             let H  = CGFloat(config.rows) * cs
 
             ScrollView([.horizontal, .vertical], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
-                    GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
-
-                    ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
-                        DraggableZoneView(
-                            zone: zone,
-                            cellSize: cs,
-                            maxRows: config.rows,
-                            maxCols: config.cols,
-                            onUpdate: { updated in
-                                config.zones[idx] = updated
-                            },
-                            onTap: {
-                                onEditZone(zone)
+                    // Column labels (top)
+                    if hasLabels {
+                        HStack(spacing: 0) {
+                            ForEach(0..<config.cols, id: \.self) { c in
+                                Text(config.colLabel(at: c))
+                                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: cs, height: margin)
                             }
-                        )
+                        }
+                        .offset(x: margin, y: 0)
                     }
+
+                    // Row labels (left)
+                    if hasLabels {
+                        VStack(spacing: 0) {
+                            ForEach(0..<config.rows, id: \.self) { r in
+                                Text(config.rowLabel(at: r))
+                                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: margin, height: cs)
+                            }
+                        }
+                        .offset(x: 0, y: margin)
+                    }
+
+                    // Grid + zones
+                    ZStack(alignment: .topLeading) {
+                        GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
+
+                        ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
+                            DraggableZoneView(
+                                zone: zone,
+                                cellSize: cs,
+                                maxRows: config.rows,
+                                maxCols: config.cols,
+                                onUpdate: { updated in
+                                    config.zones[idx] = updated
+                                },
+                                onTap: {
+                                    onEditZone(zone)
+                                }
+                            )
+                        }
+                    }
+                    .frame(width: W, height: H)
+                    .offset(x: margin, y: margin)
                 }
-                .frame(width: W, height: H)
+                .frame(width: W + margin, height: H + margin)
                 .frame(
                     minWidth: geo.size.width,
                     minHeight: geo.size.height
@@ -50,9 +87,9 @@ struct ConfigGridPreviewView: View {
         .background(.background.secondary)
     }
 
-    private func cellSize(in size: CGSize) -> CGFloat {
-        let byCol = (size.width  - 32) / CGFloat(config.cols)
-        let byRow = (size.height - 32) / CGFloat(config.rows)
+    private func cellSize(in size: CGSize, margin: CGFloat) -> CGFloat {
+        let byCol = (size.width  - 32 - margin) / CGFloat(config.cols)
+        let byRow = (size.height - 32 - margin) / CGFloat(config.rows)
         return min(60, max(20, min(byCol, byRow)))
     }
 }
