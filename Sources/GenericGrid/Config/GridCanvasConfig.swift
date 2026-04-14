@@ -75,7 +75,7 @@ public struct GridCanvasConfig: Codable, Sendable {
 
     /// Loads a config from a local or imported URL.
     public static func load(url: URL) -> GridCanvasConfig? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
+		guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(GridCanvasConfig.self, from: data)
     }
 

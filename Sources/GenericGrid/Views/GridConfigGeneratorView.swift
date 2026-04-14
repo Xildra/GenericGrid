@@ -41,17 +41,11 @@ public struct GridConfigGeneratorView: View {
         self.onExport = onExport
     }
 
-    /// Creates the generator pre-filled with an existing config to edit.
-    public init(existing: GridCanvasConfig, onExport: ((URL) -> Void)? = nil) {
-        self._config = State(initialValue: existing)
-        self._sourceURL = State(initialValue: nil)
-        self.onExport = onExport
-    }
-
     /// Creates the generator by loading a JSON file at the given URL.
+    /// If the URL is nil, falls back to a default config.
     /// On export the file is written back to the same URL.
-    public init(url: URL, onExport: ((URL) -> Void)? = nil) {
-        let loaded = GridCanvasConfig.load(url: url) ?? .default
+    public init(url: URL?, onExport: ((URL) -> Void)? = nil) {
+        let loaded = url.flatMap { GridCanvasConfig.load(url: $0) } ?? .default
         self._config = State(initialValue: loaded)
         self._sourceURL = State(initialValue: url)
         self.onExport = onExport
