@@ -61,6 +61,8 @@ public struct GridConfigGeneratorView: View {
             }
         }
         .navigationTitle("Aircraft Configuration Maker")
+		.navigationBarTitleDisplayMode(.inline)
+		
         .sheet(isPresented: $showZoneSheet) {
             ZoneEditorSheet(
                 zone: editingZone,
