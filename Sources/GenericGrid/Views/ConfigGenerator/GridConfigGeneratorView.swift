@@ -60,9 +60,6 @@ public struct GridConfigGeneratorView: View {
                 showZoneSheet = true
             }
         }
-        .navigationTitle("Aircraft Configuration Maker")
-		.navigationBarTitleDisplayMode(.inline)
-		
         .sheet(isPresented: $showZoneSheet) {
             ZoneEditorSheet(
                 zone: editingZone,
@@ -101,6 +98,7 @@ public struct GridConfigGeneratorView: View {
             labelsSection
             zonesListSection
         }
+		.navigationTitle("Aircraft Configuration Maker")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
