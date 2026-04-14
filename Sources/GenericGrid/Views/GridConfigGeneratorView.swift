@@ -58,7 +58,7 @@ public struct GridConfigGeneratorView: View {
                 labelsSection
                 zonesListSection
             }
-            .navigationTitle("Config")
+            .navigationTitle("Grid Maker")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -82,10 +82,6 @@ public struct GridConfigGeneratorView: View {
             }
         } detail: {
             gridPreview
-                .navigationTitle(config.title ?? "Preview")
-                #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
-                #endif
         }
         .sheet(isPresented: $showZoneSheet) {
             ZoneEditorSheet(
