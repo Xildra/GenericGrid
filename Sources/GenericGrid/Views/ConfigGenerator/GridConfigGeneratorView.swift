@@ -60,6 +60,7 @@ public struct GridConfigGeneratorView: View {
                 showZoneSheet = true
             }
         }
+        .navigationTitle("Aircraft Configuration Maker")
         .sheet(isPresented: $showZoneSheet) {
             ZoneEditorSheet(
                 zone: editingZone,
@@ -98,10 +99,6 @@ public struct GridConfigGeneratorView: View {
             labelsSection
             zonesListSection
         }
-        .navigationTitle("Grid Maker")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -110,28 +107,20 @@ public struct GridConfigGeneratorView: View {
                     Label("Import", systemImage: "square.and.arrow.down")
                 }
             }
-            #if os(iOS)
-            ToolbarItem(placement: .bottomBar) {
-                saveButton
-            }
-            #else
-            ToolbarItem(placement: .secondaryAction) {
-                saveButton
-            }
-            #endif
         }
-    }
-
-    // MARK: - Save button
-
-    private var saveButton: some View {
-        Button {
-            saveAndExport()
-        } label: {
-            Label(
-                saveSuccess ? "Saved" : "Save",
-                systemImage: saveSuccess ? "checkmark.circle.fill" : "square.and.arrow.up"
-            )
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                saveAndExport()
+            } label: {
+                Label(
+                    saveSuccess ? "Saved" : "Save",
+                    systemImage: saveSuccess ? "checkmark.circle.fill" : "square.and.arrow.up"
+                )
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .padding()
         }
     }
 
