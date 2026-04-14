@@ -24,28 +24,36 @@ public struct GridConfigGeneratorView: View {
     @State private var showZoneSheet = false
     @State private var showImporter = false
     @State private var importError: String?
+    @State private var saveSuccess = false
 
-    /// Optional callback when the user taps "Export" — receives the JSON string.
-    public var onExport: ((String) -> Void)?
+    /// URL the config was loaded from (used as default save destination).
+    @State private var sourceURL: URL?
+
+    /// Callback after a successful save — receives the URL of the written file.
+    public var onExport: ((URL) -> Void)?
 
     // MARK: - Init
 
     /// Creates the generator with an empty default config.
-    public init(onExport: ((String) -> Void)? = nil) {
+    public init(onExport: ((URL) -> Void)? = nil) {
         self._config = State(initialValue: .default)
+        self._sourceURL = State(initialValue: nil)
         self.onExport = onExport
     }
 
     /// Creates the generator pre-filled with an existing config to edit.
-    public init(existing: GridCanvasConfig, onExport: ((String) -> Void)? = nil) {
+    public init(existing: GridCanvasConfig, onExport: ((URL) -> Void)? = nil) {
         self._config = State(initialValue: existing)
+        self._sourceURL = State(initialValue: nil)
         self.onExport = onExport
     }
 
-    /// Creates the generator by loading a JSON file URL.
-    public init(jsonURL: URL, onExport: ((String) -> Void)? = nil) {
-        let loaded = GridCanvasConfig.load(url: jsonURL) ?? .default
+    /// Creates the generator by loading a JSON file at the given URL.
+    /// On export the file is written back to the same URL.
+    public init(url: URL, onExport: ((URL) -> Void)? = nil) {
+        let loaded = GridCanvasConfig.load(url: url) ?? .default
         self._config = State(initialValue: loaded)
+        self._sourceURL = State(initialValue: url)
         self.onExport = onExport
     }
 
@@ -251,15 +259,22 @@ public struct GridConfigGeneratorView: View {
 
     private var exportSection: some View {
         Section("Export") {
-            if let onExport {
-                Button {
-                    onExport(jsonString)
-                } label: {
-                    Label("Export JSON", systemImage: "square.and.arrow.up")
-                }
+            Button {
+                saveAndExport()
+            } label: {
+                Label(
+                    saveSuccess ? "Saved!" : "Save JSON",
+                    systemImage: saveSuccess ? "checkmark.circle.fill" : "square.and.arrow.down"
+                )
             }
 
-            // Always provide a share/save option via the JSON text
+            if sourceURL != nil {
+                Text(sourceURL!.lastPathComponent)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+
+            // Inline JSON preview
             DisclosureGroup("Show JSON") {
                 ScrollView(.horizontal) {
                     Text(jsonString)
@@ -269,6 +284,39 @@ public struct GridConfigGeneratorView: View {
                 }
                 .frame(maxHeight: 260)
             }
+        }
+    }
+
+    // MARK: - Save
+
+    /// Writes the current config to disk and calls `onExport` with the URL.
+    /// If a `sourceURL` was provided the file is overwritten in-place,
+    /// otherwise a new file is created in the temporary directory.
+    private func saveAndExport() {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(config) else { return }
+
+        let destination: URL
+        if let sourceURL {
+            destination = sourceURL
+        } else {
+            let name = (config.title ?? "grid_config")
+                .replacingOccurrences(of: " ", with: "_")
+                .lowercased()
+            destination = FileManager.default.temporaryDirectory
+                .appendingPathComponent("\(name).json")
+        }
+
+        do {
+            try data.write(to: destination, options: .atomic)
+            withAnimation { saveSuccess = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation { saveSuccess = false }
+            }
+            onExport?(destination)
+        } catch {
+            importError = "Save failed: \(error.localizedDescription)"
         }
     }
 
@@ -293,7 +341,10 @@ public struct GridConfigGeneratorView: View {
             let accessed = url.startAccessingSecurityScopedResource()
             defer { if accessed { url.stopAccessingSecurityScopedResource() } }
             if let loaded = GridCanvasConfig.load(url: url) {
-                withAnimation { config = loaded }
+                withAnimation {
+                    config = loaded
+                    sourceURL = url
+                }
             } else {
                 importError = "Unable to decode the selected JSON file as a valid GridCanvasConfig."
             }
