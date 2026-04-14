@@ -2,6 +2,8 @@
 //  GridItemsLayer.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Renders all placed items on the grid.
 //  Items currently being moved are displayed dimmed.
 //

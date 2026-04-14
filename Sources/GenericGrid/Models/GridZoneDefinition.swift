@@ -2,6 +2,8 @@
 //  GridZoneDefinition.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Describes a rectangular zone on the grid with a rule,
 //  optional colour, and optional type restrictions.
 //

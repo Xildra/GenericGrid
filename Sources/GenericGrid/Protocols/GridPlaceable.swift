@@ -2,6 +2,8 @@
 //  GridPlaceable.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Protocol for items that have been placed on the grid.
 //  Provides anchor position, rotation, and computed cell footprint.
 //

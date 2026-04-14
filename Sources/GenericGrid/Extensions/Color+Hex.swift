@@ -2,6 +2,8 @@
 //  Color+Hex.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Convenience initialiser to create a SwiftUI Color from a hex string.
 //
 

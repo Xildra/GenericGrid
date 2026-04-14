@@ -2,6 +2,8 @@
 //  GridBackgroundLayer.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Canvas-drawn grid lines with rounded border.
 //
 

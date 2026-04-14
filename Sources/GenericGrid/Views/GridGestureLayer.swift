@@ -2,6 +2,8 @@
 //  GridGestureLayer.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Invisible hit-testing rectangle that handles tap and drag
 //  gestures for item placement and movement.
 //

@@ -2,6 +2,8 @@
 //  GridCell.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Represents a single cell position on the grid.
 //
 

@@ -2,6 +2,8 @@
 //  GridCanvasConfig.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  JSON-driven configuration defining the grid dimensions,
 //  zones, labels, and bundle discovery helpers.
 //

@@ -2,6 +2,8 @@
 //  ZoneRule.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Defines the drag & drop behaviour of a grid zone.
 //
 

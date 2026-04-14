@@ -2,6 +2,8 @@
 //  GenericStatsBlock.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Displays grid occupancy statistics with a colour-coded progress bar.
 //
 

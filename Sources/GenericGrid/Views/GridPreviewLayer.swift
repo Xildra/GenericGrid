@@ -2,6 +2,8 @@
 //  GridPreviewLayer.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Displays a green (valid) or red (invalid) overlay
 //  showing where the item would be placed.
 //

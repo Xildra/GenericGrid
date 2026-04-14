@@ -2,6 +2,8 @@
 //  GenericGridView.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Main grid view that composes all layers: background, zones,
 //  placed items, preview overlay, and gesture handling.
 //

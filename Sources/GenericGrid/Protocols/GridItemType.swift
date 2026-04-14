@@ -2,6 +2,8 @@
 //  GridItemType.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Protocol for item types that can be placed on the grid
 //  (e.g. parcel type, furniture type, passenger class…).
 //

@@ -2,6 +2,8 @@
 //  GridEngine.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Observable state machine and logic engine for the grid.
 //  Manages occupancy map, placement validation, drag & drop,
 //  and exposes statistics / preview state.

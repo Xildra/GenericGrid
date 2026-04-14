@@ -2,6 +2,8 @@
 //  GridZoneOverlayLayer.swift
 //  GenericGrid Module
 //
+//  Copyright © 2026 GenericGrid. All rights reserved.
+//
 //  Renders coloured zone overlays with labels and rule icons.
 //
 
