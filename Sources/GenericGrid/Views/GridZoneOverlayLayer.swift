@@ -15,10 +15,10 @@ struct GridZoneOverlayLayer: View {
 
     var body: some View {
         ForEach(zones) { zone in
-            let x = CGFloat(zone.colStart) * cellSize
-            let y = CGFloat(zone.rowStart) * cellSize
-            let w = CGFloat(zone.colEnd - zone.colStart) * cellSize
-            let h = CGFloat(zone.rowEnd - zone.rowStart) * cellSize
+            let x = zone.colStart * cellSize
+            let y = zone.rowStart * cellSize
+            let w = (zone.colEnd - zone.colStart) * cellSize
+            let h = (zone.rowEnd - zone.rowStart) * cellSize
 
             ZStack {
                 RoundedRectangle(cornerRadius: 4)

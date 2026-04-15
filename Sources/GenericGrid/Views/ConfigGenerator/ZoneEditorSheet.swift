@@ -16,10 +16,10 @@ struct ZoneEditorSheet: View {
     @State private var id: UUID
     @State private var label: String
     @State private var rule: ZoneRule
-    @State private var rowStart: Int
-    @State private var rowEnd: Int
-    @State private var colStart: Int
-    @State private var colEnd: Int
+    @State private var rowStart: Double
+    @State private var rowEnd: Double
+    @State private var colStart: Double
+    @State private var colEnd: Double
     @State private var zoneColor: Color
     @State private var hasColor: Bool
     @State private var allowedTypeNames: String
@@ -36,7 +36,7 @@ struct ZoneEditorSheet: View {
         self.onSave = onSave
         self.isNew = zone == nil
 
-        let z = zone ?? GridZoneDefinition(rowEnd: min(3, maxRows), colEnd: min(3, maxCols))
+        let z = zone ?? GridZoneDefinition(rowEnd: min(3, Double(maxRows)), colEnd: min(3, Double(maxCols)))
         id       = z.id
         label    = z.label
         rule     = z.rule
@@ -73,11 +73,11 @@ struct ZoneEditorSheet: View {
                     }
                 }
 
-                Section("Bounds (0-indexed, end exclusive)") {
-                    Stepper("Row start: \(rowStart)", value: $rowStart, in: 0...(maxRows - 1))
-                    Stepper("Row end: \(rowEnd)", value: $rowEnd, in: 1...maxRows)
-                    Stepper("Col start: \(colStart)", value: $colStart, in: 0...(maxCols - 1))
-                    Stepper("Col end: \(colEnd)", value: $colEnd, in: 1...maxCols)
+                Section("Bounds (supports half-cells: 0, 0.5, 1…)") {
+                    stepperWithField("Row start", value: $rowStart, range: 0...Double(maxRows) - 0.5)
+                    stepperWithField("Row end", value: $rowEnd, range: 0.5...Double(maxRows))
+                    stepperWithField("Col start", value: $colStart, range: 0...Double(maxCols) - 0.5)
+                    stepperWithField("Col end", value: $colEnd, range: 0.5...Double(maxCols))
                 }
 
                 Section("Appearance") {
@@ -145,5 +145,21 @@ struct ZoneEditorSheet: View {
         #if os(iOS)
         .presentationDetents([.large])
         #endif
+    }
+
+    private func stepperWithField(_ label: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
+        Stepper(value: value, in: range, step: 0.5) {
+            HStack {
+                Text(label)
+                Spacer()
+                TextField("", value: value, format: .number.precision(.fractionLength(0...1)))
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 60)
+                    #if os(iOS)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                    #endif
+            }
+        }
     }
 }

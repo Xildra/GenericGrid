@@ -26,6 +26,8 @@ public struct GridConfigGeneratorView: View {
     @State private var showColLabelsSheet = false
     @State private var showImporter = false
     @State private var importError: String?
+    @State private var showExporter = false
+    @State private var exportDocument: ConfigDocument?
     @State private var saveSuccess = false
     @State private var sourceURL: URL?
 
@@ -100,6 +102,14 @@ public struct GridConfigGeneratorView: View {
         ) { result in
             handleImport(result)
         }
+        .fileExporter(
+            isPresented: $showExporter,
+            document: exportDocument,
+            contentType: .json,
+            defaultFilename: defaultFilename
+        ) { result in
+            handleExport(result)
+        }
         .alert("Import Error", isPresented: Binding(
             get: { importError != nil },
             set: { if !$0 { importError = nil } }
@@ -134,7 +144,8 @@ public struct GridConfigGeneratorView: View {
         }
         .safeAreaInset(edge: .bottom) {
             Button {
-                saveAndExport()
+                exportDocument = ConfigDocument(config: config)
+                showExporter = true
             } label: {
                 Label(
                     saveSuccess ? "Saved" : "Save",
@@ -156,8 +167,24 @@ public struct GridConfigGeneratorView: View {
                 get: { config.title ?? "" },
                 set: { config.title = $0.isEmpty ? nil : $0 }
             ))
-            Stepper("Rows: \(config.rows)", value: $config.rows, in: 1...100)
-            Stepper("Columns: \(config.cols)", value: $config.cols, in: 1...100)
+            stepperWithField("Rows", value: $config.rows)
+            stepperWithField("Columns", value: $config.cols)
+        }
+    }
+
+    private func stepperWithField(_ label: String, value: Binding<Int>) -> some View {
+        Stepper(value: value, in: 1...999) {
+            HStack {
+                Text(label)
+                Spacer()
+                TextField("", value: value, format: .number)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 60)
+                    #if os(iOS)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.roundedBorder)
+                    #endif
+            }
         }
     }
 
@@ -281,52 +308,26 @@ public struct GridConfigGeneratorView: View {
         .tint(.primary)
     }
 
-    // MARK: - Save
+    // MARK: - Save (fileExporter)
 
-    /// Returns `<Application Support>/<AppName>/Configurations/`, creating it if needed.
-    private static var configurationsDirectory: URL? {
-        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return nil
-        }
-        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? Bundle.main.bundleIdentifier ?? "GenericGrid"
-        let dir = appSupport
-            .appendingPathComponent(appName, isDirectory: true)
-            .appendingPathComponent("Configurations", isDirectory: true)
-        if !FileManager.default.fileExists(atPath: dir.path) {
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        }
-        return dir
+    /// Default filename derived from the config title.
+    private var defaultFilename: String {
+        let name = (config.title ?? "grid_config")
+            .replacingOccurrences(of: " ", with: "_")
+            .lowercased()
+        return "\(name).json"
     }
 
-    private func saveAndExport() {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        guard let data = try? encoder.encode(config) else { return }
-
-        let destination: URL
-        if let sourceURL {
-            destination = sourceURL
-        } else {
-            guard let dir = Self.configurationsDirectory else {
-                importError = "Unable to access Documents directory."
-                return
-            }
-            let name = (config.title ?? "grid_config")
-                .replacingOccurrences(of: " ", with: "_")
-                .lowercased()
-            destination = dir.appendingPathComponent("\(name).json")
-        }
-
-        do {
-            try data.write(to: destination, options: .atomic)
-            sourceURL = destination
+    private func handleExport(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            sourceURL = url
             withAnimation { saveSuccess = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 withAnimation { saveSuccess = false }
             }
-            onExport?(destination)
-        } catch {
+            onExport?(url)
+        case .failure(let error):
             importError = "Save failed: \(error.localizedDescription)"
         }
     }

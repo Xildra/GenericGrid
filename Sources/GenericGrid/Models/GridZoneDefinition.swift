@@ -17,10 +17,11 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
 
     /// Zone rectangle (inclusive start, exclusive end):
     /// rows [rowStart, rowEnd), cols [colStart, colEnd)
-    public var rowStart: Int
-    public var rowEnd: Int
-    public var colStart: Int
-    public var colEnd: Int
+    /// Supports half-cell increments (e.g. 0.5, 3.5).
+    public var rowStart: Double
+    public var rowEnd: Double
+    public var colStart: Double
+    public var colEnd: Double
 
     /// Optional background colour for the zone (hex string).
     public var colorHex: String?
@@ -28,8 +29,8 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
     /// For `.restricted` zones: names of the item types that are allowed.
     public var allowedTypeNames: [String]?
 
-	public init(label: String = "New Zone", rule: ZoneRule = .free,
-                rowStart: Int = 0, rowEnd: Int, colStart: Int = 0, colEnd: Int,
+    public init(label: String = "New Zone", rule: ZoneRule = .free,
+                rowStart: Double = 0, rowEnd: Double, colStart: Double = 0, colEnd: Double,
                 colorHex: String? = nil, allowedTypeNames: [String]? = nil) {
         self.label = label; self.rule = rule
         self.rowStart = rowStart; self.rowEnd = rowEnd
@@ -45,7 +46,7 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
 
     /// Returns `true` if the given cell falls inside this zone.
     public func contains(_ cell: GridCell) -> Bool {
-        cell.r >= rowStart && cell.r < rowEnd &&
-        cell.c >= colStart && cell.c < colEnd
+        Double(cell.r) >= rowStart && Double(cell.r) < rowEnd &&
+        Double(cell.c) >= colStart && Double(cell.c) < colEnd
     }
 }

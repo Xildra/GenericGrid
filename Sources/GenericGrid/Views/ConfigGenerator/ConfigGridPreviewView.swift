@@ -155,13 +155,30 @@ struct ConfigGridPreviewView: View {
 
     // MARK: - Cell size
 
+    /// Minimum cell width required so the widest column label fits.
+    private var minCellWidthForLabels: CGFloat {
+        guard config.colLabels != nil else { return 8 }
+        #if canImport(UIKit)
+        let font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        #elseif canImport(AppKit)
+        let font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        #endif
+        let maxWidth = (0..<config.cols).map { c in
+            let label = config.colLabel(at: c)
+            return (label as NSString).size(withAttributes: [.font: font]).width
+        }.max() ?? 0
+        return maxWidth + 8
+    }
+
     /// Base cell size that fits the grid in the available space at zoom 1×.
+    /// Ensures cells are wide enough to display column labels.
     private func baseCellSize(in size: CGSize, margin: CGFloat) -> CGFloat {
         let availW = size.width  - margin
         let availH = size.height - margin
         let byCol = availW / CGFloat(config.cols)
         let byRow = availH / CGFloat(config.rows)
-        return max(8, min(byCol, byRow))
+        let fitSize = min(byCol, byRow)
+        return max(minCellWidthForLabels, max(8, fitSize))
     }
 }
 
@@ -181,23 +198,28 @@ struct DraggableZoneView: View {
     @State private var resizeDelta: ResizeDelta = .zero
 
     struct ResizeDelta {
-        var top: Int = 0
-        var bottom: Int = 0
-        var leading: Int = 0
-        var trailing: Int = 0
+        var top: Double = 0
+        var bottom: Double = 0
+        var leading: Double = 0
+        var trailing: Double = 0
         static let zero = ResizeDelta()
     }
 
-    // Effective bounds during gesture
-    private var eRowStart: Int { clamp(zone.rowStart + resizeDelta.top, min: 0, max: eRowEnd - 1) }
-    private var eRowEnd:   Int { clamp(zone.rowEnd   + resizeDelta.bottom, min: zone.rowStart + resizeDelta.top + 1, max: maxRows) }
-    private var eColStart: Int { clamp(zone.colStart + resizeDelta.leading, min: 0, max: eColEnd - 1) }
-    private var eColEnd:   Int { clamp(zone.colEnd   + resizeDelta.trailing, min: zone.colStart + resizeDelta.leading + 1, max: maxCols) }
+    /// Snaps a value to the nearest half-cell (0, 0.5, 1, 1.5…).
+    private func snapHalf(_ v: Double) -> Double {
+        (v * 2).rounded() / 2
+    }
 
-    private var x: CGFloat { CGFloat(eColStart) * cellSize }
-    private var y: CGFloat { CGFloat(eRowStart) * cellSize }
-    private var w: CGFloat { CGFloat(eColEnd - eColStart) * cellSize }
-    private var h: CGFloat { CGFloat(eRowEnd - eRowStart) * cellSize }
+    // Effective bounds during gesture
+    private var eRowStart: Double { clamp(zone.rowStart + resizeDelta.top, lo: 0, hi: eRowEnd - 0.5) }
+    private var eRowEnd:   Double { clamp(zone.rowEnd   + resizeDelta.bottom, lo: zone.rowStart + resizeDelta.top + 0.5, hi: Double(maxRows)) }
+    private var eColStart: Double { clamp(zone.colStart + resizeDelta.leading, lo: 0, hi: eColEnd - 0.5) }
+    private var eColEnd:   Double { clamp(zone.colEnd   + resizeDelta.trailing, lo: zone.colStart + resizeDelta.leading + 0.5, hi: Double(maxCols)) }
+
+    private var x: CGFloat { eColStart * cellSize }
+    private var y: CGFloat { eRowStart * cellSize }
+    private var w: CGFloat { (eColEnd - eColStart) * cellSize }
+    private var h: CGFloat { (eRowEnd - eRowStart) * cellSize }
 
     private let handleSize: CGFloat = 14
 
@@ -234,13 +256,13 @@ struct DraggableZoneView: View {
                 moveOffset = v.translation
             }
             .onEnded { v in
-                let dc = Int((v.translation.width / cellSize).rounded())
-                let dr = Int((v.translation.height / cellSize).rounded())
+                let dc = snapHalf(Double(v.translation.width / cellSize))
+                let dr = snapHalf(Double(v.translation.height / cellSize))
                 var z = zone
-                let newColStart = clamp(z.colStart + dc, min: 0, max: maxCols - (z.colEnd - z.colStart))
-                let newRowStart = clamp(z.rowStart + dr, min: 0, max: maxRows - (z.rowEnd - z.rowStart))
                 let colSpan = z.colEnd - z.colStart
                 let rowSpan = z.rowEnd - z.rowStart
+                let newColStart = clamp(z.colStart + dc, lo: 0, hi: Double(maxCols) - colSpan)
+                let newRowStart = clamp(z.rowStart + dr, lo: 0, hi: Double(maxRows) - rowSpan)
                 z.colStart = newColStart; z.colEnd = newColStart + colSpan
                 z.rowStart = newRowStart; z.rowEnd = newRowStart + rowSpan
                 moveOffset = .zero
@@ -281,13 +303,13 @@ struct DraggableZoneView: View {
                 var d = resizeDelta
                 switch edge {
                 case .top:
-                    d.top = Int((v.translation.height / cellSize).rounded())
+                    d.top = snapHalf(Double(v.translation.height / cellSize))
                 case .bottom:
-                    d.bottom = Int((v.translation.height / cellSize).rounded())
+                    d.bottom = snapHalf(Double(v.translation.height / cellSize))
                 case .leading:
-                    d.leading = Int((v.translation.width / cellSize).rounded())
+                    d.leading = snapHalf(Double(v.translation.width / cellSize))
                 case .trailing:
-                    d.trailing = Int((v.translation.width / cellSize).rounded())
+                    d.trailing = snapHalf(Double(v.translation.width / cellSize))
                 }
                 resizeDelta = d
             }
@@ -342,6 +364,6 @@ struct DraggableZoneView: View {
 
 // MARK: - Utility
 
-func clamp(_ value: Int, min lo: Int, max hi: Int) -> Int {
+func clamp(_ value: Double, lo: Double, hi: Double) -> Double {
     Swift.min(hi, Swift.max(lo, value))
 }
