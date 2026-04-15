@@ -15,6 +15,11 @@ struct ConfigGridPreviewView: View {
     @Binding var config: GridCanvasConfig
     var onEditZone: (GridZoneDefinition) -> Void
 
+    @State private var zoom: CGFloat = 1.0
+    @State private var gestureZoom: CGFloat = 1.0
+
+    private var effectiveZoom: CGFloat { zoom * gestureZoom }
+
     private var hasLabels: Bool {
         config.rowLabels != nil || config.colLabels != nil
     }
@@ -23,81 +28,140 @@ struct ConfigGridPreviewView: View {
     var body: some View {
         GeometryReader { geo in
             let margin: CGFloat = hasLabels ? labelMargin : 0
-            let cs = cellSize(in: geo.size, margin: margin)
+            let baseCS = baseCellSize(in: geo.size, margin: margin)
+            let cs = baseCS * effectiveZoom
             let W  = CGFloat(config.cols) * cs
             let H  = CGFloat(config.rows) * cs
             let totalW = W + margin
             let totalH = H + margin
 
-            ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                ZStack(alignment: .topLeading) {
-                    // Column labels (top)
-                    if hasLabels {
-                        HStack(spacing: 0) {
-                            ForEach(0..<config.cols, id: \.self) { c in
-                                Text(config.colLabel(at: c))
-                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: cs, height: margin)
-                            }
-                        }
-                        .offset(x: margin, y: 0)
-                    }
-
-                    // Row labels (left)
-                    if hasLabels {
-                        VStack(spacing: 0) {
-                            ForEach(0..<config.rows, id: \.self) { r in
-                                Text(config.rowLabel(at: r))
-                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: margin, height: cs)
-                            }
-                        }
-                        .offset(x: 0, y: margin)
-                    }
-
-                    // Grid + zones
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView([.horizontal, .vertical], showsIndicators: true) {
                     ZStack(alignment: .topLeading) {
-                        GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
-
-                        ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
-                            DraggableZoneView(
-                                zone: zone,
-                                cellSize: cs,
-                                maxRows: config.rows,
-                                maxCols: config.cols,
-                                onUpdate: { updated in
-                                    config.zones[idx] = updated
-                                },
-                                onTap: {
-                                    onEditZone(zone)
+                        // Column labels (top)
+                        if hasLabels {
+                            HStack(spacing: 0) {
+                                ForEach(0..<config.cols, id: \.self) { c in
+                                    Text(config.colLabel(at: c))
+                                        .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: cs, height: margin)
                                 }
-                            )
+                            }
+                            .offset(x: margin, y: 0)
                         }
+
+                        // Row labels (left)
+                        if hasLabels {
+                            VStack(spacing: 0) {
+                                ForEach(0..<config.rows, id: \.self) { r in
+                                    Text(config.rowLabel(at: r))
+                                        .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: margin, height: cs)
+                                }
+                            }
+                            .offset(x: 0, y: margin)
+                        }
+
+                        // Grid + zones
+                        ZStack(alignment: .topLeading) {
+                            GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
+
+                            ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
+                                DraggableZoneView(
+                                    zone: zone,
+                                    cellSize: cs,
+                                    maxRows: config.rows,
+                                    maxCols: config.cols,
+                                    onUpdate: { updated in
+                                        config.zones[idx] = updated
+                                    },
+                                    onTap: {
+                                        onEditZone(zone)
+                                    }
+                                )
+                            }
+                        }
+                        .frame(width: W, height: H)
+                        .offset(x: margin, y: margin)
                     }
-                    .frame(width: W, height: H)
-                    .offset(x: margin, y: margin)
+                    .frame(width: totalW, height: totalH)
+                    .frame(
+                        minWidth: geo.size.width,
+                        minHeight: geo.size.height
+                    )
                 }
-                .frame(width: totalW, height: totalH)
-                // Centre when smaller than available space
-                .frame(
-                    minWidth: geo.size.width,
-                    minHeight: geo.size.height
-                )
+                .gesture(magnifyGesture)
+
+                // Zoom controls
+                zoomControls
+                    .padding(12)
             }
         }
         .background(.background.secondary)
     }
 
-    /// Computes the largest cell size that fits the grid in the available space.
-    /// No upper cap — the grid always fills the detail area.
-    private func cellSize(in size: CGSize, margin: CGFloat) -> CGFloat {
+    // MARK: - Zoom controls
+
+    private var zoomControls: some View {
+        VStack(spacing: 8) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { zoom = min(zoom * 1.3, 5.0) }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(width: 32, height: 32)
+            }
+
+            Text("\(Int(effectiveZoom * 100))%")
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { zoom = max(zoom / 1.3, 0.2) }
+            } label: {
+                Image(systemName: "minus")
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(width: 32, height: 32)
+            }
+
+            Divider().frame(width: 20)
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { zoom = 1.0 }
+            } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 32, height: 32)
+            }
+        }
+        .buttonStyle(.bordered)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    // MARK: - Magnify gesture (pinch to zoom)
+
+    private var magnifyGesture: some Gesture {
+        MagnifyGesture()
+            .onChanged { v in
+                gestureZoom = v.magnification
+            }
+            .onEnded { v in
+                zoom = max(0.2, min(5.0, zoom * v.magnification))
+                gestureZoom = 1.0
+            }
+    }
+
+    // MARK: - Cell size
+
+    /// Base cell size that fits the grid in the available space at zoom 1×.
+    private func baseCellSize(in size: CGSize, margin: CGFloat) -> CGFloat {
         let availW = size.width  - margin
         let availH = size.height - margin
         let byCol = availW / CGFloat(config.cols)
         let byRow = availH / CGFloat(config.rows)
-        return max(12, min(byCol, byRow))
+        return max(8, min(byCol, byRow))
     }
 }
 
