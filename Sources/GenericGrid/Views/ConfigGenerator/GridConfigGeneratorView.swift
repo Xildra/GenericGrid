@@ -196,7 +196,8 @@ public struct GridConfigGeneratorView: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(.green)
                         } else {
-                            Image(systemName: "hand.draw.fill")
+                            Text("Edited")
+                                .font(.subheadline)
                                 .foregroundStyle(.orange)
                         }
                     }
@@ -220,7 +221,8 @@ public struct GridConfigGeneratorView: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(.green)
                         } else {
-                            Image(systemName: "hand.draw.fill")
+                            Text("Edited")
+                                .font(.subheadline)
                                 .foregroundStyle(.orange)
                         }
                     }

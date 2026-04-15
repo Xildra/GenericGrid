@@ -26,6 +26,8 @@ struct ConfigGridPreviewView: View {
             let cs = cellSize(in: geo.size, margin: margin)
             let W  = CGFloat(config.cols) * cs
             let H  = CGFloat(config.rows) * cs
+            let totalW = W + margin
+            let totalH = H + margin
 
             ScrollView([.horizontal, .vertical], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
@@ -34,7 +36,7 @@ struct ConfigGridPreviewView: View {
                         HStack(spacing: 0) {
                             ForEach(0..<config.cols, id: \.self) { c in
                                 Text(config.colLabel(at: c))
-                                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
                                     .foregroundStyle(.secondary)
                                     .frame(width: cs, height: margin)
                             }
@@ -47,7 +49,7 @@ struct ConfigGridPreviewView: View {
                         VStack(spacing: 0) {
                             ForEach(0..<config.rows, id: \.self) { r in
                                 Text(config.rowLabel(at: r))
-                                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
                                     .foregroundStyle(.secondary)
                                     .frame(width: margin, height: cs)
                             }
@@ -77,7 +79,8 @@ struct ConfigGridPreviewView: View {
                     .frame(width: W, height: H)
                     .offset(x: margin, y: margin)
                 }
-                .frame(width: W + margin, height: H + margin)
+                .frame(width: totalW, height: totalH)
+                // Centre when smaller than available space
                 .frame(
                     minWidth: geo.size.width,
                     minHeight: geo.size.height
@@ -87,10 +90,14 @@ struct ConfigGridPreviewView: View {
         .background(.background.secondary)
     }
 
+    /// Computes the largest cell size that fits the grid in the available space.
+    /// No upper cap — the grid always fills the detail area.
     private func cellSize(in size: CGSize, margin: CGFloat) -> CGFloat {
-        let byCol = (size.width  - 32 - margin) / CGFloat(config.cols)
-        let byRow = (size.height - 32 - margin) / CGFloat(config.rows)
-        return min(60, max(20, min(byCol, byRow)))
+        let availW = size.width  - margin
+        let availH = size.height - margin
+        let byCol = availW / CGFloat(config.cols)
+        let byRow = availH / CGFloat(config.rows)
+        return max(12, min(byCol, byRow))
     }
 }
 
