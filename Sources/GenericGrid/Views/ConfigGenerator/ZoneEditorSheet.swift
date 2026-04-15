@@ -154,10 +154,9 @@ struct ZoneEditorSheet: View {
                 Spacer()
                 TextField("", value: value, format: .number.precision(.fractionLength(0...1)))
                     .multilineTextAlignment(.trailing)
-                    .frame(width: 60)
+                    .fixedSize()
                     #if os(iOS)
                     .keyboardType(.decimalPad)
-                    .textFieldStyle(.roundedBorder)
                     #endif
             }
         }

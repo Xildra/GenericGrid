@@ -84,6 +84,8 @@ public struct GridConfigGeneratorView: View {
                 labels: config.rowLabels ?? []
             ) { saved in
                 config.rowLabels = saved
+            } onReset: {
+                config.rowLabels = nil
             }
         }
         .sheet(isPresented: $showColLabelsSheet) {
@@ -93,6 +95,8 @@ public struct GridConfigGeneratorView: View {
                 labels: config.colLabels ?? []
             ) { saved in
                 config.colLabels = saved
+            } onReset: {
+                config.colLabels = nil
             }
         }
         .fileImporter(
@@ -179,10 +183,9 @@ public struct GridConfigGeneratorView: View {
                 Spacer()
                 TextField("", value: value, format: .number)
                     .multilineTextAlignment(.trailing)
-                    .frame(width: 60)
+                    .fixedSize()
                     #if os(iOS)
                     .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
                     #endif
             }
         }

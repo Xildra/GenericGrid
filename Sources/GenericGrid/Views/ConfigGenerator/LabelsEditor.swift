@@ -17,11 +17,15 @@ struct LabelsEditorSheet: View {
     let count: Int
     @State private var labels: [String]
     let onSave: ([String]) -> Void
+    let onReset: (() -> Void)?
 
-    init(kind: String, count: Int, labels: [String], onSave: @escaping ([String]) -> Void) {
+    init(kind: String, count: Int, labels: [String],
+         onSave: @escaping ([String]) -> Void,
+         onReset: (() -> Void)? = nil) {
         self.kind = kind
         self.count = count
         self.onSave = onSave
+        self.onReset = onReset
         // Pad to count if needed
         var padded = labels
         while padded.count < count { padded.append("") }
@@ -57,6 +61,7 @@ struct LabelsEditorSheet: View {
                 }
                 ToolbarItem(placement: .destructiveAction) {
                     Button("Reset", role: .destructive) {
+                        onReset?()
                         dismiss()
                     }
                 }
