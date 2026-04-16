@@ -298,9 +298,7 @@ public struct GridConfigGeneratorView: View {
             showZoneSheet = true
         } label: {
             HStack {
-                if let hex = zone.colorHex {
-                    Circle().fill(Color(hex: hex)).frame(width: 12, height: 12)
-                }
+                Circle().fill(zone.color).frame(width: 12, height: 12)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(zone.label).font(.headline)
                     Text(zone.rule.rawValue)

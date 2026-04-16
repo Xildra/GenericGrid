@@ -180,15 +180,19 @@ struct DraggableZoneView: View {
     let onUpdate: (GridZoneDefinition) -> Void
     let onTap: () -> Void
 
-    @State private var moveOffset: CGSize = .zero
-    @State private var resizeDelta: ResizeDelta = .zero
+    @State private var draft: GridZoneDefinition
+    /// Anchor captured at the start of each drag (reset to nil between drags).
+    @GestureState private var anchor: GridZoneDefinition? = nil
 
-    struct ResizeDelta {
-        var top: Double = 0
-        var bottom: Double = 0
-        var leading: Double = 0
-        var trailing: Double = 0
-        static let zero = ResizeDelta()
+    init(zone: GridZoneDefinition, cellSize: CGFloat, maxRows: Int, maxCols: Int,
+         onUpdate: @escaping (GridZoneDefinition) -> Void, onTap: @escaping () -> Void) {
+        self.zone = zone
+        self.cellSize = cellSize
+        self.maxRows = maxRows
+        self.maxCols = maxCols
+        self.onUpdate = onUpdate
+        self.onTap = onTap
+        self.draft = zone
     }
 
     /// Snaps a value to the nearest half-cell (0, 0.5, 1, 1.5…).
@@ -196,28 +200,22 @@ struct DraggableZoneView: View {
         (v * 2).rounded() / 2
     }
 
-    // Effective bounds during gesture
-    private var eRowStart: Double { clamp(zone.rowStart + resizeDelta.top, lo: 0, hi: eRowEnd - 0.5) }
-    private var eRowEnd:   Double { clamp(zone.rowEnd   + resizeDelta.bottom, lo: zone.rowStart + resizeDelta.top + 0.5, hi: Double(maxRows)) }
-    private var eColStart: Double { clamp(zone.colStart + resizeDelta.leading, lo: 0, hi: eColEnd - 0.5) }
-    private var eColEnd:   Double { clamp(zone.colEnd   + resizeDelta.trailing, lo: zone.colStart + resizeDelta.leading + 0.5, hi: Double(maxCols)) }
-
-    private var x: CGFloat { eColStart * cellSize }
-    private var y: CGFloat { eRowStart * cellSize }
-    private var w: CGFloat { (eColEnd - eColStart) * cellSize }
-    private var h: CGFloat { (eRowEnd - eRowStart) * cellSize }
+    private var x: CGFloat { draft.colStart * cellSize }
+    private var y: CGFloat { draft.rowStart * cellSize }
+    private var w: CGFloat { (draft.colEnd - draft.colStart) * cellSize }
+    private var h: CGFloat { (draft.rowEnd - draft.rowStart) * cellSize }
 
     private let handleSize: CGFloat = 14
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
-                .fill((zone.color ?? .gray).opacity(0.15))
+                .fill(draft.color.opacity(0.15))
             RoundedRectangle(cornerRadius: 4)
                 .strokeBorder(strokeColor, style: strokeStyle)
 
             VStack(spacing: 2) {
-                Text(zone.label)
+                Text(draft.label)
                     .font(.system(size: min(w / 8, 11), weight: .medium))
                     .foregroundStyle(.secondary)
                 ruleIcon
@@ -229,30 +227,38 @@ struct DraggableZoneView: View {
             resizeHandle(edge: .trailing)
         }
         .frame(width: w, height: h)
-        .offset(x: x + moveOffset.width, y: y + moveOffset.height)
+        .offset(x: x, y: y)
         .gesture(moveGesture)
         .onTapGesture { onTap() }
+        .onChange(of: zone) { _, newValue in draft = newValue }
     }
 
     // MARK: - Move gesture
 
     private var moveGesture: some Gesture {
         DragGesture(minimumDistance: 4, coordinateSpace: .global)
-            .onChanged { v in
-                moveOffset = v.translation
+            .updating($anchor) { _, state, _ in
+                if state == nil { state = draft }
             }
-            .onEnded { v in
-                let dc = snapHalf(Double(v.translation.width / cellSize))
-                let dr = snapHalf(Double(v.translation.height / cellSize))
-                var z = zone
-                let colSpan = z.colEnd - z.colStart
-                let rowSpan = z.rowEnd - z.rowStart
-                let newColStart = clamp(z.colStart + dc, lo: 0, hi: Double(maxCols) - colSpan)
-                let newRowStart = clamp(z.rowStart + dr, lo: 0, hi: Double(maxRows) - rowSpan)
-                z.colStart = newColStart; z.colEnd = newColStart + colSpan
-                z.rowStart = newRowStart; z.rowEnd = newRowStart + rowSpan
-                moveOffset = .zero
-                onUpdate(z)
+            .onChanged { v in
+                guard let start = anchor else { return }
+                let dc = Double(v.translation.width / cellSize)
+                let dr = Double(v.translation.height / cellSize)
+                let colSpan = start.colEnd - start.colStart
+                let rowSpan = start.rowEnd - start.rowStart
+                let newColStart = clamp(start.colStart + dc, lo: 0, hi: Double(maxCols) - colSpan)
+                let newRowStart = clamp(start.rowStart + dr, lo: 0, hi: Double(maxRows) - rowSpan)
+                draft.colStart = newColStart
+                draft.colEnd   = newColStart + colSpan
+                draft.rowStart = newRowStart
+                draft.rowEnd   = newRowStart + rowSpan
+            }
+            .onEnded { _ in
+                draft.colStart = snapHalf(draft.colStart)
+                draft.colEnd   = snapHalf(draft.colEnd)
+                draft.rowStart = snapHalf(draft.rowStart)
+                draft.rowEnd   = snapHalf(draft.rowEnd)
+                onUpdate(draft)
             }
     }
 
@@ -285,58 +291,46 @@ struct DraggableZoneView: View {
 
     private func resizeGesture(edge: Edge) -> some Gesture {
         DragGesture(minimumDistance: 2, coordinateSpace: .global)
-            .onChanged { v in
-                var d = resizeDelta
-                switch edge {
-                case .top:
-                    d.top = Double(v.translation.height / cellSize)
-                case .bottom:
-                    d.bottom = Double(v.translation.height / cellSize)
-                case .leading:
-                    d.leading = Double(v.translation.width / cellSize)
-                case .trailing:
-                    d.trailing = Double(v.translation.width / cellSize)
-                }
-                resizeDelta = d
+            .updating($anchor) { _, state, _ in
+                if state == nil { state = draft }
             }
-            .onEnded { v in
-                // Snap only at the end for fluid tracking during the drag.
-                var d = ResizeDelta.zero
+            .onChanged { v in
+                guard let start = anchor else { return }
+                let dx = Double(v.translation.width / cellSize)
+                let dy = Double(v.translation.height / cellSize)
                 switch edge {
                 case .top:
-                    d.top = snapHalf(Double(v.translation.height / cellSize))
+                    draft.rowStart = clamp(start.rowStart + dy, lo: 0, hi: start.rowEnd - 0.5)
                 case .bottom:
-                    d.bottom = snapHalf(Double(v.translation.height / cellSize))
+                    draft.rowEnd   = clamp(start.rowEnd + dy, lo: start.rowStart + 0.5, hi: Double(maxRows))
                 case .leading:
-                    d.leading = snapHalf(Double(v.translation.width / cellSize))
+                    draft.colStart = clamp(start.colStart + dx, lo: 0, hi: start.colEnd - 0.5)
                 case .trailing:
-                    d.trailing = snapHalf(Double(v.translation.width / cellSize))
+                    draft.colEnd   = clamp(start.colEnd + dx, lo: start.colStart + 0.5, hi: Double(maxCols))
                 }
-                resizeDelta = d
-
-                var z = zone
-                z.rowStart = eRowStart
-                z.rowEnd   = eRowEnd
-                z.colStart = eColStart
-                z.colEnd   = eColEnd
-                resizeDelta = .zero
-                onUpdate(z)
+            }
+            .onEnded { _ in
+                draft.rowStart = snapHalf(draft.rowStart)
+                draft.rowEnd   = snapHalf(draft.rowEnd)
+                draft.colStart = snapHalf(draft.colStart)
+                draft.colEnd   = snapHalf(draft.colEnd)
+                onUpdate(draft)
             }
     }
 
     // MARK: - Styling
 
     private var strokeColor: Color {
-        switch zone.rule {
+        switch draft.rule {
         case .locked:     return .orange.opacity(0.5)
         case .forbidden:  return .red.opacity(0.4)
         case .restricted: return .blue.opacity(0.4)
-        case .free:       return (zone.color ?? .gray).opacity(0.3)
+        case .free:       return draft.color.opacity(0.3)
         }
     }
 
     private var strokeStyle: StrokeStyle {
-        switch zone.rule {
+        switch draft.rule {
         case .locked, .forbidden:
             return StrokeStyle(lineWidth: 1.5, dash: [6, 3])
         default:
@@ -346,7 +340,7 @@ struct DraggableZoneView: View {
 
     @ViewBuilder
     private var ruleIcon: some View {
-        switch zone.rule {
+        switch draft.rule {
         case .locked:
             Image(systemName: "lock.fill")
                 .font(.system(size: 9)).foregroundStyle(.secondary.opacity(0.6))

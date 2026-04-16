@@ -31,20 +31,18 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
 
     public init(label: String = "New Zone", rule: ZoneRule = .free,
                 rowStart: Double = 0, rowEnd: Double, colStart: Double = 0, colEnd: Double,
-                colorHex: String? = nil, allowedTypeNames: [String]? = nil) {
+                color: Color = .gray, allowedTypeNames: [String]? = nil) {
         self.label = label; self.rule = rule
         self.rowStart = rowStart; self.rowEnd = rowEnd
         self.colStart = colStart; self.colEnd = colEnd
-        self.colorHex = colorHex; self.allowedTypeNames = allowedTypeNames
+        self.colorHex = color.toHex()
+        self.allowedTypeNames = allowedTypeNames
     }
 
-    /// Resolved SwiftUI colour from the hex string (nil if no hex provided).
+    /// Resolved SwiftUI colour, backed by `colorHex`. Defaults to `.gray`.
     public var color: Color {
-		get {
-			guard let hex = colorHex else { return .gray }
-			return Color(hex: hex)
-		}
-		set { colorHex = newValue.toHex()	} 
+        get { colorHex.map { Color(hex: $0) } ?? .gray }
+        set { colorHex = newValue.toHex() }
     }
 
     /// Returns `true` if the given cell falls inside this zone.

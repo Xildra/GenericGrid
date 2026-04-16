@@ -22,7 +22,7 @@ struct GridZoneOverlayLayer: View {
 
             ZStack {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill((zone.color ?? .gray).opacity(0.12))
+                    .fill(zone.color.opacity(0.12))
                 RoundedRectangle(cornerRadius: 4)
                     .strokeBorder(strokeColor(for: zone), style: strokeStyle(for: zone))
 
@@ -54,7 +54,7 @@ struct GridZoneOverlayLayer: View {
         case .locked:     return .orange.opacity(0.5)
         case .forbidden:  return .red.opacity(0.4)
         case .restricted: return .blue.opacity(0.4)
-        case .free:       return (zone.color ?? .gray).opacity(0.3)
+        case .free:       return zone.color.opacity(0.3)
         }
     }
 
