@@ -12,17 +12,9 @@ import SwiftUI
 @available(iOS 17.0, macOS 14.0, *)
 struct ZoneEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
-
-    @State private var id: UUID
-    @State private var label: String
-    @State private var rule: ZoneRule
-    @State private var rowStart: Double
-    @State private var rowEnd: Double
-    @State private var colStart: Double
-    @State private var colEnd: Double
-    @State private var zoneColor: Color
-    @State private var hasColor: Bool
-    @State private var allowedTypeNames: String
+	
+	@State private var zone: GridZoneDefinition
+    @State private var allowedTypeNames: String = ""
     @FocusState private var focusedField: Bool
 
     private let isNew: Bool
@@ -36,18 +28,8 @@ struct ZoneEditorSheet: View {
         self.maxCols = maxCols
         self.onSave = onSave
         self.isNew = zone == nil
-
-        let z = zone ?? GridZoneDefinition(rowEnd: min(3, Double(maxRows)), colEnd: min(3, Double(maxCols)))
-        id       = z.id
-        label    = z.label
-        rule     = z.rule
-        rowStart = z.rowStart
-        rowEnd   = z.rowEnd
-        colStart = z.colStart
-        colEnd   = z.colEnd
-        hasColor = z.colorHex != nil
-        zoneColor = z.color ?? .gray
-        allowedTypeNames = (z.allowedTypeNames ?? []).joined(separator: ", ")
+		
+		self.zone = zone ?? GridZoneDefinition(rowEnd: min(3, Double(maxRows)), colEnd: min(3, Double(maxCols)))
     }
 
     var body: some View {
@@ -55,18 +37,18 @@ struct ZoneEditorSheet: View {
             Form {
                 Section("General") {
 					LabeledContent("Name") {
-						TextField("Name", text: $label)
+						TextField("Name", text: $zone.label)
 							.fixedSize()
 							.focused($focusedField)
 					}
 					LabeledContent("Color") {
-						ColorPicker("", selection: $zoneColor, supportsOpacity: false)
+						ColorPicker("", selection: $zone.color, supportsOpacity: false)
 							.labelsHidden()
 					}
                 }
 
                 Section("Rule") {
-                    Picker("Rule", selection: $rule) {
+					Picker("Rule", selection: $zone.rule) {
                         Text("Free").tag(ZoneRule.free)
                         Text("Locked").tag(ZoneRule.locked)
                         Text("Forbidden").tag(ZoneRule.forbidden)
@@ -76,18 +58,18 @@ struct ZoneEditorSheet: View {
                     .pickerStyle(.segmented)
                     #endif
 
-                    if rule == .restricted {
-                        TextField("Allowed types (comma-separated)", text: $allowedTypeNames)
+					if zone.rule == .restricted {
+						TextField("Allowed types (comma-separated)", text: $allowedTypeNames)
                             .font(.caption)
                             .focused($focusedField)
                     }
                 }
 
                 Section("Bounds (supports half-cells: 0, 0.5, 1…)") {
-                    stepperWithField("Row start", value: $rowStart, range: 0...Double(maxRows) - 0.5)
-                    stepperWithField("Row end", value: $rowEnd, range: 0.5...Double(maxRows))
-                    stepperWithField("Col start", value: $colStart, range: 0...Double(maxCols) - 0.5)
-                    stepperWithField("Col end", value: $colEnd, range: 0.5...Double(maxCols))
+					stepperWithField("Row start", value: $zone.rowStart, range: 0...Double(maxRows) - 0.5)
+					stepperWithField("Row end", value: $zone.rowEnd, range: 0.5...Double(maxRows))
+					stepperWithField("Col start", value: $zone.colStart, range: 0...Double(maxCols) - 0.5)
+					stepperWithField("Col end", value: $zone.colEnd, range: 0.5...Double(maxCols))
                 }
             }
             .navigationTitle(isNew ? "New Zone" : "Edit Zone")
@@ -105,23 +87,10 @@ struct ZoneEditorSheet: View {
                             .map { $0.trimmingCharacters(in: .whitespaces) }
                             .filter { !$0.isEmpty }
 
-                        let hex: String? = hasColor ? zoneColor.toHex() : nil
-
-                        var zone = GridZoneDefinition(
-                            label: label,
-                            rule: rule,
-                            rowStart: rowStart,
-                            rowEnd: rowEnd,
-                            colStart: colStart,
-                            colEnd: colEnd,
-                            colorHex: hex,
-                            allowedTypeNames: types.isEmpty ? nil : types
-                        )
-                        zone.id = id
                         onSave(zone)
                         dismiss()
                     }
-                    .disabled(label.isEmpty || rowEnd <= rowStart || colEnd <= colStart)
+					.disabled(zone.label.isEmpty || zone.rowEnd <= zone.rowStart || zone.colEnd <= zone.colStart)
                 }
             }
             .onTapGesture {

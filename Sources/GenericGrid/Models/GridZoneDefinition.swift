@@ -39,9 +39,12 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
     }
 
     /// Resolved SwiftUI colour from the hex string (nil if no hex provided).
-    public var color: Color? {
-        guard let hex = colorHex else { return nil }
-        return Color(hex: hex)
+    public var color: Color {
+		get {
+			guard let hex = colorHex else { return .gray }
+			return Color(hex: hex)
+		}
+		set { colorHex = newValue.toHex()	} 
     }
 
     /// Returns `true` if the given cell falls inside this zone.
