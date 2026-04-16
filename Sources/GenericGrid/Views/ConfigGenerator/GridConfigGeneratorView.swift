@@ -30,6 +30,7 @@ public struct GridConfigGeneratorView: View {
     @State private var exportDocument: ConfigDocument?
     @State private var saveSuccess = false
     @State private var sourceURL: URL?
+    @FocusState private var focusedField: Bool
 
     /// Callback after a successful save — receives the URL of the written file.
     public var onExport: ((URL) -> Void)?
@@ -64,7 +65,7 @@ public struct GridConfigGeneratorView: View {
                 showZoneSheet = true
             }
         }
-        .sheet(isPresented: $showZoneSheet) {
+        .sheet(isPresented: $showZoneSheet, onDismiss: { focusedField = false }) {
             ZoneEditorSheet(
                 zone: editingZone,
                 maxRows: config.rows,
@@ -77,7 +78,7 @@ public struct GridConfigGeneratorView: View {
                 }
             }
         }
-        .sheet(isPresented: $showRowLabelsSheet) {
+        .sheet(isPresented: $showRowLabelsSheet, onDismiss: { focusedField = false }) {
             LabelsEditorSheet(
                 kind: "Row",
                 count: config.rows,
@@ -88,7 +89,7 @@ public struct GridConfigGeneratorView: View {
                 config.rowLabels = nil
             }
         }
-        .sheet(isPresented: $showColLabelsSheet) {
+        .sheet(isPresented: $showColLabelsSheet, onDismiss: { focusedField = false }) {
             LabelsEditorSheet(
                 kind: "Column",
                 count: config.cols,
@@ -171,6 +172,7 @@ public struct GridConfigGeneratorView: View {
                 get: { config.title ?? "" },
                 set: { config.title = $0.isEmpty ? nil : $0 }
             ))
+            .focused($focusedField)
             stepperWithField("Rows", value: $config.rows)
             stepperWithField("Columns", value: $config.cols)
         }
@@ -184,6 +186,7 @@ public struct GridConfigGeneratorView: View {
                 TextField("", value: value, format: .number)
                     .multilineTextAlignment(.trailing)
                     .fixedSize()
+                    .focused($focusedField)
                     #if os(iOS)
                     .keyboardType(.numberPad)
                     #endif

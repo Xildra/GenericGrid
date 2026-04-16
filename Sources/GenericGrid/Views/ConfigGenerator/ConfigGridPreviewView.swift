@@ -303,6 +303,21 @@ struct DraggableZoneView: View {
                 var d = resizeDelta
                 switch edge {
                 case .top:
+                    d.top = Double(v.translation.height / cellSize)
+                case .bottom:
+                    d.bottom = Double(v.translation.height / cellSize)
+                case .leading:
+                    d.leading = Double(v.translation.width / cellSize)
+                case .trailing:
+                    d.trailing = Double(v.translation.width / cellSize)
+                }
+                resizeDelta = d
+            }
+            .onEnded { v in
+                // Snap only at the end for fluid tracking during the drag.
+                var d = ResizeDelta.zero
+                switch edge {
+                case .top:
                     d.top = snapHalf(Double(v.translation.height / cellSize))
                 case .bottom:
                     d.bottom = snapHalf(Double(v.translation.height / cellSize))
@@ -312,8 +327,7 @@ struct DraggableZoneView: View {
                     d.trailing = snapHalf(Double(v.translation.width / cellSize))
                 }
                 resizeDelta = d
-            }
-            .onEnded { _ in
+
                 var z = zone
                 z.rowStart = eRowStart
                 z.rowEnd   = eRowEnd
