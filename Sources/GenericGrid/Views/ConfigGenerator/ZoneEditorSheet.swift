@@ -53,9 +53,16 @@ struct ZoneEditorSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Identity") {
-                    TextField("Label", text: $label)
-                        .focused($focusedField)
+                Section("General") {
+					LabeledContent("Name") {
+						TextField("Name", text: $label)
+							.fixedSize()
+							.focused($focusedField)
+					}
+					LabeledContent("Color") {
+						ColorPicker("", selection: $zoneColor, supportsOpacity: false)
+							.labelsHidden()
+					}
                 }
 
                 Section("Rule") {
@@ -81,33 +88,6 @@ struct ZoneEditorSheet: View {
                     stepperWithField("Row end", value: $rowEnd, range: 0.5...Double(maxRows))
                     stepperWithField("Col start", value: $colStart, range: 0...Double(maxCols) - 0.5)
                     stepperWithField("Col end", value: $colEnd, range: 0.5...Double(maxCols))
-                }
-
-                Section("Appearance") {
-                    HStack {
-                        Text("Zone color")
-                        Spacer()
-                        if hasColor {
-                            ColorPicker("", selection: $zoneColor, supportsOpacity: false)
-                                .labelsHidden()
-                                .frame(width: 32, height: 32)
-                        }
-                        Button {
-                            withAnimation {
-                                if hasColor {
-                                    hasColor = false
-                                } else {
-                                    hasColor = true
-                                    zoneColor = .gray
-                                }
-                            }
-                        } label: {
-                            Image(systemName: hasColor ? "circle.slash" : "circle.slash.fill")
-                                .font(.title3)
-                                .foregroundStyle(hasColor ? Color.secondary : Color.red)
-                        }
-                        .buttonStyle(.plain)
-                    }
                 }
             }
             .navigationTitle(isNew ? "New Zone" : "Edit Zone")
