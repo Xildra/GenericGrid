@@ -23,6 +23,7 @@ struct ZoneEditorSheet: View {
     @State private var zoneColor: Color
     @State private var hasColor: Bool
     @State private var allowedTypeNames: String
+    @FocusState private var focusedField: Bool
 
     private let isNew: Bool
     private let maxRows: Int
@@ -54,6 +55,7 @@ struct ZoneEditorSheet: View {
             Form {
                 Section("Identity") {
                     TextField("Label", text: $label)
+                        .focused($focusedField)
                 }
 
                 Section("Rule") {
@@ -70,6 +72,7 @@ struct ZoneEditorSheet: View {
                     if rule == .restricted {
                         TextField("Allowed types (comma-separated)", text: $allowedTypeNames)
                             .font(.caption)
+                            .focused($focusedField)
                     }
                 }
 
@@ -141,6 +144,9 @@ struct ZoneEditorSheet: View {
                     .disabled(label.isEmpty || rowEnd <= rowStart || colEnd <= colStart)
                 }
             }
+            .onTapGesture {
+                focusedField = false
+            }
         }
         #if os(iOS)
         .presentationDetents([.large])
@@ -155,6 +161,7 @@ struct ZoneEditorSheet: View {
                 TextField("", value: value, format: .number.precision(.fractionLength(0...1)))
                     .multilineTextAlignment(.trailing)
                     .fixedSize()
+                    .focused($focusedField)
                     #if os(iOS)
                     .keyboardType(.decimalPad)
                     #endif
