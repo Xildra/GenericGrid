@@ -214,7 +214,7 @@ public struct GridConfigGeneratorView: View {
     }
 
     private var labelsSection: some View {
-        Section("Labels") {
+        Section("Titles") {
             Button {
                 if config.rowLabels == nil {
                     config.rowLabels = (0..<config.rows).map { "\($0 + 1)" }
@@ -222,7 +222,7 @@ public struct GridConfigGeneratorView: View {
                 showRowLabelsSheet = true
             } label: {
                 HStack {
-                    Text("Row labels")
+                    Text("Row")
                     Spacer()
                     if config.rowLabels != nil {
                         if allRowLabelsEdited() {
@@ -247,7 +247,7 @@ public struct GridConfigGeneratorView: View {
                 showColLabelsSheet = true
             } label: {
                 HStack {
-                    Text("Column labels")
+                    Text("Column")
                     Spacer()
                     if config.colLabels != nil {
                         if allColLabelsEdited() {
@@ -358,4 +358,8 @@ public struct GridConfigGeneratorView: View {
             importError = error.localizedDescription
         }
     }
+}
+
+#Preview {
+	GridConfigGeneratorView()
 }

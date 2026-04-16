@@ -37,11 +37,14 @@ struct LabelsEditorSheet: View {
             List {
                 ForEach(0..<count, id: \.self) { i in
                     HStack {
-                        Text("\(i)")
+						var index = i + 1
+						
+						Text(index.description)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                            .frame(width: 28, alignment: .trailing)
-                        TextField("\(kind) \(i)", text: $labels[i])
+							.fixedSize()
+                            .frame(alignment: .trailing)
+                        TextField("\(kind) \(index)", text: $labels[i])
                     }
                 }
             }

@@ -134,8 +134,9 @@ struct ConfigGridPreviewView: View {
                     .frame(width: 32, height: 32)
             }
         }
-//        .buttonStyle(.bordered)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 15))
+        .buttonStyle(.bordered)
+        .background(.ultraThinMaterial)
+		.clipShape(.buttonBorder)
     }
 
     // MARK: - Cell size
