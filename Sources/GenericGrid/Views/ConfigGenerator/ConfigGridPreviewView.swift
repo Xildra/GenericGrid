@@ -16,9 +16,8 @@ struct ConfigGridPreviewView: View {
     var onEditZone: (GridZoneDefinition) -> Void
 
     @State private var zoom: CGFloat = 1.0
-    @State private var gestureZoom: CGFloat = 1.0
 
-    private var effectiveZoom: CGFloat { zoom * gestureZoom }
+    private var effectiveZoom: CGFloat { zoom }
 
     private var hasLabels: Bool {
         config.rowLabels != nil || config.colLabels != nil
@@ -92,7 +91,6 @@ struct ConfigGridPreviewView: View {
                         minHeight: geo.size.height
                     )
                 }
-                .gesture(magnifyGesture)
 
                 // Zoom controls
                 zoomControls
@@ -136,21 +134,8 @@ struct ConfigGridPreviewView: View {
                     .frame(width: 32, height: 32)
             }
         }
-        .buttonStyle(.bordered)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
-    }
-
-    // MARK: - Magnify gesture (pinch to zoom)
-
-    private var magnifyGesture: some Gesture {
-        MagnifyGesture()
-            .onChanged { v in
-                gestureZoom = v.magnification
-            }
-            .onEnded { v in
-                zoom = max(0.2, min(5.0, zoom * v.magnification))
-                gestureZoom = 1.0
-            }
+//        .buttonStyle(.bordered)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 15))
     }
 
     // MARK: - Cell size
@@ -251,7 +236,7 @@ struct DraggableZoneView: View {
     // MARK: - Move gesture
 
     private var moveGesture: some Gesture {
-        DragGesture(minimumDistance: 4)
+        DragGesture(minimumDistance: 4, coordinateSpace: .global)
             .onChanged { v in
                 moveOffset = v.translation
             }
@@ -298,7 +283,7 @@ struct DraggableZoneView: View {
     }
 
     private func resizeGesture(edge: Edge) -> some Gesture {
-        DragGesture(minimumDistance: 2)
+        DragGesture(minimumDistance: 2, coordinateSpace: .global)
             .onChanged { v in
                 var d = resizeDelta
                 switch edge {
