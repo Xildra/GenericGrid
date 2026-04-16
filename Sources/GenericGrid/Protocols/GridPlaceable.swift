@@ -5,7 +5,8 @@
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
 //  Protocol for items that have been placed on the grid.
-//  Provides anchor position, rotation, and computed cell footprint.
+//  Provides anchor position (half-cell precision), rotation,
+//  and computed sub-cell footprint used by the engine.
 //
 
 import SwiftUI
@@ -14,8 +15,8 @@ import SwiftUI
 public protocol GridPlaceable: AnyObject, Identifiable, Observable {
     associatedtype ItemType: GridItemType
     var itemType: ItemType? { get }
-    var anchorRow: Int { get set }
-    var anchorCol: Int { get set }
+    var anchorRow: Double { get set }
+    var anchorCol: Double { get set }
     var rotated: Bool { get set }
 }
 
@@ -26,10 +27,21 @@ public extension GridPlaceable {
     /// Height after applying rotation.
     var effectiveHeight: Int { rotated ? (itemType?.width ?? 1) : (itemType?.height ?? 1) }
 
-    /// All grid cells currently occupied by this item.
+    /// All half-cell sub-cells currently occupied by this item.
+    /// An item of size W×H spans (2W)×(2H) sub-cells of 0.5×0.5 each.
     var cells: [GridCell] {
-        (anchorRow ..< anchorRow + effectiveHeight).flatMap { r in
-            (anchorCol ..< anchorCol + effectiveWidth).map { GridCell(r, c: $0) }
+        let endR = anchorRow + Double(effectiveHeight)
+        let endC = anchorCol + Double(effectiveWidth)
+        var result: [GridCell] = []
+        var r = anchorRow
+        while r < endR {
+            var c = anchorCol
+            while c < endC {
+                result.append(GridCell(r, c: c))
+                c += 0.5
+            }
+            r += 0.5
         }
+        return result
     }
 }

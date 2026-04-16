@@ -32,8 +32,8 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
 // MARK: - Generic block for a single placed item
 
 struct GenericItemBlock<T: GridItemType>: View {
-    let anchorRow: Int
-    let anchorCol: Int
+    let anchorRow: Double
+    let anchorCol: Double
     let effWidth: Int
     let effHeight: Int
     let type: T
@@ -53,8 +53,8 @@ struct GenericItemBlock<T: GridItemType>: View {
     var body: some View {
         let w  = CGFloat(effWidth)  * cellSize - 4
         let h  = CGFloat(effHeight) * cellSize - 4
-        let ox = CGFloat(anchorCol) * cellSize + 2
-        let oy = CGFloat(anchorRow) * cellSize + 2
+        let ox = anchorCol * cellSize + 2
+        let oy = anchorRow * cellSize + 2
 
         RoundedRectangle(cornerRadius: 7)
             .fill(type.color.opacity(dimmed ? 0.08 : 0.16))

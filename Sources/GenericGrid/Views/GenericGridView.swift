@@ -17,7 +17,8 @@ public struct GenericGridView<Item: GridPlaceable>: View {
     let items: [Item]
 
     /// Callback to insert a new item (bridges to SwiftData / your storage).
-    let onInsert: (Item.ItemType, Int, Int, Bool) -> Void
+    /// Anchor coordinates are passed at half-cell precision (0, 0.5, 1, 1.5…).
+    let onInsert: (Item.ItemType, Double, Double, Bool) -> Void
     /// Optional callback for long-press deletion.
     var onDelete: ((Item) -> Void)?
     /// Optional callback when placing on an already occupied cell.
@@ -34,7 +35,7 @@ public struct GenericGridView<Item: GridPlaceable>: View {
 
     public init(engine: GridEngine<Item>,
                 items: [Item],
-                onInsert: @escaping (Item.ItemType, Int, Int, Bool) -> Void,
+                onInsert: @escaping (Item.ItemType, Double, Double, Bool) -> Void,
                 onDelete: ((Item) -> Void)? = nil,
                 onConflict: ((GridCell, Item) -> Void)? = nil) {
         self.engine = engine

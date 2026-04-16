@@ -14,7 +14,7 @@ import SwiftUI
 struct GridGestureLayer<Item: GridPlaceable>: View {
     let engine: GridEngine<Item>
     let cellSize: CGFloat
-    let onInsert: (Item.ItemType, Int, Int, Bool) -> Void
+    let onInsert: (Item.ItemType, Double, Double, Bool) -> Void
     var onConflict: ((GridCell, Item) -> Void)?
 
     private var W: CGFloat { CGFloat(engine.cols) * cellSize }
@@ -64,9 +64,14 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
 
     // MARK: - Helpers
 
+    /// Converts a touch point to the half-cell sub-cell it falls into.
+    /// Uses floor at 0.5 resolution so the pointer always picks the
+    /// sub-cell directly under the finger.
     private func toCell(_ pt: CGPoint) -> GridCell? {
-        let c = Int(pt.x / cellSize), r = Int(pt.y / cellSize)
-        guard c >= 0, c < engine.cols, r >= 0, r < engine.rows else { return nil }
+        let r = (pt.y / cellSize * 2).rounded(.down) / 2
+        let c = (pt.x / cellSize * 2).rounded(.down) / 2
+        let rowsD = Double(engine.rows), colsD = Double(engine.cols)
+        guard r >= 0, r + 0.5 <= rowsD, c >= 0, c + 0.5 <= colsD else { return nil }
         return GridCell(r, c: c)
     }
 }

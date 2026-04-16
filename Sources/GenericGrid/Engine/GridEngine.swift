@@ -73,13 +73,24 @@ public final class GridEngine<Item: GridPlaceable> {
 
     // MARK: - Footprint
 
-    /// Computes the set of cells that an item type would occupy at the given anchor.
+    /// Computes the set of half-cell sub-cells that an item type would occupy at the
+    /// given anchor. An item of size W×H produces (2W)×(2H) sub-cells of 0.5×0.5 each.
     public func footprint(anchor: GridCell, type: Item.ItemType, rotated: Bool) -> [GridCell] {
-        let w = rotated ? type.height : type.width
-        let h = rotated ? type.width  : type.height
-        return (anchor.r ..< anchor.r + h).flatMap { r in
-            (anchor.c ..< anchor.c + w).map { GridCell(r, c: $0) }
+        let w = Double(rotated ? type.height : type.width)
+        let h = Double(rotated ? type.width  : type.height)
+        let endR = anchor.r + h
+        let endC = anchor.c + w
+        var result: [GridCell] = []
+        var r = anchor.r
+        while r < endR {
+            var c = anchor.c
+            while c < endC {
+                result.append(GridCell(r, c: c))
+                c += 0.5
+            }
+            r += 0.5
         }
+        return result
     }
 
     // MARK: - Validation
@@ -89,9 +100,10 @@ public final class GridEngine<Item: GridPlaceable> {
     public func canPlace(anchor: GridCell, type: Item.ItemType, rotated: Bool,
                          excluding: Item? = nil) -> Bool {
         let cells = footprint(anchor: anchor, type: type, rotated: rotated)
+        let rowsD = Double(rows), colsD = Double(cols)
         return cells.allSatisfy { cell in
-            cell.r >= 0 && cell.r < rows &&
-            cell.c >= 0 && cell.c < cols &&
+            cell.r >= 0 && cell.r + 0.5 <= rowsD &&
+            cell.c >= 0 && cell.c + 0.5 <= colsD &&
             (map[cell] == nil || map[cell] === excluding) &&
             config.canAccept(cell: cell, typeName: type.name)
         }
@@ -105,7 +117,7 @@ public final class GridEngine<Item: GridPlaceable> {
 
     // MARK: - Placement (delegated via callbacks, SwiftData-agnostic)
 
-    public typealias InsertHandler = (Item.ItemType, Int, Int, Bool) -> Void
+    public typealias InsertHandler = (Item.ItemType, Double, Double, Bool) -> Void
     public typealias ConflictHandler = (GridCell, Item) -> Void
 
     /// Attempts to place the currently selected type at the given anchor.
@@ -114,9 +126,12 @@ public final class GridEngine<Item: GridPlaceable> {
                       onConflict: ConflictHandler? = nil) {
         guard let t = selectedType else { return }
         let cells = footprint(anchor: anchor, type: t, rotated: rotated)
+        let rowsD = Double(rows), colsD = Double(cols)
 
         // Bounds check
-        let inBounds = cells.allSatisfy { $0.r >= 0 && $0.r < rows && $0.c >= 0 && $0.c < cols }
+        let inBounds = cells.allSatisfy {
+            $0.r >= 0 && $0.r + 0.5 <= rowsD && $0.c >= 0 && $0.c + 0.5 <= colsD
+        }
         guard inBounds else { return }
 
         // Zone rules check

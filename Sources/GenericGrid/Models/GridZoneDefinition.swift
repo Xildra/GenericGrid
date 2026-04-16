@@ -45,9 +45,9 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
         set { colorHex = newValue.toHex() }
     }
 
-    /// Returns `true` if the given cell falls inside this zone.
+    /// Returns `true` if the given sub-cell (0.5×0.5) is fully inside this zone.
     public func contains(_ cell: GridCell) -> Bool {
-        Double(cell.r) >= rowStart && Double(cell.r) < rowEnd &&
-        Double(cell.c) >= colStart && Double(cell.c) < colEnd
+        cell.r >= rowStart && cell.r + 0.5 <= rowEnd &&
+        cell.c >= colStart && cell.c + 0.5 <= colEnd
     }
 }

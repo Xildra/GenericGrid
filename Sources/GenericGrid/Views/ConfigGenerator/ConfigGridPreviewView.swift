@@ -98,6 +98,7 @@ struct ConfigGridPreviewView: View {
             }
         }
         .background(.background.secondary)
+        .padding(.bottom, 16)
     }
 
     // MARK: - Zoom controls
