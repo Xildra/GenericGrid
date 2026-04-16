@@ -34,71 +34,69 @@ struct ConfigGridPreviewView: View {
             let totalW = W + margin
             let totalH = H + margin
 
-            ZStack(alignment: .bottomTrailing) {
-                ScrollView([.horizontal, .vertical], showsIndicators: true) {
-                    ZStack(alignment: .topLeading) {
-                        // Column labels (top)
-                        if hasLabels {
-                            HStack(spacing: 0) {
-                                ForEach(0..<config.cols, id: \.self) { c in
-                                    Text(config.colLabel(at: c))
-                                        .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
-                                        .foregroundStyle(.secondary)
-                                        .frame(width: cs, height: margin)
-                                }
-                            }
-                            .offset(x: margin, y: 0)
-                        }
-
-                        // Row labels (left)
-                        if hasLabels {
-                            VStack(spacing: 0) {
-                                ForEach(0..<config.rows, id: \.self) { r in
-                                    Text(config.rowLabel(at: r))
-                                        .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
-                                        .foregroundStyle(.secondary)
-                                        .frame(width: margin, height: cs)
-                                }
-                            }
-                            .offset(x: 0, y: margin)
-                        }
-
-                        // Grid + zones
-                        ZStack(alignment: .topLeading) {
-                            GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
-
-                            ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
-                                DraggableZoneView(
-                                    zone: zone,
-                                    cellSize: cs,
-                                    maxRows: config.rows,
-                                    maxCols: config.cols,
-                                    onUpdate: { updated in
-                                        config.zones[idx] = updated
-                                    },
-                                    onTap: {
-                                        onEditZone(zone)
-                                    }
-                                )
+            ScrollView([.horizontal, .vertical], showsIndicators: true) {
+                ZStack(alignment: .topLeading) {
+                    // Column labels (top)
+                    if hasLabels {
+                        HStack(spacing: 0) {
+                            ForEach(0..<config.cols, id: \.self) { c in
+                                Text(config.colLabel(at: c))
+                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: cs, height: margin)
                             }
                         }
-                        .frame(width: W, height: H)
-                        .offset(x: margin, y: margin)
+                        .offset(x: margin, y: 0)
                     }
-                    .frame(width: totalW, height: totalH)
-                    .frame(
-                        minWidth: geo.size.width,
-                        minHeight: geo.size.height
-                    )
-                }
 
-                // Zoom controls
-                zoomControls
-                    .padding(12)
+                    // Row labels (left)
+                    if hasLabels {
+                        VStack(spacing: 0) {
+                            ForEach(0..<config.rows, id: \.self) { r in
+                                Text(config.rowLabel(at: r))
+                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: margin, height: cs)
+                            }
+                        }
+                        .offset(x: 0, y: margin)
+                    }
+
+                    // Grid + zones
+                    ZStack(alignment: .topLeading) {
+                        GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
+
+                        ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
+                            DraggableZoneView(
+                                zone: zone,
+                                cellSize: cs,
+                                maxRows: config.rows,
+                                maxCols: config.cols,
+                                onUpdate: { updated in
+                                    config.zones[idx] = updated
+                                },
+                                onTap: {
+                                    onEditZone(zone)
+                                }
+                            )
+                        }
+                    }
+                    .frame(width: W, height: H)
+                    .offset(x: margin, y: margin)
+                }
+                .frame(width: totalW, height: totalH)
+                .frame(
+                    minWidth: geo.size.width,
+                    minHeight: geo.size.height,
+                    alignment: .center
+                )
+            }
+            .overlay(alignment: .bottomTrailing) {
+                zoomControls.padding(12)
             }
         }
         .background(.background.secondary)
-        .padding(.bottom, 16)
+        .safeAreaPadding(.bottom, 16)
     }
 
     // MARK: - Zoom controls
