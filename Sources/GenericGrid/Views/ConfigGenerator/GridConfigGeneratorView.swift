@@ -179,7 +179,7 @@ public struct GridConfigGeneratorView: View {
     }
 
     private func stepperWithField(_ label: String, value: Binding<Int>) -> some View {
-        Stepper(value: value, in: 1...999) {
+        Stepper(value: value, in: 1...GridDefaults.stepperMax) {
             HStack {
                 Text(label)
                 Spacer()
@@ -298,8 +298,8 @@ public struct GridConfigGeneratorView: View {
             showZoneSheet = true
         } label: {
             HStack {
-                Circle().fill(zone.color).frame(width: 12, height: 12)
-                VStack(alignment: .leading, spacing: 2) {
+                Circle().fill(zone.color).frame(width: GridLayout.colorCircleSize, height: GridLayout.colorCircleSize)
+                VStack(alignment: .leading, spacing: GridLayout.zoneLabelSpacing) {
                     Text(zone.label).font(.headline)
                     Text(zone.rule.rawValue)
                         .font(.caption).foregroundStyle(.secondary)
@@ -327,7 +327,7 @@ public struct GridConfigGeneratorView: View {
         case .success(let url):
             sourceURL = url
             withAnimation { saveSuccess = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + GridAnimation.saveResetDelay) {
                 withAnimation { saveSuccess = false }
             }
             onExport?(url)

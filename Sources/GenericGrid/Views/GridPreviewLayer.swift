@@ -19,12 +19,12 @@ struct GridPreviewLayer: View {
 
     var body: some View {
         if let rect = boundingRect {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(isValid ? Color.green.opacity(0.22) : Color.red.opacity(0.2))
+            RoundedRectangle(cornerRadius: GridCornerRadius.zone)
+                .fill(isValid ? Color.green.opacity(GridOpacity.previewValidFill) : Color.red.opacity(GridOpacity.previewInvalidFill))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(isValid ? Color.green.opacity(0.7) : Color.red.opacity(0.6),
-                                lineWidth: 1.2)
+                    RoundedRectangle(cornerRadius: GridCornerRadius.zone)
+                        .stroke(isValid ? Color.green.opacity(GridOpacity.previewValidStroke) : Color.red.opacity(GridOpacity.previewInvalidStroke),
+                                lineWidth: GridLineWidth.preview)
                 )
                 .frame(width: rect.width, height: rect.height)
                 .offset(x: rect.minX, y: rect.minY)
@@ -36,11 +36,12 @@ struct GridPreviewLayer: View {
     private var boundingRect: CGRect? {
         guard !cells.isEmpty else { return nil }
         let rs = cells.map(\.r), cs = cells.map(\.c)
-        let minR = rs.min()!, maxR = rs.max()! + 0.5   // each sub-cell spans 0.5
-        let minC = cs.min()!, maxC = cs.max()! + 0.5
-        return CGRect(x: minC * cellSize + 1,
-                      y: minR * cellSize + 1,
-                      width:  (maxC - minC) * cellSize - 2,
-                      height: (maxR - minR) * cellSize - 2)
+        let minR = rs.min()!, maxR = rs.max()! + GridGesture.halfCell
+        let minC = cs.min()!, maxC = cs.max()! + GridGesture.halfCell
+        let inset = GridLayout.previewInset
+        return CGRect(x: minC * cellSize + inset,
+                      y: minR * cellSize + inset,
+                      width:  (maxC - minC) * cellSize - inset * 2,
+                      height: (maxR - minR) * cellSize - inset * 2)
     }
 }

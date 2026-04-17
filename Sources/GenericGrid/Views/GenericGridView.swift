@@ -24,12 +24,12 @@ public struct GenericGridView<Item: GridPlaceable>: View {
     /// Optional callback when placing on an already occupied cell.
     var onConflict: ((GridCell, Item) -> Void)?
 
-    @State private var cs: CGFloat = 44
+    @State private var cs: CGFloat = GridCellSize.default
 
     // MARK: - Layout helpers
 
     private var hasLabels: Bool { engine.config.rowLabels != nil || engine.config.colLabels != nil }
-    private var labelMargin: CGFloat { hasLabels ? 28 : 0 }
+    private var labelMargin: CGFloat { hasLabels ? GridLayout.labelMargin : 0 }
     private var W: CGFloat { CGFloat(engine.cols) * cs }
     private var H: CGFloat { CGFloat(engine.rows) * cs }
 
@@ -71,7 +71,7 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                     .offset(x: labelMargin, y: labelMargin)
                 }
                 .frame(width: W + labelMargin, height: H + labelMargin)
-                .padding(16)
+                .padding(GridLayout.gridPadding)
             }
             .onAppear { fitCell(geo) }
             .onChange(of: geo.size)      { _, _ in fitCell(geo) }
@@ -87,7 +87,7 @@ public struct GenericGridView<Item: GridPlaceable>: View {
         HStack(spacing: 0) {
             ForEach(0..<engine.cols, id: \.self) { c in
                 Text(engine.config.colLabel(at: c))
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(.system(size: GridFont.gridLabel, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .frame(width: cs, height: labelMargin)
             }
@@ -100,7 +100,7 @@ public struct GenericGridView<Item: GridPlaceable>: View {
         VStack(spacing: 0) {
             ForEach(0..<engine.rows, id: \.self) { r in
                 Text(engine.config.rowLabel(at: r))
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(.system(size: GridFont.gridLabel, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .frame(width: labelMargin, height: cs)
             }
@@ -110,9 +110,9 @@ public struct GenericGridView<Item: GridPlaceable>: View {
     // MARK: - Dynamic cell sizing
 
     private func fitCell(_ geo: GeometryProxy) {
-        let margin = labelMargin + 32
+        let margin = labelMargin + GridCellSize.fitMargin
         let byCol = (geo.size.width  - margin) / CGFloat(engine.cols)
         let byRow = (geo.size.height - margin) / CGFloat(engine.rows)
-        cs = min(60, max(28, min(byCol, byRow)))
+        cs = min(GridCellSize.max, max(GridCellSize.min, min(byCol, byRow)))
     }
 }

@@ -29,7 +29,7 @@ struct ZoneEditorSheet: View {
         self.onSave = onSave
         self.isNew = zone == nil
 		
-		self.zone = zone ?? GridZoneDefinition(rowEnd: min(3, Double(maxRows)), colEnd: min(3, Double(maxCols)))
+		self.zone = zone ?? GridZoneDefinition(rowEnd: min(GridDefaults.newZoneEnd, Double(maxRows)), colEnd: min(GridDefaults.newZoneEnd, Double(maxCols)))
     }
 
     var body: some View {
@@ -103,7 +103,7 @@ struct ZoneEditorSheet: View {
     }
 
     private func stepperWithField(_ label: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {
-        Stepper(value: value, in: range, step: 0.5) {
+        Stepper(value: value, in: range, step: GridGesture.halfCell) {
             HStack {
                 Text(label)
                 Spacer()

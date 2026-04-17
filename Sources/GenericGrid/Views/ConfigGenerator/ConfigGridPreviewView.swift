@@ -15,18 +15,17 @@ struct ConfigGridPreviewView: View {
     @Binding var config: GridCanvasConfig
     var onEditZone: (GridZoneDefinition) -> Void
 
-    @State private var zoom: CGFloat = 1.0
+    @State private var zoom: CGFloat = GridZoom.default
 
     private var effectiveZoom: CGFloat { zoom }
 
     private var hasLabels: Bool {
         config.rowLabels != nil || config.colLabels != nil
     }
-    private let labelMargin: CGFloat = 28
 
     var body: some View {
         GeometryReader { geo in
-            let margin: CGFloat = hasLabels ? labelMargin : 0
+            let margin: CGFloat = hasLabels ? GridLayout.labelMargin : 0
             let baseCS = baseCellSize(in: geo.size, margin: margin)
             let cs = baseCS * effectiveZoom
             let W  = CGFloat(config.cols) * cs
@@ -41,7 +40,7 @@ struct ConfigGridPreviewView: View {
                         HStack(spacing: 0) {
                             ForEach(0..<config.cols, id: \.self) { c in
                                 Text(config.colLabel(at: c))
-                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
+                                    .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax), weight: .medium, design: .rounded))
                                     .foregroundStyle(.secondary)
                                     .frame(width: cs, height: margin)
                             }
@@ -54,7 +53,7 @@ struct ConfigGridPreviewView: View {
                         VStack(spacing: 0) {
                             ForEach(0..<config.rows, id: \.self) { r in
                                 Text(config.rowLabel(at: r))
-                                    .font(.system(size: min(cs * 0.3, 12), weight: .medium, design: .rounded))
+                                    .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax), weight: .medium, design: .rounded))
                                     .foregroundStyle(.secondary)
                                     .frame(width: margin, height: cs)
                             }
@@ -92,45 +91,45 @@ struct ConfigGridPreviewView: View {
                 )
             }
             .overlay(alignment: .bottomTrailing) {
-                zoomControls.padding(12)
+                zoomControls.padding(GridLayout.zoomControlsPadding)
             }
         }
         .background(.background.secondary)
-        .safeAreaPadding(.bottom, 30)
+        .safeAreaPadding(.bottom, GridLayout.previewBottomInset)
     }
 
     // MARK: - Zoom controls
 
     private var zoomControls: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: GridLayout.statsSpacing) {
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { zoom = min(zoom * 1.3, 5.0) }
+                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) { zoom = min(zoom * GridZoom.step, GridZoom.max) }
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 32, height: 32)
+                    .font(.system(size: GridFont.zoomIcon, weight: .semibold))
+                    .frame(width: GridLayout.zoomButtonSize, height: GridLayout.zoomButtonSize)
             }
 
             Text("\(Int(effectiveZoom * 100))%")
-                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .font(.system(size: GridFont.zoomPercent, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
 
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { zoom = max(zoom / 1.3, 0.2) }
+                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) { zoom = max(zoom / GridZoom.step, GridZoom.min) }
             } label: {
                 Image(systemName: "minus")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 32, height: 32)
+                    .font(.system(size: GridFont.zoomIcon, weight: .semibold))
+                    .frame(width: GridLayout.zoomButtonSize, height: GridLayout.zoomButtonSize)
             }
 
-            Divider().frame(width: 20)
+            Divider().frame(width: GridLayout.zoomDividerWidth)
 
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { zoom = 1.0 }
+                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) { zoom = GridZoom.default }
             } label: {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .frame(width: 32, height: 32)
+                    .font(.system(size: GridFont.zoomResetIcon, weight: .semibold))
+                    .frame(width: GridLayout.zoomButtonSize, height: GridLayout.zoomButtonSize)
             }
         }
         .buttonStyle(.bordered)
@@ -142,17 +141,17 @@ struct ConfigGridPreviewView: View {
 
     /// Minimum cell width required so the widest column label fits.
     private var minCellWidthForLabels: CGFloat {
-        guard config.colLabels != nil else { return 8 }
+        guard config.colLabels != nil else { return GridCellSize.absoluteMin }
         #if canImport(UIKit)
-        let font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        let font = UIFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
         #elseif canImport(AppKit)
-        let font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        let font = NSFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
         #endif
         let maxWidth = (0..<config.cols).map { c in
             let label = config.colLabel(at: c)
             return (label as NSString).size(withAttributes: [.font: font]).width
         }.max() ?? 0
-        return maxWidth + 8
+        return maxWidth + GridCellSize.labelPadding
     }
 
     /// Base cell size that fits the grid in the available space at zoom 1×.
@@ -163,7 +162,7 @@ struct ConfigGridPreviewView: View {
         let byCol = availW / CGFloat(config.cols)
         let byRow = availH / CGFloat(config.rows)
         let fitSize = min(byCol, byRow)
-        return max(minCellWidthForLabels, max(8, fitSize))
+        return max(minCellWidthForLabels, max(GridCellSize.absoluteMin, fitSize))
     }
 }
 
@@ -204,18 +203,16 @@ struct DraggableZoneView: View {
     private var w: CGFloat { (draft.colEnd - draft.colStart) * cellSize }
     private var h: CGFloat { (draft.rowEnd - draft.rowStart) * cellSize }
 
-    private let handleSize: CGFloat = 14
-
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(draft.color.opacity(0.15))
-            RoundedRectangle(cornerRadius: 4)
+            RoundedRectangle(cornerRadius: GridCornerRadius.zone)
+                .fill(draft.color.opacity(GridOpacity.zoneFillPreview))
+            RoundedRectangle(cornerRadius: GridCornerRadius.zone)
                 .strokeBorder(strokeColor, style: strokeStyle)
 
-            VStack(spacing: 2) {
+            VStack(spacing: GridLayout.zoneLabelSpacing) {
                 Text(draft.label)
-                    .font(.system(size: min(w / 8, 11), weight: .medium))
+                    .font(.system(size: min(w / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax), weight: .medium))
                     .foregroundStyle(.secondary)
                 ruleIcon
             }
@@ -235,7 +232,7 @@ struct DraggableZoneView: View {
     // MARK: - Move gesture
 
     private var moveGesture: some Gesture {
-        DragGesture(minimumDistance: 4, coordinateSpace: .global)
+        DragGesture(minimumDistance: GridGesture.moveDragMinimum, coordinateSpace: .global)
             .updating($anchor) { _, state, _ in
                 if state == nil { state = draft }
             }
@@ -269,11 +266,11 @@ struct DraggableZoneView: View {
     private func resizeHandle(edge: Edge) -> some View {
         let isHorizontal = (edge == .top || edge == .bottom)
 
-        RoundedRectangle(cornerRadius: 2)
-            .fill(Color.accentColor.opacity(0.6))
+        RoundedRectangle(cornerRadius: GridCornerRadius.resizeHandle)
+            .fill(Color.accentColor.opacity(GridOpacity.resizeHandle))
             .frame(
-                width:  isHorizontal ? min(w * 0.4, 36) : handleSize * 0.45,
-                height: isHorizontal ? handleSize * 0.45 : min(h * 0.4, 36)
+                width:  isHorizontal ? min(w * GridHandleFactor.lengthFraction, GridLayout.zoneHandleMaxLength) : GridLayout.zoneHandleSize * GridHandleFactor.thickness,
+                height: isHorizontal ? GridLayout.zoneHandleSize * GridHandleFactor.thickness : min(h * GridHandleFactor.lengthFraction, GridLayout.zoneHandleMaxLength)
             )
             .position(handlePosition(edge: edge))
             .gesture(resizeGesture(edge: edge))
@@ -289,7 +286,7 @@ struct DraggableZoneView: View {
     }
 
     private func resizeGesture(edge: Edge) -> some Gesture {
-        DragGesture(minimumDistance: 2, coordinateSpace: .global)
+        DragGesture(minimumDistance: GridGesture.resizeDragMinimum, coordinateSpace: .global)
             .updating($anchor) { _, state, _ in
                 if state == nil { state = draft }
             }
@@ -299,13 +296,13 @@ struct DraggableZoneView: View {
                 let dy = Double(v.translation.height / cellSize)
                 switch edge {
                 case .top:
-                    draft.rowStart = clamp(start.rowStart + dy, lo: 0, hi: start.rowEnd - 0.5)
+                    draft.rowStart = clamp(start.rowStart + dy, lo: 0, hi: start.rowEnd - GridGesture.minZoneSpan)
                 case .bottom:
-                    draft.rowEnd   = clamp(start.rowEnd + dy, lo: start.rowStart + 0.5, hi: Double(maxRows))
+                    draft.rowEnd   = clamp(start.rowEnd + dy, lo: start.rowStart + GridGesture.minZoneSpan, hi: Double(maxRows))
                 case .leading:
-                    draft.colStart = clamp(start.colStart + dx, lo: 0, hi: start.colEnd - 0.5)
+                    draft.colStart = clamp(start.colStart + dx, lo: 0, hi: start.colEnd - GridGesture.minZoneSpan)
                 case .trailing:
-                    draft.colEnd   = clamp(start.colEnd + dx, lo: start.colStart + 0.5, hi: Double(maxCols))
+                    draft.colEnd   = clamp(start.colEnd + dx, lo: start.colStart + GridGesture.minZoneSpan, hi: Double(maxCols))
                 }
             }
             .onEnded { _ in
@@ -321,19 +318,19 @@ struct DraggableZoneView: View {
 
     private var strokeColor: Color {
         switch draft.rule {
-        case .locked:     return .orange.opacity(0.5)
-        case .forbidden:  return .red.opacity(0.4)
-        case .restricted: return .blue.opacity(0.4)
-        case .free:       return draft.color.opacity(0.3)
+        case .locked:     return .orange.opacity(GridOpacity.zoneStrokeLocked)
+        case .forbidden:  return .red.opacity(GridOpacity.zoneStrokeForbidden)
+        case .restricted: return .blue.opacity(GridOpacity.zoneStrokeRestricted)
+        case .free:       return draft.color.opacity(GridOpacity.zoneStrokeFree)
         }
     }
 
     private var strokeStyle: StrokeStyle {
         switch draft.rule {
         case .locked, .forbidden:
-            return StrokeStyle(lineWidth: 1.5, dash: [6, 3])
+            return StrokeStyle(lineWidth: GridLineWidth.zoneDashed, dash: GridDash.zoneLocked)
         default:
-            return StrokeStyle(lineWidth: 1)
+            return StrokeStyle(lineWidth: GridLineWidth.zoneDefault)
         }
     }
 
@@ -342,13 +339,13 @@ struct DraggableZoneView: View {
         switch draft.rule {
         case .locked:
             Image(systemName: "lock.fill")
-                .font(.system(size: 9)).foregroundStyle(.secondary.opacity(0.6))
+                .font(.system(size: GridFont.ruleIcon)).foregroundStyle(.secondary.opacity(GridOpacity.ruleIconLock))
         case .forbidden:
             Image(systemName: "nosign")
-                .font(.system(size: 9)).foregroundStyle(.red.opacity(0.5))
+                .font(.system(size: GridFont.ruleIcon)).foregroundStyle(.red.opacity(GridOpacity.ruleIconForbidden))
         case .restricted:
             Image(systemName: "person.badge.key")
-                .font(.system(size: 9)).foregroundStyle(.blue.opacity(0.5))
+                .font(.system(size: GridFont.ruleIcon)).foregroundStyle(.blue.opacity(GridOpacity.ruleIconRestricted))
         case .free:
             EmptyView()
         }

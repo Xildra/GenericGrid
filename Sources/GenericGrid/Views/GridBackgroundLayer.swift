@@ -20,23 +20,23 @@ struct GridBackgroundLayer: View {
 
     var body: some View {
         Canvas { ctx, size in
-            let sep = GraphicsContext.Shading.color(.secondary.opacity(0.3))
+            let sep = GraphicsContext.Shading.color(.secondary.opacity(GridOpacity.gridLine))
             for r in 0...rows {
                 var p = Path(); let y = CGFloat(r) * cellSize
                 p.move(to: .init(x: 0, y: y))
                 p.addLine(to: .init(x: size.width, y: y))
-                ctx.stroke(p, with: sep, lineWidth: 0.5)
+                ctx.stroke(p, with: sep, lineWidth: GridLineWidth.gridLine)
             }
             for c in 0...cols {
                 var p = Path(); let x = CGFloat(c) * cellSize
                 p.move(to: .init(x: x, y: 0))
                 p.addLine(to: .init(x: x, y: size.height))
-                ctx.stroke(p, with: sep, lineWidth: 0.5)
+                ctx.stroke(p, with: sep, lineWidth: GridLineWidth.gridLine)
             }
         }
         .frame(width: W, height: H)
         .background(.background)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.separator, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: GridCornerRadius.grid))
+        .overlay(RoundedRectangle(cornerRadius: GridCornerRadius.grid).stroke(.separator, lineWidth: GridLineWidth.gridLine))
     }
 }

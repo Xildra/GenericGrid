@@ -51,28 +51,30 @@ struct GenericItemBlock<T: GridItemType>: View {
     }
 
     var body: some View {
-        let w  = CGFloat(effWidth)  * cellSize - 4
-        let h  = CGFloat(effHeight) * cellSize - 4
-        let ox = anchorCol * cellSize + 2
-        let oy = anchorRow * cellSize + 2
+        let inset = GridLayout.itemBlockInset
+        let w  = CGFloat(effWidth)  * cellSize - inset * 2
+        let h  = CGFloat(effHeight) * cellSize - inset * 2
+        let ox = anchorCol * cellSize + inset
+        let oy = anchorRow * cellSize + inset
 
-        RoundedRectangle(cornerRadius: 7)
-            .fill(type.color.opacity(dimmed ? 0.08 : 0.16))
+        RoundedRectangle(cornerRadius: GridCornerRadius.item)
+            .fill(type.color.opacity(dimmed ? GridOpacity.itemDimmedFill : GridOpacity.itemFill))
             .overlay(
-                RoundedRectangle(cornerRadius: 7)
-                    .stroke(type.color.opacity(dimmed ? 0.3 : 1), lineWidth: dimmed ? 1 : 1.5)
+                RoundedRectangle(cornerRadius: GridCornerRadius.item)
+                    .stroke(type.color.opacity(dimmed ? GridOpacity.itemStrokeDimmed : 1),
+                            lineWidth: dimmed ? GridLineWidth.itemDimmed : GridLineWidth.item)
             )
             .overlay(
                 VStack(spacing: 1) {
                     Text(type.name)
                         .font(.system(size: fontSize(w, h), weight: .semibold))
-                        .foregroundStyle(type.color.opacity(dimmed ? 0.4 : 1))
+                        .foregroundStyle(type.color.opacity(dimmed ? GridOpacity.itemTextDimmed : 1))
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                         .minimumScaleFactor(0.5)
                     Text(type.label)
-                        .font(.system(size: max(fontSize(w, h) - 2, 7), weight: .regular, design: .monospaced))
-                        .foregroundStyle(type.color.opacity(dimmed ? 0.3 : 0.6))
+                        .font(.system(size: max(fontSize(w, h) - GridFont.itemSubtitleOffset, GridFont.itemSubtitleMin), weight: .regular, design: .monospaced))
+                        .foregroundStyle(type.color.opacity(dimmed ? GridOpacity.itemSubtextDimmed : GridOpacity.itemSubtext))
                 }
                 .padding(3)
             )
@@ -81,6 +83,6 @@ struct GenericItemBlock<T: GridItemType>: View {
     }
 
     private func fontSize(_ w: CGFloat, _ h: CGFloat) -> CGFloat {
-        min(w / 4, h / 2.5, 12)
+        min(w / GridFont.itemNameWidthDiv, h / GridFont.itemNameHeightDiv, GridFont.itemNameMax)
     }
 }

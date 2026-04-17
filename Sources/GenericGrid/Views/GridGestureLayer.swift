@@ -71,7 +71,7 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
         let r = (pt.y / cellSize * 2).rounded(.down) / 2
         let c = (pt.x / cellSize * 2).rounded(.down) / 2
         let rowsD = Double(engine.rows), colsD = Double(engine.cols)
-        guard r >= 0, r + 0.5 <= rowsD, c >= 0, c + 0.5 <= colsD else { return nil }
+        guard r >= 0, r + GridGesture.halfCell <= rowsD, c >= 0, c + GridGesture.halfCell <= colsD else { return nil }
         return GridCell(r, c: c)
     }
 }

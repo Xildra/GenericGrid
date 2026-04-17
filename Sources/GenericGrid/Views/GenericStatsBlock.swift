@@ -16,7 +16,7 @@ public struct GenericStatsBlock<Item: GridPlaceable>: View {
     public init(engine: GridEngine<Item>) { self.engine = engine }
 
     public var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: GridLayout.statsSpacing) {
             HStack {
                 stat("Used",  value: "\(engine.usedCells)")
                 Divider()
@@ -27,15 +27,15 @@ public struct GenericStatsBlock<Item: GridPlaceable>: View {
             .fixedSize(horizontal: false, vertical: true)
 
             ProgressView(value: engine.fillPct)
-                .tint(engine.fillPct < 0.5 ? .green : engine.fillPct < 0.8 ? .orange : .red)
+                .tint(engine.fillPct < GridOpacity.statsFillMedium ? .green : engine.fillPct < GridOpacity.statsFillHigh ? .orange : .red)
             Text("\(Int(engine.fillPct * 100))% filled")
                 .font(.caption).foregroundStyle(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, GridLayout.statsVerticalPadding)
     }
 
     private func stat(_ label: String, value: String) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: GridLayout.statItemSpacing) {
             Text(value).font(.headline).monospacedDigit()
             Text(label).font(.caption2).foregroundStyle(.secondary)
         }

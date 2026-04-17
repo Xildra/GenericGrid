@@ -21,23 +21,23 @@ struct GridZoneOverlayLayer: View {
             let h = (zone.rowEnd - zone.rowStart) * cellSize
 
             ZStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(zone.color.opacity(0.12))
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: GridCornerRadius.zone)
+                    .fill(zone.color.opacity(GridOpacity.zoneFill))
+                RoundedRectangle(cornerRadius: GridCornerRadius.zone)
                     .strokeBorder(strokeColor(for: zone), style: strokeStyle(for: zone))
 
-                VStack(spacing: 2) {
+                VStack(spacing: GridLayout.zoneLabelSpacing) {
                     Text(zone.label)
-                        .font(.system(size: min(w / 8, 11), weight: .medium))
+                        .font(.system(size: min(w / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax), weight: .medium))
                         .foregroundStyle(.secondary)
                     if zone.rule == .locked {
                         Image(systemName: "lock.fill")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.secondary.opacity(0.6))
+                            .font(.system(size: GridFont.ruleIcon))
+                            .foregroundStyle(.secondary.opacity(GridOpacity.ruleIconLock))
                     } else if zone.rule == .forbidden {
                         Image(systemName: "nosign")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.red.opacity(0.5))
+                            .font(.system(size: GridFont.ruleIcon))
+                            .foregroundStyle(.red.opacity(GridOpacity.ruleIconForbidden))
                     }
                 }
             }
@@ -51,19 +51,19 @@ struct GridZoneOverlayLayer: View {
 
     private func strokeColor(for zone: GridZoneDefinition) -> Color {
         switch zone.rule {
-        case .locked:     return .orange.opacity(0.5)
-        case .forbidden:  return .red.opacity(0.4)
-        case .restricted: return .blue.opacity(0.4)
-        case .free:       return zone.color.opacity(0.3)
+        case .locked:     return .orange.opacity(GridOpacity.zoneStrokeLocked)
+        case .forbidden:  return .red.opacity(GridOpacity.zoneStrokeForbidden)
+        case .restricted: return .blue.opacity(GridOpacity.zoneStrokeRestricted)
+        case .free:       return zone.color.opacity(GridOpacity.zoneStrokeFree)
         }
     }
 
     private func strokeStyle(for zone: GridZoneDefinition) -> StrokeStyle {
         switch zone.rule {
         case .locked, .forbidden:
-            return StrokeStyle(lineWidth: 1.5, dash: [6, 3])
+            return StrokeStyle(lineWidth: GridLineWidth.zoneDashed, dash: GridDash.zoneLocked)
         default:
-            return StrokeStyle(lineWidth: 1)
+            return StrokeStyle(lineWidth: GridLineWidth.zoneDefault)
         }
     }
 }

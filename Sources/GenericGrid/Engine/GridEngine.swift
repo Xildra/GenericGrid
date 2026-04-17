@@ -86,9 +86,9 @@ public final class GridEngine<Item: GridPlaceable> {
             var c = anchor.c
             while c < endC {
                 result.append(GridCell(r, c: c))
-                c += 0.5
+                c += GridGesture.halfCell
             }
-            r += 0.5
+            r += GridGesture.halfCell
         }
         return result
     }
@@ -102,8 +102,8 @@ public final class GridEngine<Item: GridPlaceable> {
         let cells = footprint(anchor: anchor, type: type, rotated: rotated)
         let rowsD = Double(rows), colsD = Double(cols)
         return cells.allSatisfy { cell in
-            cell.r >= 0 && cell.r + 0.5 <= rowsD &&
-            cell.c >= 0 && cell.c + 0.5 <= colsD &&
+            cell.r >= 0 && cell.r + GridGesture.halfCell <= rowsD &&
+            cell.c >= 0 && cell.c + GridGesture.halfCell <= colsD &&
             (map[cell] == nil || map[cell] === excluding) &&
             config.canAccept(cell: cell, typeName: type.name)
         }
@@ -130,7 +130,7 @@ public final class GridEngine<Item: GridPlaceable> {
 
         // Bounds check
         let inBounds = cells.allSatisfy {
-            $0.r >= 0 && $0.r + 0.5 <= rowsD && $0.c >= 0 && $0.c + 0.5 <= colsD
+            $0.r >= 0 && $0.r + GridGesture.halfCell <= rowsD && $0.c >= 0 && $0.c + GridGesture.halfCell <= colsD
         }
         guard inBounds else { return }
 

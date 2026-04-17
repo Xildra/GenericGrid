@@ -21,7 +21,7 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// Optional labels for each column (index 0 = column 0).
     public var colLabels: [String]?
 
-    public init(rows: Int = 10, cols: Int = 14,
+    public init(rows: Int = GridDefaults.rows, cols: Int = GridDefaults.cols,
                 zones: [GridZoneDefinition] = [], title: String? = nil,
                 rowLabels: [String]? = nil, colLabels: [String]? = nil) {
         self.rows = rows; self.cols = cols
@@ -81,7 +81,7 @@ public struct GridCanvasConfig: Codable, Sendable {
 
     // MARK: - Default config (empty grid)
 
-    public static let `default` = GridCanvasConfig(rows: 10, cols: 14, title: "Empty grid")
+    public static let `default` = GridCanvasConfig(rows: GridDefaults.rows, cols: GridDefaults.cols, title: "Empty grid")
 
     // MARK: - Bundle discovery
 

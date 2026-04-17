@@ -38,9 +38,9 @@ public extension GridPlaceable {
             var c = anchorCol
             while c < endC {
                 result.append(GridCell(r, c: c))
-                c += 0.5
+                c += GridGesture.halfCell
             }
-            r += 0.5
+            r += GridGesture.halfCell
         }
         return result
     }
