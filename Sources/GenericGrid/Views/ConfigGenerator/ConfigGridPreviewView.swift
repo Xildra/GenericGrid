@@ -17,152 +17,24 @@ struct ConfigGridPreviewView: View {
 
     @State private var zoom: CGFloat = GridZoom.default
 
-    private var effectiveZoom: CGFloat { zoom }
-
-    private var hasLabels: Bool {
-        config.rowLabels != nil || config.colLabels != nil
-    }
-
     var body: some View {
-        GeometryReader { geo in
-            let margin: CGFloat = hasLabels ? GridLayout.labelMargin : 0
-            let baseCS = baseCellSize(in: geo.size, margin: margin)
-            let cs = baseCS * effectiveZoom
-            let W  = CGFloat(config.cols) * cs
-            let H  = CGFloat(config.rows) * cs
-            let totalW = W + margin
-            let totalH = H + margin
+        ZoomableGridScaffold(config: config, zoom: $zoom) { cs in
+            ZStack(alignment: .topLeading) {
+                GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
 
-            ScrollView([.horizontal, .vertical], showsIndicators: true) {
-                ZStack(alignment: .topLeading) {
-                    // Column labels (top)
-                    if hasLabels {
-                        HStack(spacing: 0) {
-                            ForEach(0..<config.cols, id: \.self) { c in
-                                Text(config.colLabel(at: c))
-                                    .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax), weight: .medium, design: .rounded))
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: cs, height: margin)
-                            }
-                        }
-                        .offset(x: margin, y: 0)
-                    }
-
-                    // Row labels (left)
-                    if hasLabels {
-                        VStack(spacing: 0) {
-                            ForEach(0..<config.rows, id: \.self) { r in
-                                Text(config.rowLabel(at: r))
-                                    .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax), weight: .medium, design: .rounded))
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: margin, height: cs)
-                            }
-                        }
-                        .offset(x: 0, y: margin)
-                    }
-
-                    // Grid + zones
-                    ZStack(alignment: .topLeading) {
-                        GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
-
-                        ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
-                            DraggableZoneView(
-                                zone: zone,
-                                cellSize: cs,
-                                maxRows: config.rows,
-                                maxCols: config.cols,
-                                onUpdate: { updated in
-                                    config.zones[idx] = updated
-                                },
-                                onTap: {
-                                    onEditZone(zone)
-                                }
-                            )
-                        }
-                    }
-                    .frame(width: W, height: H)
-                    .offset(x: margin, y: margin)
+                ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
+                    DraggableZoneView(
+                        zone: zone,
+                        cellSize: cs,
+                        maxRows: config.rows,
+                        maxCols: config.cols,
+                        onUpdate: { updated in config.zones[idx] = updated },
+                        onTap:    { onEditZone(zone) }
+                    )
                 }
-                .frame(width: totalW, height: totalH)
-                .frame(
-                    minWidth: geo.size.width,
-                    minHeight: geo.size.height,
-                    alignment: .center
-                )
-            }
-            .overlay(alignment: .bottomTrailing) {
-                zoomControls.padding(GridLayout.zoomControlsPadding)
             }
         }
-        .background(.background.secondary)
         .safeAreaPadding(.bottom, GridLayout.previewBottomInset)
-    }
-
-    // MARK: - Zoom controls
-
-    private var zoomControls: some View {
-        VStack(spacing: GridLayout.statsSpacing) {
-            Button {
-                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) { zoom = min(zoom * GridZoom.step, GridZoom.max) }
-            } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: GridFont.zoomIcon, weight: .semibold))
-                    .frame(width: GridLayout.zoomButtonSize, height: GridLayout.zoomButtonSize)
-            }
-
-            Text("\(Int(effectiveZoom * 100))%")
-                .font(.system(size: GridFont.zoomPercent, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
-
-            Button {
-                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) { zoom = max(zoom / GridZoom.step, GridZoom.min) }
-            } label: {
-                Image(systemName: "minus")
-                    .font(.system(size: GridFont.zoomIcon, weight: .semibold))
-                    .frame(width: GridLayout.zoomButtonSize, height: GridLayout.zoomButtonSize)
-            }
-
-            Divider().frame(width: GridLayout.zoomDividerWidth)
-
-            Button {
-                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) { zoom = GridZoom.default }
-            } label: {
-                Image(systemName: "arrow.up.left.and.arrow.down.right")
-                    .font(.system(size: GridFont.zoomResetIcon, weight: .semibold))
-                    .frame(width: GridLayout.zoomButtonSize, height: GridLayout.zoomButtonSize)
-            }
-        }
-        .buttonStyle(.bordered)
-        .background(.ultraThinMaterial)
-		.clipShape(.buttonBorder)
-    }
-
-    // MARK: - Cell size
-
-    /// Minimum cell width required so the widest column label fits.
-    private var minCellWidthForLabels: CGFloat {
-        guard config.colLabels != nil else { return GridCellSize.absoluteMin }
-        #if canImport(UIKit)
-        let font = UIFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
-        #elseif canImport(AppKit)
-        let font = NSFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
-        #endif
-        let maxWidth = (0..<config.cols).map { c in
-            let label = config.colLabel(at: c)
-            return (label as NSString).size(withAttributes: [.font: font]).width
-        }.max() ?? 0
-        return maxWidth + GridCellSize.labelPadding
-    }
-
-    /// Base cell size that fits the grid in the available space at zoom 1×.
-    /// Ensures cells are wide enough to display column labels.
-    private func baseCellSize(in size: CGSize, margin: CGFloat) -> CGFloat {
-        let availW = size.width  - margin
-        let availH = size.height - margin
-        let byCol = availW / CGFloat(config.cols)
-        let byRow = availH / CGFloat(config.rows)
-        let fitSize = min(byCol, byRow)
-        return max(minCellWidthForLabels, max(GridCellSize.absoluteMin, fitSize))
     }
 }
 

@@ -219,4 +219,11 @@ public final class GridEngine<Item: GridPlaceable> {
         if case .moving(let item, _, _) = interaction { return item }
         return nil
     }
+
+    /// `true` while the user is previewing a placement or moving an item.
+    /// Used by the view layer to disable scrolling during direct manipulation.
+    public var isInteracting: Bool {
+        if case .idle = interaction { return false }
+        return true
+    }
 }

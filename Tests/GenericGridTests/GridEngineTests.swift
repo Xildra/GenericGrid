@@ -376,4 +376,48 @@ struct GridEngineTests {
         engine.beginMove(item: item, at: GridCell(0, c: 0))
         #expect(engine.movingItem === item)
     }
+
+    // MARK: - isInteracting
+
+    @Test("isInteracting is false when idle")
+    func isInteractingIdle() {
+        let engine = makeEngine()
+        #expect(!engine.isInteracting)
+    }
+
+    @Test("isInteracting is true when previewing")
+    func isInteractingPreviewing() {
+        let engine = makeEngine()
+        engine.interaction = .previewing(anchor: GridCell(0, c: 0))
+        #expect(engine.isInteracting)
+    }
+
+    @Test("isInteracting is true when moving")
+    func isInteractingMoving() {
+        let engine = makeEngine()
+        let item = MockItem(type: .small, row: 0, col: 0)
+        engine.sync([item])
+        engine.beginMove(item: item, at: GridCell(0, c: 0))
+        #expect(engine.isInteracting)
+    }
+
+    @Test("isInteracting flips back to false after cancel")
+    func isInteractingAfterCancel() {
+        let engine = makeEngine()
+        engine.interaction = .previewing(anchor: GridCell(0, c: 0))
+        #expect(engine.isInteracting)
+        engine.cancelInteraction()
+        #expect(!engine.isInteracting)
+    }
+
+    @Test("isInteracting flips back to false after commitMove")
+    func isInteractingAfterCommit() {
+        let engine = makeEngine()
+        let item = MockItem(type: .small, row: 0, col: 0)
+        engine.sync([item])
+        engine.beginMove(item: item, at: GridCell(0, c: 0))
+        #expect(engine.isInteracting)
+        engine.commitMove()
+        #expect(!engine.isInteracting)
+    }
 }

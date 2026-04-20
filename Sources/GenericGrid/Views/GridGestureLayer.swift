@@ -36,7 +36,10 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
                       let cell = toCell(location) else { return }
                 engine.place(at: cell, insert: onInsert, onConflict: onConflict)
             }
-            .gesture(longPressDragGesture)
+            // `simultaneousGesture` lets the enclosing ScrollView keep handling
+            // quick swipes — our long-press only takes over when the finger
+            // stays still, so plain scrolls still pass through.
+            .simultaneousGesture(longPressDragGesture)
     }
 
     // MARK: - Long-press + drag gesture

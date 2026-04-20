@@ -64,6 +64,34 @@ public struct GridCanvasConfig: Codable, Sendable {
         }
     }
 
+    // MARK: - Cell sizing
+
+    /// Minimum cell width required so the widest column label fits.
+    /// Falls back to `GridCellSize.absoluteMin` when no custom labels are set.
+    public func minCellWidthForLabels() -> CGFloat {
+        guard colLabels != nil else { return GridCellSize.absoluteMin }
+        #if canImport(UIKit)
+        let font = UIFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
+        #elseif canImport(AppKit)
+        let font = NSFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
+        #endif
+        let maxWidth = (0..<cols).map { c in
+            (colLabel(at: c) as NSString).size(withAttributes: [.font: font]).width
+        }.max() ?? 0
+        return maxWidth + GridCellSize.labelPadding
+    }
+
+    /// Base cell size that fits the grid in `size`, reserving `margin` for labels.
+    /// Cells are bounded below by the minimum label width so column labels always fit.
+    public func baseCellSize(in size: CGSize, margin: CGFloat) -> CGFloat {
+        let availW = size.width  - margin
+        let availH = size.height - margin
+        let byCol = availW / CGFloat(cols)
+        let byRow = availH / CGFloat(rows)
+        let fitSize = min(byCol, byRow)
+        return max(minCellWidthForLabels(), max(GridCellSize.absoluteMin, fitSize))
+    }
+
     // MARK: - JSON loading
 
     /// Loads a config from a JSON file in the given bundle.

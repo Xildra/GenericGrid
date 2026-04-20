@@ -5,6 +5,7 @@
 
 import Testing
 import Foundation
+import CoreGraphics
 @testable import GenericGrid
 
 @Suite("GridCanvasConfig")
@@ -168,6 +169,44 @@ struct GridCanvasConfigTests {
         )
         let config = GridCanvasConfig(rows: 10, cols: 10, zones: [zone])
         #expect(!config.canAccept(cell: GridCell(1.0, c: 1.0), typeName: nil))
+    }
+
+    // MARK: - Cell sizing
+
+    @Test("minCellWidthForLabels falls back to absolute min without labels")
+    func minCellWidthNoLabels() {
+        let config = GridCanvasConfig(rows: 3, cols: 3)
+        #expect(config.minCellWidthForLabels() == GridCellSize.absoluteMin)
+    }
+
+    @Test("minCellWidthForLabels grows with widest label")
+    func minCellWidthScalesWithLabels() {
+        let short = GridCanvasConfig(rows: 1, cols: 2, colLabels: ["A", "B"])
+        let long  = GridCanvasConfig(rows: 1, cols: 2, colLabels: ["A", "Very long label"])
+        #expect(long.minCellWidthForLabels() > short.minCellWidthForLabels())
+    }
+
+    @Test("baseCellSize fits grid inside available space")
+    func baseCellSizeFits() {
+        let config = GridCanvasConfig(rows: 10, cols: 10)
+        let cs = config.baseCellSize(in: CGSize(width: 500, height: 500), margin: 0)
+        // 10 × cs must not exceed 500
+        #expect(cs * 10 <= 500)
+    }
+
+    @Test("baseCellSize honours margin")
+    func baseCellSizeMargin() {
+        let config = GridCanvasConfig(rows: 10, cols: 10)
+        let csNoMargin   = config.baseCellSize(in: CGSize(width: 500, height: 500), margin: 0)
+        let csWithMargin = config.baseCellSize(in: CGSize(width: 500, height: 500), margin: 100)
+        #expect(csWithMargin < csNoMargin)
+    }
+
+    @Test("baseCellSize clamps to absoluteMin for tiny viewports")
+    func baseCellSizeClampsMin() {
+        let config = GridCanvasConfig(rows: 100, cols: 100)
+        let cs = config.baseCellSize(in: CGSize(width: 50, height: 50), margin: 0)
+        #expect(cs >= GridCellSize.absoluteMin)
     }
 
     // MARK: - Codable

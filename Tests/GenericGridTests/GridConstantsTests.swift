@@ -37,6 +37,14 @@ struct GridConstantsTests {
         #expect(GridGesture.halfCell == 0.5)
     }
 
+    @Test("long-press duration is responsive but not accidental")
+    func longPressDuration() {
+        // Must be > 0 so a plain tap does NOT trigger it (keeps tap-to-place
+        // snappy) and < 1s so a hold-to-drag still feels immediate.
+        #expect(GridGesture.longPressDuration > 0)
+        #expect(GridGesture.longPressDuration < 1.0)
+    }
+
     @Test("animation durations are positive")
     func animationDurations() {
         #expect(GridAnimation.zoomDuration > 0)
