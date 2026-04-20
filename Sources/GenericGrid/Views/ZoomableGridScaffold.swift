@@ -54,7 +54,7 @@ struct ZoomableGridScaffold<Content: View>: View {
                     minHeight: geo.size.height,
                     alignment: .center
                 )
-				.padding(.bottom, 30)
+                .padding(GridLayout.gridPadding)
             }
             .scrollDisabled(scrollDisabled)
             .overlay(alignment: .bottomTrailing) {
