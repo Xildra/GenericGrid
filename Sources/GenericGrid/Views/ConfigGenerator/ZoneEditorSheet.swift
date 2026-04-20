@@ -82,7 +82,7 @@ struct ZoneEditorSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        let types = allowedTypeNames
+						_ = allowedTypeNames
                             .split(separator: ",")
                             .map { $0.trimmingCharacters(in: .whitespaces) }
                             .filter { !$0.isEmpty }

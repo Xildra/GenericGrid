@@ -208,6 +208,9 @@ public enum GridGesture {
     static let minZoneSpan: Double = 0.5
     /// Half-cell size for sub-cell calculations.
     static let halfCell: Double = 0.5
+    /// Minimum duration (seconds) of the long-press before a grid drag activates.
+    /// Short enough to stay responsive, long enough to let ScrollView capture quick swipes.
+    static let longPressDuration: Double = 0.18
 }
 
 // MARK: - Config defaults
