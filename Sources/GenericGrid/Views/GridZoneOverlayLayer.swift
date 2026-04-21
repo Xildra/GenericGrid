@@ -19,6 +19,9 @@ struct GridZoneOverlayLayer: View {
             let y = zone.rowStart * cellSize
             let w = (zone.colEnd - zone.colStart) * cellSize
             let h = (zone.rowEnd - zone.rowStart) * cellSize
+            let shortSide = min(w, h)
+            let labelSize = min(shortSide / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax)
+            let iconSize = min(shortSide / GridFont.zoneLabelDivisor, GridFont.ruleIcon)
 
             ZStack {
                 RoundedRectangle(cornerRadius: GridCornerRadius.zone)
@@ -28,20 +31,21 @@ struct GridZoneOverlayLayer: View {
 
                 VStack(spacing: GridLayout.zoneLabelSpacing) {
                     Text(zone.label)
-                        .font(.system(size: min(w / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax), weight: .medium))
+                        .font(.system(size: labelSize, weight: .medium))
                         .foregroundStyle(.secondary)
                     if zone.rule == .locked {
                         Image(systemName: "lock.fill")
-                            .font(.system(size: GridFont.ruleIcon))
+                            .font(.system(size: iconSize))
                             .foregroundStyle(.secondary.opacity(GridOpacity.ruleIconLock))
                     } else if zone.rule == .forbidden {
                         Image(systemName: "nosign")
-                            .font(.system(size: GridFont.ruleIcon))
+                            .font(.system(size: iconSize))
                             .foregroundStyle(.red.opacity(GridOpacity.ruleIconForbidden))
                     }
                 }
             }
             .frame(width: w, height: h)
+            .clipShape(RoundedRectangle(cornerRadius: GridCornerRadius.zone))
             .offset(x: x, y: y)
             .allowsHitTesting(false)
         }

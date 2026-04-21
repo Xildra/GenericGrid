@@ -78,19 +78,30 @@ struct DraggableZoneView: View {
     private var h: CGFloat { (draft.rowEnd - draft.rowStart) * cellSize }
 
     var body: some View {
+        let shortSide = min(w, h)
+        let labelSize = min(shortSide / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax)
+
         ZStack {
-            RoundedRectangle(cornerRadius: GridCornerRadius.zone)
-                .fill(draft.color.opacity(GridOpacity.zoneFillPreview))
-            RoundedRectangle(cornerRadius: GridCornerRadius.zone)
-                .strokeBorder(strokeColor, lineWidth: GridLineWidth.zoneDefault)
+            // Zone body (fill + border + label/icon) clipped to the zone shape
+            // so narrow zones never bleed into their neighbours when zoomed out.
+            ZStack {
+                RoundedRectangle(cornerRadius: GridCornerRadius.zone)
+                    .fill(draft.color.opacity(GridOpacity.zoneFillPreview))
+                RoundedRectangle(cornerRadius: GridCornerRadius.zone)
+                    .strokeBorder(strokeColor, lineWidth: GridLineWidth.zoneDefault)
 
-            VStack(spacing: GridLayout.zoneLabelSpacing) {
-                Text(draft.label)
-                    .font(.system(size: min(w / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax), weight: .medium))
-                    .foregroundStyle(.secondary)
-                ruleIcon
+                VStack(spacing: GridLayout.zoneLabelSpacing) {
+                    Text(draft.label)
+                        .font(.system(size: labelSize, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    ruleIcon
+                }
             }
+            .frame(width: w, height: h)
+            .clipShape(RoundedRectangle(cornerRadius: GridCornerRadius.zone))
 
+            // Resize handles stay outside the clip so they remain visible &
+            // hittable along the edges.
             resizeHandle(edge: .top)
             resizeHandle(edge: .bottom)
             resizeHandle(edge: .leading)
@@ -199,18 +210,22 @@ struct DraggableZoneView: View {
         }
     }
 
+    private var iconSize: CGFloat {
+        min(min(w, h) / GridFont.zoneLabelDivisor, GridFont.ruleIcon)
+    }
+
     @ViewBuilder
     private var ruleIcon: some View {
         switch draft.rule {
         case .locked:
             Image(systemName: "lock.fill")
-                .font(.system(size: GridFont.ruleIcon)).foregroundStyle(.secondary.opacity(GridOpacity.ruleIconLock))
+                .font(.system(size: iconSize)).foregroundStyle(.secondary.opacity(GridOpacity.ruleIconLock))
         case .forbidden:
             Image(systemName: "nosign")
-                .font(.system(size: GridFont.ruleIcon)).foregroundStyle(.red.opacity(GridOpacity.ruleIconForbidden))
+                .font(.system(size: iconSize)).foregroundStyle(.red.opacity(GridOpacity.ruleIconForbidden))
         case .restricted:
             Image(systemName: "person.badge.key")
-                .font(.system(size: GridFont.ruleIcon)).foregroundStyle(.blue.opacity(GridOpacity.ruleIconRestricted))
+                .font(.system(size: iconSize)).foregroundStyle(.blue.opacity(GridOpacity.ruleIconRestricted))
         case .free:
             EmptyView()
         }
