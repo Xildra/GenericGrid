@@ -5,6 +5,7 @@
 
 import Testing
 import SwiftUI
+import Foundation
 @testable import GenericGrid
 
 @Suite("GridZoneDefinition")
@@ -28,7 +29,7 @@ struct GridZoneDefinitionTests {
     func customInit() {
         let zone = GridZoneDefinition(
             label: "VIP", rule: .restricted,
-            rowStart: 1.5, rowEnd: 4, colStart: 2, colEnd: 6,
+            rowStart: 1.5, rowEnd: 4.5, colStart: 2, colEnd: 6,
             color: .blue, allowedTypeNames: ["Business"]
         )
         #expect(zone.label == "VIP")
@@ -69,6 +70,40 @@ struct GridZoneDefinitionTests {
         #expect(!zone.contains(GridCell(2.5, c: 0.0)))
     }
 
+    @Test("containsPoint uses inclusive bounds")
+    func containsPointInclusive() {
+        let zone = GridZoneDefinition(rowStart: 1, rowEnd: 3, colStart: 2, colEnd: 5)
+        #expect(zone.containsPoint(GridCell(1.0, c: 2.0)))
+        #expect(zone.containsPoint(GridCell(2.5, c: 4.3)))
+        #expect(zone.containsPoint(GridCell(3.0, c: 5.0))) // far corner inclusive
+        #expect(!zone.containsPoint(GridCell(0.5, c: 2.0)))
+        #expect(!zone.containsPoint(GridCell(1.0, c: 5.1)))
+    }
+
+    // MARK: - Dimensions
+
+    @Test("rowCount / colCount reflect integer size")
+    func dimensionCounts() {
+        let zone = GridZoneDefinition(rowStart: 1.5, rowEnd: 5.5, colStart: 2, colEnd: 7)
+        #expect(zone.rowSize == 4)
+        #expect(zone.colSize == 5)
+        #expect(zone.rowCount == 4)
+        #expect(zone.colCount == 5)
+    }
+
+    @Test("rowCount / colCount round defensively and never go below 1")
+    func dimensionCountsRounding() {
+        // Slightly off-integer size (floating-point noise) still rounds cleanly.
+        let noisy = GridZoneDefinition(rowStart: 0, rowEnd: 2.9999999, colStart: 0, colEnd: 3.0000001)
+        #expect(noisy.rowCount == 3)
+        #expect(noisy.colCount == 3)
+
+        // Degenerate / zero-size zone still reports at least 1 in each axis.
+        let degenerate = GridZoneDefinition(rowStart: 0, rowEnd: 0, colStart: 0, colEnd: 0)
+        #expect(degenerate.rowCount == 1)
+        #expect(degenerate.colCount == 1)
+    }
+
     // MARK: - Color
 
     @Test("color getter returns default gray when no hex")
@@ -94,7 +129,7 @@ struct GridZoneDefinitionTests {
     func codableRoundTrip() throws {
         let original = GridZoneDefinition(
             label: "Test", rule: .locked,
-            rowStart: 0.5, rowEnd: 3, colStart: 1, colEnd: 5.5,
+            rowStart: 0.5, rowEnd: 3.5, colStart: 1, colEnd: 5,
             color: .orange, allowedTypeNames: nil
         )
         let encoder = JSONEncoder()

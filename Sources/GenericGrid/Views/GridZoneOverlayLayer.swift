@@ -24,7 +24,7 @@ struct GridZoneOverlayLayer: View {
                 RoundedRectangle(cornerRadius: GridCornerRadius.zone)
                     .fill(zone.color.opacity(GridOpacity.zoneFill))
                 RoundedRectangle(cornerRadius: GridCornerRadius.zone)
-                    .strokeBorder(strokeColor(for: zone), style: strokeStyle(for: zone))
+                    .strokeBorder(strokeColor(for: zone), lineWidth: GridLineWidth.zoneDefault)
 
                 VStack(spacing: GridLayout.zoneLabelSpacing) {
                     Text(zone.label)
@@ -58,12 +58,4 @@ struct GridZoneOverlayLayer: View {
         }
     }
 
-    private func strokeStyle(for zone: GridZoneDefinition) -> StrokeStyle {
-        switch zone.rule {
-        case .locked, .forbidden:
-            return StrokeStyle(lineWidth: GridLineWidth.zoneDashed, dash: GridDash.zoneLocked)
-        default:
-            return StrokeStyle(lineWidth: GridLineWidth.zoneDefault)
-        }
-    }
 }

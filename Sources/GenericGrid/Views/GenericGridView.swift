@@ -46,7 +46,9 @@ public struct GenericGridView<Item: GridPlaceable>: View {
             scrollDisabled: engine.isInteracting
         ) { cs in
             ZStack(alignment: .topLeading) {
-                GridBackgroundLayer(rows: engine.rows, cols: engine.cols, cellSize: cs)
+                GridBackgroundLayer(rows: engine.rows, cols: engine.cols, cellSize: cs,
+                                    showLines: engine.config.showMainGrid)
+                GridZoneSubdivisionLayer(zones: engine.config.zones, cellSize: cs)
                 GridZoneOverlayLayer(zones: engine.config.zones, cellSize: cs)
                 GridItemsLayer(items: items, cellSize: cs, movingItem: engine.movingItem)
                 GridPreviewLayer(cells: engine.previewCells, isValid: engine.isPreviewValid, cellSize: cs)

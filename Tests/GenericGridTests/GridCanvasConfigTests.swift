@@ -209,6 +209,49 @@ struct GridCanvasConfigTests {
         #expect(cs >= GridCellSize.absoluteMin)
     }
 
+    // MARK: - Zone-aware snap
+
+    @Test("snap falls back to half-cell outside any zone")
+    func snapOutsideZone() {
+        let config = GridCanvasConfig(rows: 10, cols: 10)
+        // Main grid acts as a half-cell placement guide.
+        let snapped = config.snap(GridCell(1.37, c: 2.82))
+        #expect(snapped.r == 1.5)
+        #expect(snapped.c == 3.0)
+    }
+
+    @Test("snap rounds to zone's local unit grid")
+    func snapInsideZoneUnitGrid() {
+        // Zone with fractional origin: local step = 1, so integer offsets
+        // from (0.5, 0.5) are the only valid anchors inside.
+        let zone = GridZoneDefinition(rowStart: 0.5, rowEnd: 3.5, colStart: 0.5, colEnd: 3.5)
+        let config = GridCanvasConfig(rows: 10, cols: 10, zones: [zone])
+
+        // 1.5 → local 1.0 → floor 1 → back to 1.5.
+        let a = config.snap(GridCell(1.5, c: 1.5))
+        #expect(a.r == 1.5)
+        #expect(a.c == 1.5)
+
+        // 2.0 → local 1.5 → floor 1 → 1.5.
+        let b = config.snap(GridCell(2.0, c: 2.0))
+        #expect(b.r == 1.5)
+        #expect(b.c == 1.5)
+
+        // 2.9 → local 2.4 → floor 2 → 2.5.
+        let c = config.snap(GridCell(2.9, c: 2.9))
+        #expect(c.r == 2.5)
+        #expect(c.c == 2.5)
+    }
+
+    @Test("snap anchors land on zone start")
+    func snapAtZoneOrigin() {
+        let zone = GridZoneDefinition(rowStart: 1, rowEnd: 4, colStart: 2, colEnd: 5)
+        let config = GridCanvasConfig(rows: 10, cols: 10, zones: [zone])
+        let snapped = config.snap(GridCell(1.0, c: 2.0))
+        #expect(snapped.r == 1.0)
+        #expect(snapped.c == 2.0)
+    }
+
     // MARK: - Codable
 
     @Test("config round-trips through JSON")
@@ -234,5 +277,22 @@ struct GridCanvasConfigTests {
         #expect(decoded.zones[0].rule == .locked)
         #expect(decoded.rowLabels?.count == 8)
         #expect(decoded.colLabels == nil)
+    }
+
+    @Test("legacy JSON without showMainGrid decodes with default true")
+    func codableLegacyShowMainGrid() throws {
+        let legacy = #"{"rows":4,"cols":4,"zones":[]}"#.data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(GridCanvasConfig.self, from: legacy)
+        #expect(decoded.rows == 4)
+        #expect(decoded.cols == 4)
+        #expect(decoded.showMainGrid == true)
+    }
+
+    @Test("showMainGrid round-trips through JSON")
+    func codableShowMainGridRoundTrip() throws {
+        let original = GridCanvasConfig(rows: 3, cols: 3, showMainGrid: false)
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(GridCanvasConfig.self, from: data)
+        #expect(decoded.showMainGrid == false)
     }
 }

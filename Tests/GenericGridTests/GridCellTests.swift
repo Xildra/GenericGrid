@@ -32,17 +32,17 @@ struct GridCellTests {
         #expect(GridCell.snapHalf(-1.0) == -1.0)
     }
 
-    // MARK: - Init snapping
+    // MARK: - Init
 
-    @Test("init snaps coordinates to 0.5")
-    func initSnaps() {
+    @Test("init stores raw coordinates without snapping")
+    func initIsRaw() {
         let cell = GridCell(0.3, c: 1.8)
-        #expect(cell.r == 0.5)
-        #expect(cell.c == 2.0)
+        #expect(cell.r == 0.3)
+        #expect(cell.c == 1.8)
     }
 
-    @Test("init preserves already-snapped values")
-    func initPreservesSnapped() {
+    @Test("init preserves already-aligned values")
+    func initPreservesAligned() {
         let cell = GridCell(1.5, c: 3.0)
         #expect(cell.r == 1.5)
         #expect(cell.c == 3.0)
@@ -50,9 +50,9 @@ struct GridCellTests {
 
     // MARK: - Equality & Hashing
 
-    @Test("cells with same snapped coordinates are equal")
+    @Test("cells with identical coordinates are equal")
     func equality() {
-        let a = GridCell(0.3, c: 1.7)
+        let a = GridCell(0.5, c: 1.5)
         let b = GridCell(0.5, c: 1.5)
         #expect(a == b)
     }
@@ -66,7 +66,7 @@ struct GridCellTests {
 
     @Test("equal cells produce same hash")
     func hashing() {
-        let a = GridCell(0.3, c: 1.8)
+        let a = GridCell(0.5, c: 2.0)
         let b = GridCell(0.5, c: 2.0)
         #expect(a.hashValue == b.hashValue)
     }
@@ -75,7 +75,7 @@ struct GridCellTests {
     func setUsage() {
         var set = Set<GridCell>()
         set.insert(GridCell(0.0, c: 0.0))
-        set.insert(GridCell(0.1, c: 0.1)) // snaps to (0, 0) → duplicate
+        set.insert(GridCell(0.0, c: 0.0)) // same raw coords → duplicate
         set.insert(GridCell(0.5, c: 0.0))
         #expect(set.count == 2)
     }

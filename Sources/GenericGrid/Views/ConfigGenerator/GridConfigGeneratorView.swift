@@ -175,6 +175,7 @@ public struct GridConfigGeneratorView: View {
             .focused($focusedField)
             stepperWithField("Rows", value: $config.rows)
             stepperWithField("Columns", value: $config.cols)
+            Toggle("Show main grid", isOn: $config.showMainGrid)
         }
     }
 

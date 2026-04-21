@@ -21,12 +21,34 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// Optional labels for each column (index 0 = column 0).
     public var colLabels: [String]?
 
+    /// Whether the main grid lines are drawn. Only a visual toggle —
+    /// zone rectangles and their own internal grids are always shown.
+    public var showMainGrid: Bool
+
     public init(rows: Int = GridDefaults.rows, cols: Int = GridDefaults.cols,
                 zones: [GridZoneDefinition] = [], title: String? = nil,
-                rowLabels: [String]? = nil, colLabels: [String]? = nil) {
+                rowLabels: [String]? = nil, colLabels: [String]? = nil,
+                showMainGrid: Bool = true) {
         self.rows = rows; self.cols = cols
         self.zones = zones; self.title = title
         self.rowLabels = rowLabels; self.colLabels = colLabels
+        self.showMainGrid = showMainGrid
+    }
+
+    // Custom decoding so older JSON without `showMainGrid` still loads.
+    private enum CodingKeys: String, CodingKey {
+        case rows, cols, zones, title, rowLabels, colLabels, showMainGrid
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        rows = try c.decode(Int.self, forKey: .rows)
+        cols = try c.decode(Int.self, forKey: .cols)
+        zones = try c.decodeIfPresent([GridZoneDefinition].self, forKey: .zones) ?? []
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        rowLabels = try c.decodeIfPresent([String].self, forKey: .rowLabels)
+        colLabels = try c.decodeIfPresent([String].self, forKey: .colLabels)
+        showMainGrid = try c.decodeIfPresent(Bool.self, forKey: .showMainGrid) ?? true
     }
 
     // MARK: - Label helpers
@@ -62,6 +84,23 @@ public struct GridCanvasConfig: Codable, Sendable {
             guard let allowed = z.allowedTypeNames, let name = typeName else { return false }
             return allowed.contains(name)
         }
+    }
+
+    // MARK: - Zone-aware snap
+
+    /// Snaps a raw fractional anchor:
+    /// - if the point falls inside a zone, snaps to that zone's local
+    ///   unit grid (origin = zone start, step = 1 in both axes);
+    /// - otherwise falls back to the global half-cell guide.
+    /// The main grid is therefore only a guide outside zones — zones
+    /// govern their own placement and never inherit half-cell offsets.
+    public func snap(_ cell: GridCell) -> GridCell {
+        if let z = zones.first(where: { $0.containsPoint(cell) }) {
+            let localR = (cell.r - z.rowStart).rounded(.down)
+            let localC = (cell.c - z.colStart).rounded(.down)
+            return GridCell(z.rowStart + localR, c: z.colStart + localC)
+        }
+        return GridCell(GridCell.snapHalf(cell.r), c: GridCell.snapHalf(cell.c))
     }
 
     // MARK: - Cell sizing

@@ -82,15 +82,18 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
 
     // MARK: - Helpers
 
-    /// Converts a touch point to the half-cell sub-cell it falls into.
-    /// Uses floor at 0.5 resolution so the pointer always picks the
-    /// sub-cell directly under the finger.
+    /// Converts a touch point to the anchor cell it falls into.
+    /// Delegates to `GridCanvasConfig.snap` which snaps to the owning
+    /// zone's local step when inside a subdivision zone, or to the
+    /// global half-cell guide otherwise.
     private func toCell(_ pt: CGPoint) -> GridCell? {
-        let r = (pt.y / cellSize * 2).rounded(.down) / 2
-        let c = (pt.x / cellSize * 2).rounded(.down) / 2
         let rowsD = Double(engine.rows), colsD = Double(engine.cols)
-        guard r >= 0, r + GridGesture.halfCell <= rowsD,
-              c >= 0, c + GridGesture.halfCell <= colsD else { return nil }
-        return GridCell(r, c: c)
+        let r = Double(pt.y / cellSize)
+        let c = Double(pt.x / cellSize)
+        guard r >= 0, r <= rowsD, c >= 0, c <= colsD else { return nil }
+        let snapped = engine.config.snap(GridCell(r, c: c))
+        guard snapped.r + GridGesture.halfCell <= rowsD,
+              snapped.c + GridGesture.halfCell <= colsD else { return nil }
+        return snapped
     }
 }

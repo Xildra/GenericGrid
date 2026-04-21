@@ -20,7 +20,9 @@ struct ConfigGridPreviewView: View {
     var body: some View {
         ZoomableGridScaffold(config: config, zoom: $zoom) { cs in
             ZStack(alignment: .topLeading) {
-                GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs)
+                GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs,
+                                    showLines: config.showMainGrid)
+                GridZoneSubdivisionLayer(zones: config.zones, cellSize: cs)
 
                 ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
                     DraggableZoneView(
@@ -80,7 +82,7 @@ struct DraggableZoneView: View {
             RoundedRectangle(cornerRadius: GridCornerRadius.zone)
                 .fill(draft.color.opacity(GridOpacity.zoneFillPreview))
             RoundedRectangle(cornerRadius: GridCornerRadius.zone)
-                .strokeBorder(strokeColor, style: strokeStyle)
+                .strokeBorder(strokeColor, lineWidth: GridLineWidth.zoneDefault)
 
             VStack(spacing: GridLayout.zoneLabelSpacing) {
                 Text(draft.label)
@@ -194,15 +196,6 @@ struct DraggableZoneView: View {
         case .forbidden:  return .red.opacity(GridOpacity.zoneStrokeForbidden)
         case .restricted: return .blue.opacity(GridOpacity.zoneStrokeRestricted)
         case .free:       return draft.color.opacity(GridOpacity.zoneStrokeFree)
-        }
-    }
-
-    private var strokeStyle: StrokeStyle {
-        switch draft.rule {
-        case .locked, .forbidden:
-            return StrokeStyle(lineWidth: GridLineWidth.zoneDashed, dash: GridDash.zoneLocked)
-        default:
-            return StrokeStyle(lineWidth: GridLineWidth.zoneDefault)
         }
     }
 

@@ -14,12 +14,14 @@ struct GridBackgroundLayer: View {
     let rows: Int
     let cols: Int
     let cellSize: CGFloat
+    var showLines: Bool = true
 
     private var W: CGFloat { CGFloat(cols) * cellSize }
     private var H: CGFloat { CGFloat(rows) * cellSize }
 
     var body: some View {
         Canvas { ctx, size in
+            guard showLines else { return }
             let sep = GraphicsContext.Shading.color(.secondary.opacity(GridOpacity.gridLine))
             for r in 0...rows {
                 var p = Path(); let y = CGFloat(r) * cellSize

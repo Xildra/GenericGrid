@@ -87,6 +87,13 @@ public enum GridDash {
 public enum GridOpacity {
     // Grid
     static let gridLine: Double = 0.3
+    /// Opacity for zone-local subdivision lines (stronger than the global
+    /// grid so the zone-local layout stands out even when whole-aligned).
+    static let subdivisionLine: Double = 0.55
+    /// Very faint tint painted over a subdivision zone so the override is
+    /// visible even on whole-aligned zones where subdivision positions
+    /// coincide with the global grid.
+    static let subdivisionTint: Double = 0.06
 
     // Zone fill
     static let zoneFill: Double = 0.12
