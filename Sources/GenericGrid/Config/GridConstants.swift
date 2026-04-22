@@ -51,7 +51,7 @@ public enum GridCornerRadius {
     /// Grid background outer border.
     static let grid: CGFloat = 10
     /// Zone overlays and preview highlight.
-    static let zone: CGFloat = 4
+    static let zone: CGFloat = 0
     /// Placed item blocks.
     static let item: CGFloat = 7
     /// Resize handle pills.

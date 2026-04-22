@@ -51,10 +51,10 @@ struct GridConstantsTests {
         #expect(GridAnimation.saveResetDelay > 0)
     }
 
-    @Test("corner radii are positive")
+    @Test("corner radii are non-negative")
     func cornerRadii() {
         #expect(GridCornerRadius.grid > 0)
-        #expect(GridCornerRadius.zone > 0)
+        #expect(GridCornerRadius.zone >= 0)
         #expect(GridCornerRadius.item > 0)
         #expect(GridCornerRadius.resizeHandle > 0)
     }
