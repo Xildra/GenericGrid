@@ -46,12 +46,12 @@ public struct GenericGridView<Item: GridPlaceable>: View {
             scrollDisabled: engine.isInteracting
         ) { cs in
             ZStack(alignment: .topLeading) {
-                GridBackgroundLayer(rows: engine.rows, cols: engine.cols, cellSize: cs,
+                GridBackgroundLayer(config: engine.config, cellSize: cs,
                                     showLines: engine.config.showMainGrid)
-                GridZoneSubdivisionLayer(zones: engine.config.zones, cellSize: cs)
-                GridZoneOverlayLayer(zones: engine.config.zones, cellSize: cs)
-                GridItemsLayer(items: items, cellSize: cs, movingItem: engine.movingItem)
-                GridPreviewLayer(cells: engine.previewCells, isValid: engine.isPreviewValid, cellSize: cs)
+                GridZoneSubdivisionLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
+                GridZoneOverlayLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
+                GridItemsLayer(config: engine.config, items: items, cellSize: cs, movingItem: engine.movingItem)
+                GridPreviewLayer(config: engine.config, cells: engine.previewCells, isValid: engine.isPreviewValid, cellSize: cs)
                 GridGestureLayer(engine: engine, cellSize: cs, onInsert: onInsert, onConflict: onConflict)
             }
         }

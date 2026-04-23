@@ -20,20 +20,33 @@ struct ZoneEditorSheet: View {
     @FocusState private var focusedField: Bool
 
     private let isNew: Bool
-    private let maxRows: Int
-    private let maxCols: Int
+    private let config: GridCanvasConfig
     private let onSave: (GridZoneDefinition) -> Void
 
-    init(zone: GridZoneDefinition?, maxRows: Int, maxCols: Int,
+    private var maxCols: Int { config.cols }
+    private var bands: [ColumnBand] { config.effectiveBands }
+
+    /// Band currently owning the zone (by `zone.rowStart`). Clamped values.
+    private var currentBand: ColumnBand {
+        config.band(forRow: Int(zone.rowStart.rounded(.down)))
+    }
+
+    /// Row-range bounds within the current band (lo inclusive, hi exclusive).
+    private var bandRowBounds: (lo: Double, hi: Double) {
+        (Double(currentBand.rowStart), Double(currentBand.rowEnd + 1))
+    }
+
+    init(zone: GridZoneDefinition?,
+         config: GridCanvasConfig,
          onSave: @escaping (GridZoneDefinition) -> Void) {
-        self.maxRows = maxRows
-        self.maxCols = maxCols
+        self.config = config
         self.onSave = onSave
         self.isNew = zone == nil
 
+        let defaultEnd = min(GridDefaults.newZoneEnd, Double(config.rows))
         self.zone = zone ?? GridZoneDefinition(
-            rowEnd: min(GridDefaults.newZoneEnd, Double(maxRows)),
-            colEnd: min(GridDefaults.newZoneEnd, Double(maxCols))
+            rowEnd: defaultEnd,
+            colEnd: min(GridDefaults.newZoneEnd, Double(config.cols))
         )
     }
 
@@ -45,6 +58,23 @@ struct ZoneEditorSheet: View {
     private var colCountBinding: Binding<Int> {
         Binding(get: { zone.colCount },
                 set: { zone.colEnd = zone.colStart + Double($0) })
+    }
+
+    /// Picker binding that rehomes the zone into the selected compartment
+    /// when the user changes it.
+    private var compartmentBinding: Binding<Int> {
+        Binding(
+            get: {
+                bands.firstIndex(where: { $0.id == currentBand.id }) ?? 0
+            },
+            set: { idx in
+                guard idx >= 0, idx < bands.count else { return }
+                let target = bands[idx]
+                let clampedSize = min(Double(zone.rowCount), Double(target.rowCount))
+                zone.rowStart = Double(target.rowStart)
+                zone.rowEnd = zone.rowStart + clampedSize
+            }
+        )
     }
 
     var body: some View {
@@ -80,15 +110,29 @@ struct ZoneEditorSheet: View {
                     }
                 }
 
+                if bands.count > 1 {
+                    Section("Compartment") {
+                        Picker("Compartment", selection: compartmentBinding) {
+                            ForEach(Array(bands.enumerated()), id: \.element.id) { idx, band in
+                                Text("Rows \(band.rowStart)–\(band.rowEnd)")
+                                    .tag(idx)
+                            }
+                        }
+                    }
+                }
+
                 Section {
+                    let (bandLo, bandHi) = bandRowBounds
+                    let rowStartMax = max(bandLo, bandHi - Double(zone.rowCount))
+                    let rowCountMax = max(1, Int(bandHi - bandLo) - Int(zone.rowStart - bandLo))
                     positionStepper("Row start", value: $zone.rowStart,
-                                    range: 0...max(0, Double(maxRows) - Double(zone.rowCount)),
+                                    range: bandLo...rowStartMax,
                                     onChange: { zone.rowEnd = $0 + Double(zone.rowCount) })
                     positionStepper("Col start", value: $zone.colStart,
                                     range: 0...max(0, Double(maxCols) - Double(zone.colCount)),
                                     onChange: { zone.colEnd = $0 + Double(zone.colCount) })
                     intStepper("Row count", value: rowCountBinding,
-                               range: 1...max(1, maxRows - Int(zone.rowStart)))
+                               range: 1...rowCountMax)
                     intStepper("Col count", value: colCountBinding,
                                range: 1...max(1, maxCols - Int(zone.colStart)))
                 } header: {

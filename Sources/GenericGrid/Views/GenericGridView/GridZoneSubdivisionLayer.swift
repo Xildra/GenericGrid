@@ -14,12 +14,14 @@ import SwiftUI
 
 @available(iOS 17.0, macOS 14.0, *)
 struct GridZoneSubdivisionLayer: View {
+    let config: GridCanvasConfig
     let zones: [GridZoneDefinition]
     let cellSize: CGFloat
 
     var body: some View {
         ForEach(zones) { zone in
-            ZoneInternalGridView(zone: zone, cellSize: cellSize)
+            ZoneInternalGridView(zone: zone, cellSize: cellSize,
+                                 yOrigin: config.yForRow(zone.rowStart, cellSize: cellSize))
                 .allowsHitTesting(false)
         }
     }
@@ -29,10 +31,11 @@ struct GridZoneSubdivisionLayer: View {
 private struct ZoneInternalGridView: View {
     let zone: GridZoneDefinition
     let cellSize: CGFloat
+    let yOrigin: CGFloat
 
     var body: some View {
         let x = zone.colStart * cellSize
-        let y = zone.rowStart * cellSize
+        let y = yOrigin
         let w = zone.colSize * cellSize
         let h = zone.rowSize * cellSize
         let rowCount = zone.rowCount

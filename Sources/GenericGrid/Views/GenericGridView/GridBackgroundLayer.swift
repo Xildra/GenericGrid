@@ -11,19 +11,20 @@ import SwiftUI
 
 @available(iOS 17.0, macOS 14.0, *)
 struct GridBackgroundLayer: View {
-    let rows: Int
-    let cols: Int
+    let config: GridCanvasConfig
     let cellSize: CGFloat
     var showLines: Bool = true
 
+    private var cols: Int { config.cols }
+    private var totalRows: Int { config.totalVerticalCells }
     private var W: CGFloat { CGFloat(cols) * cellSize }
-    private var H: CGFloat { CGFloat(rows) * cellSize }
+    private var H: CGFloat { CGFloat(totalRows) * cellSize }
 
     var body: some View {
         Canvas { ctx, size in
             guard showLines else { return }
             let sep = GraphicsContext.Shading.color(.secondary.opacity(GridOpacity.gridLine))
-            for r in 0...rows {
+            for r in 0...totalRows {
                 var p = Path(); let y = CGFloat(r) * cellSize
                 p.move(to: .init(x: 0, y: y))
                 p.addLine(to: .init(x: size.width, y: y))

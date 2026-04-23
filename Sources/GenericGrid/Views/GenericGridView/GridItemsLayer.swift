@@ -12,6 +12,7 @@ import SwiftUI
 
 @available(iOS 17.0, macOS 14.0, *)
 struct GridItemsLayer<Item: GridPlaceable>: View {
+    let config: GridCanvasConfig
     let items: [Item]
     let cellSize: CGFloat
     let movingItem: Item?
@@ -21,6 +22,7 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
             if let t = item.itemType {
                 GenericItemBlock(
                     item: item, type: t, cellSize: cellSize,
+                    yOrigin: config.yForRow(item.anchorRow, cellSize: cellSize),
                     dimmed: movingItem === item
                 )
                 .allowsHitTesting(false)
@@ -32,21 +34,23 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
 // MARK: - Generic block for a single placed item
 
 struct GenericItemBlock<T: GridItemType>: View {
-    let anchorRow: Double
     let anchorCol: Double
     let effWidth: Int
     let effHeight: Int
     let type: T
     let cellSize: CGFloat
+    let yOrigin: CGFloat
     var dimmed: Bool = false
 
-    init<I: GridPlaceable>(item: I, type: T, cellSize: CGFloat, dimmed: Bool = false) where I.ItemType == T {
-        self.anchorRow = item.anchorRow
+    init<I: GridPlaceable>(item: I, type: T, cellSize: CGFloat,
+                           yOrigin: CGFloat,
+                           dimmed: Bool = false) where I.ItemType == T {
         self.anchorCol = item.anchorCol
         self.effWidth = item.effectiveWidth
         self.effHeight = item.effectiveHeight
         self.type = type
         self.cellSize = cellSize
+        self.yOrigin = yOrigin
         self.dimmed = dimmed
     }
 
@@ -55,7 +59,7 @@ struct GenericItemBlock<T: GridItemType>: View {
         let w  = CGFloat(effWidth)  * cellSize - inset * 2
         let h  = CGFloat(effHeight) * cellSize - inset * 2
         let ox = anchorCol * cellSize + inset
-        let oy = anchorRow * cellSize + inset
+        let oy = yOrigin + inset
 
         RoundedRectangle(cornerRadius: GridCornerRadius.item)
             .fill(type.color.opacity(dimmed ? GridOpacity.itemDimmedFill : GridOpacity.itemFill))

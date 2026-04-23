@@ -1,54 +1,22 @@
 //
-//  ConfigGridPreviewView.swift
+//  DraggableZoneView.swift
 //  GenericGrid Module
 //
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
-//  Live grid preview with draggable & resizable zone overlays.
+//  Zone overlay used in the config generator preview: fill, label,
+//  rule icon, resize handles, and the move/resize gestures. The
+//  zone is constrained to its owning compartment at all times.
 //
 
 import SwiftUI
 
 @available(iOS 17.0, macOS 14.0, *)
-struct ConfigGridPreviewView: View {
-
-    @Binding var config: GridCanvasConfig
-    var onEditZone: (GridZoneDefinition) -> Void
-
-    @State private var zoom: CGFloat = GridZoom.default
-
-    var body: some View {
-        ZoomableGridScaffold(config: config, zoom: $zoom) { cs in
-            ZStack(alignment: .topLeading) {
-                GridBackgroundLayer(rows: config.rows, cols: config.cols, cellSize: cs,
-                                    showLines: config.showMainGrid)
-                GridZoneSubdivisionLayer(zones: config.zones, cellSize: cs)
-
-                ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
-                    DraggableZoneView(
-                        zone: zone,
-                        cellSize: cs,
-                        maxRows: config.rows,
-                        maxCols: config.cols,
-                        onUpdate: { updated in config.zones[idx] = updated },
-                        onTap:    { onEditZone(zone) }
-                    )
-                }
-            }
-        }
-        .safeAreaPadding(.bottom, GridLayout.previewBottomInset)
-    }
-}
-
-// MARK: - Draggable zone overlay
-
-@available(iOS 17.0, macOS 14.0, *)
 struct DraggableZoneView: View {
 
     let zone: GridZoneDefinition
+    let config: GridCanvasConfig
     let cellSize: CGFloat
-    let maxRows: Int
-    let maxCols: Int
     let onUpdate: (GridZoneDefinition) -> Void
     let onTap: () -> Void
 
@@ -56,15 +24,33 @@ struct DraggableZoneView: View {
     /// Anchor captured at the start of each drag (reset to nil between drags).
     @GestureState private var anchor: GridZoneDefinition? = nil
 
-    init(zone: GridZoneDefinition, cellSize: CGFloat, maxRows: Int, maxCols: Int,
-         onUpdate: @escaping (GridZoneDefinition) -> Void, onTap: @escaping () -> Void) {
+    init(zone: GridZoneDefinition,
+         config: GridCanvasConfig,
+         cellSize: CGFloat,
+         onUpdate: @escaping (GridZoneDefinition) -> Void,
+         onTap: @escaping () -> Void) {
         self.zone = zone
+        self.config = config
         self.cellSize = cellSize
-        self.maxRows = maxRows
-        self.maxCols = maxCols
         self.onUpdate = onUpdate
         self.onTap = onTap
         self.draft = zone
+    }
+
+    // MARK: - Geometry
+
+    private var x: CGFloat { draft.colStart * cellSize }
+    private var y: CGFloat { config.yForRow(draft.rowStart, cellSize: cellSize) }
+    private var w: CGFloat { (draft.colEnd - draft.colStart) * cellSize }
+    private var h: CGFloat { (draft.rowEnd - draft.rowStart) * cellSize }
+
+    private var maxCols: Int { config.cols }
+
+    /// Row-range bounds (inclusive start, exclusive end) of the compartment
+    /// that owns the zone — the zone cannot leave this range.
+    private var bandRowBounds: (lo: Double, hi: Double) {
+        let band = config.band(forRow: Int(zone.rowStart.rounded(.down)))
+        return (Double(band.rowStart), Double(band.rowEnd + 1))
     }
 
     /// Snaps a value to the nearest half-cell (0, 0.5, 1, 1.5…).
@@ -72,18 +58,13 @@ struct DraggableZoneView: View {
         (v * 2).rounded() / 2
     }
 
-    private var x: CGFloat { draft.colStart * cellSize }
-    private var y: CGFloat { draft.rowStart * cellSize }
-    private var w: CGFloat { (draft.colEnd - draft.colStart) * cellSize }
-    private var h: CGFloat { (draft.rowEnd - draft.rowStart) * cellSize }
+    // MARK: - Body
 
     var body: some View {
         let shortSide = min(w, h)
         let labelSize = min(shortSide / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax)
 
         ZStack {
-            // Zone body (fill + border + label/icon) clipped to the zone shape
-            // so narrow zones never bleed into their neighbours when zoomed out.
             ZStack {
                 RoundedRectangle(cornerRadius: GridCornerRadius.zone)
                     .fill(draft.color.opacity(GridOpacity.zoneFillPreview))
@@ -127,8 +108,9 @@ struct DraggableZoneView: View {
                 let dr = Double(v.translation.height / cellSize)
                 let colSpan = start.colEnd - start.colStart
                 let rowSpan = start.rowEnd - start.rowStart
+                let (bandLo, bandHi) = bandRowBounds
                 let newColStart = clamp(start.colStart + dc, lo: 0, hi: Double(maxCols) - colSpan)
-                let newRowStart = clamp(start.rowStart + dr, lo: 0, hi: Double(maxRows) - rowSpan)
+                let newRowStart = clamp(start.rowStart + dr, lo: bandLo, hi: bandHi - rowSpan)
                 draft.colStart = newColStart
                 draft.colEnd   = newColStart + colSpan
                 draft.rowStart = newRowStart
@@ -179,11 +161,12 @@ struct DraggableZoneView: View {
                 guard let start = anchor else { return }
                 let dx = Double(v.translation.width / cellSize)
                 let dy = Double(v.translation.height / cellSize)
+                let (bandLo, bandHi) = bandRowBounds
                 switch edge {
                 case .top:
-                    draft.rowStart = clamp(start.rowStart + dy, lo: 0, hi: start.rowEnd - GridGesture.minZoneSpan)
+                    draft.rowStart = clamp(start.rowStart + dy, lo: bandLo, hi: start.rowEnd - GridGesture.minZoneSpan)
                 case .bottom:
-                    draft.rowEnd   = clamp(start.rowEnd + dy, lo: start.rowStart + GridGesture.minZoneSpan, hi: Double(maxRows))
+                    draft.rowEnd   = clamp(start.rowEnd + dy, lo: start.rowStart + GridGesture.minZoneSpan, hi: bandHi)
                 case .leading:
                     draft.colStart = clamp(start.colStart + dx, lo: 0, hi: start.colEnd - GridGesture.minZoneSpan)
                 case .trailing:

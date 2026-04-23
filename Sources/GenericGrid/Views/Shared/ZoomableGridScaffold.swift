@@ -25,7 +25,7 @@ struct ZoomableGridScaffold<Content: View>: View {
     @ViewBuilder let content: (_ cellSize: CGFloat) -> Content
 
     private var hasLabels: Bool {
-        config.rowLabels != nil || config.colLabels != nil
+        config.rowLabels != nil || config.colLabels != nil || config.columnBands != nil
     }
 
     var body: some View {
@@ -34,12 +34,13 @@ struct ZoomableGridScaffold<Content: View>: View {
             let baseCS = config.baseCellSize(in: geo.size, margin: margin)
             let cs = baseCS * zoom
             let W  = CGFloat(config.cols) * cs
-            let H  = CGFloat(config.rows) * cs
+            let H  = config.totalContentHeight(cellSize: cs)
+            let bands = config.effectiveBands
 
-            ScrollView([.horizontal, .vertical], showsIndicators: true) {
+            ScrollView([.horizontal, .vertical], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
                     if hasLabels {
-                        columnLabels(cellSize: cs, margin: margin)
+                        topBandLabels(band: bands[0], cellSize: cs, margin: margin)
                             .offset(x: margin, y: 0)
                         rowLabels(cellSize: cs, margin: margin)
                             .offset(x: 0, y: margin)
@@ -47,6 +48,10 @@ struct ZoomableGridScaffold<Content: View>: View {
                     content(cs)
                         .frame(width: W, height: H)
                         .offset(x: margin, y: margin)
+                    if hasLabels, bands.count > 1 {
+                        intermediateBandHeaders(bands: bands, cellSize: cs, width: W)
+                            .offset(x: margin, y: margin)
+                    }
                 }
                 .frame(width: W + margin, height: H + margin)
                 .frame(
@@ -66,10 +71,10 @@ struct ZoomableGridScaffold<Content: View>: View {
 
     // MARK: - Labels
 
-    private func columnLabels(cellSize cs: CGFloat, margin: CGFloat) -> some View {
+    private func topBandLabels(band: ColumnBand, cellSize cs: CGFloat, margin: CGFloat) -> some View {
         HStack(spacing: 0) {
             ForEach(0..<config.cols, id: \.self) { c in
-                Text(config.colLabel(at: c))
+                Text(band.colLabel(at: c))
                     .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
                                   weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
@@ -78,14 +83,38 @@ struct ZoomableGridScaffold<Content: View>: View {
         }
     }
 
+    @ViewBuilder
+    private func intermediateBandHeaders(bands: [ColumnBand],
+                                         cellSize cs: CGFloat,
+                                         width W: CGFloat) -> some View {
+        ForEach(Array(bands.enumerated()), id: \.element.id) { idx, band in
+            if idx > 0 {
+                let y = (CGFloat(band.rowStart) + CGFloat(idx) - 1) * cs
+                HStack(spacing: 0) {
+                    ForEach(0..<config.cols, id: \.self) { c in
+                        Text(band.colLabel(at: c))
+                            .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
+                                          weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .frame(width: cs, height: cs)
+                    }
+                }
+                .frame(width: W, height: cs)
+                .background(.background.secondary)
+                .offset(x: 0, y: y)
+            }
+        }
+    }
+
     private func rowLabels(cellSize cs: CGFloat, margin: CGFloat) -> some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .topLeading) {
             ForEach(0..<config.rows, id: \.self) { r in
                 Text(config.rowLabel(at: r))
                     .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
                                   weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .frame(width: margin, height: cs)
+                    .offset(x: 0, y: config.yForRow(Double(r), cellSize: cs))
             }
         }
     }

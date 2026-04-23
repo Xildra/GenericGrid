@@ -4,8 +4,9 @@
 //
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
-//  JSON-driven configuration defining the grid dimensions,
-//  zones, labels, and bundle discovery helpers.
+//  Core JSON-driven configuration: grid dimensions, zones, labels,
+//  and the simple zone/snap/label lookups. Band geometry, band
+//  mutations, and bundle discovery live in dedicated extension files.
 //
 
 import SwiftUI
@@ -19,7 +20,14 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// Optional labels for each row (index 0 = row 0).
     public var rowLabels: [String]?
     /// Optional labels for each column (index 0 = column 0).
+    /// Ignored when `columnBands` is set and valid.
     public var colLabels: [String]?
+
+    /// Optional horizontal compartments of the grid, each carrying its
+    /// own set of column titles. When set and valid, takes precedence
+    /// over the flat `colLabels`. Bands must be contiguous and cover
+    /// every row from 0 to `rows - 1`.
+    public var columnBands: [ColumnBand]?
 
     /// Whether the main grid lines are drawn. Only a visual toggle —
     /// zone rectangles and their own internal grids are always shown.
@@ -28,16 +36,18 @@ public struct GridCanvasConfig: Codable, Sendable {
     public init(rows: Int = GridDefaults.rows, cols: Int = GridDefaults.cols,
                 zones: [GridZoneDefinition] = [], title: String? = nil,
                 rowLabels: [String]? = nil, colLabels: [String]? = nil,
+                columnBands: [ColumnBand]? = nil,
                 showMainGrid: Bool = true) {
         self.rows = rows; self.cols = cols
         self.zones = zones; self.title = title
         self.rowLabels = rowLabels; self.colLabels = colLabels
+        self.columnBands = columnBands
         self.showMainGrid = showMainGrid
     }
 
-    // Custom decoding so older JSON without `showMainGrid` still loads.
+    // Custom decoding so older JSON without `showMainGrid` / `columnBands` still loads.
     private enum CodingKeys: String, CodingKey {
-        case rows, cols, zones, title, rowLabels, colLabels, showMainGrid
+        case rows, cols, zones, title, rowLabels, colLabels, columnBands, showMainGrid
     }
 
     public init(from decoder: Decoder) throws {
@@ -48,6 +58,7 @@ public struct GridCanvasConfig: Codable, Sendable {
         title = try c.decodeIfPresent(String.self, forKey: .title)
         rowLabels = try c.decodeIfPresent([String].self, forKey: .rowLabels)
         colLabels = try c.decodeIfPresent([String].self, forKey: .colLabels)
+        columnBands = try c.decodeIfPresent([ColumnBand].self, forKey: .columnBands)
         showMainGrid = try c.decodeIfPresent(Bool.self, forKey: .showMainGrid) ?? true
     }
 
@@ -60,6 +71,8 @@ public struct GridCanvasConfig: Codable, Sendable {
     }
 
     /// Column label at the given index, falling back to "A", "B", "C"…
+    /// This is the flat (single-band) lookup — prefer
+    /// `colLabel(at:forRow:)` when compartments may be involved.
     public func colLabel(at index: Int) -> String {
         if let labels = colLabels, index < labels.count { return labels[index] }
         let letter = index < 26 ? String(UnicodeScalar(65 + index)!) : "\(index)"
@@ -108,14 +121,20 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// Minimum cell width required so the widest column label fits.
     /// Falls back to `GridCellSize.absoluteMin` when no custom labels are set.
     public func minCellWidthForLabels() -> CGFloat {
-        guard colLabels != nil else { return GridCellSize.absoluteMin }
+        guard colLabels != nil || columnBands != nil else {
+            return GridCellSize.absoluteMin
+        }
         #if canImport(UIKit)
         let font = UIFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
         #elseif canImport(AppKit)
         let font = NSFont.systemFont(ofSize: GridDefaults.labelMeasureFontSize, weight: .medium)
         #endif
-        let maxWidth = (0..<cols).map { c in
-            (colLabel(at: c) as NSString).size(withAttributes: [.font: font]).width
+        let bands = effectiveBands
+        let maxWidth = bands.flatMap { band in
+            (0..<cols).map { c in
+                (band.colLabel(at: c) as NSString)
+                    .size(withAttributes: [.font: font]).width
+            }
         }.max() ?? 0
         return maxWidth + GridCellSize.labelPadding
     }
@@ -126,7 +145,7 @@ public struct GridCanvasConfig: Codable, Sendable {
         let availW = size.width  - margin
         let availH = size.height - margin
         let byCol = availW / CGFloat(cols)
-        let byRow = availH / CGFloat(rows)
+        let byRow = availH / CGFloat(max(1, totalVerticalCells))
         let fitSize = min(byCol, byRow)
         return max(minCellWidthForLabels(), max(GridCellSize.absoluteMin, fitSize))
     }
@@ -142,42 +161,13 @@ public struct GridCanvasConfig: Codable, Sendable {
 
     /// Loads a config from a local or imported URL.
     public static func load(url: URL) -> GridCanvasConfig? {
-		guard let data = try? Data(contentsOf: url) else { return nil }
+        guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(GridCanvasConfig.self, from: data)
     }
 
     // MARK: - Default config (empty grid)
 
-    public static let `default` = GridCanvasConfig(rows: GridDefaults.rows, cols: GridDefaults.cols, title: "Empty grid")
-
-    // MARK: - Bundle discovery
-
-    /// Represents a config found inside the app bundle.
-    public struct BundleEntry: Identifiable {
-        public let id: String          // filename without extension
-        public let filename: String    // full filename (with .json)
-        public let config: GridCanvasConfig
-
-        public var title: String { config.title ?? id }
-        public var subtitle: String { "\(config.cols)×\(config.rows) — \(config.zones.count) zones" }
-    }
-
-    /// Scans the bundle for files matching `*_config.json` or `grid_*.json`
-    /// and attempts to decode them as `GridCanvasConfig`.
-    public static func discoverConfigs(in bundle: Bundle = .main,
-                                        suffix: String = "_config") -> [BundleEntry] {
-        guard let resourceURL = bundle.resourceURL else { return [] }
-        let files = (try? FileManager.default.contentsOfDirectory(
-            at: resourceURL, includingPropertiesForKeys: nil
-        )) ?? []
-
-        return files.compactMap { url -> BundleEntry? in
-            guard url.pathExtension == "json" else { return nil }
-            let name = url.deletingPathExtension().lastPathComponent
-            guard name.contains(suffix) || name.hasPrefix("grid_") else { return nil }
-            guard let config = load(url: url) else { return nil }
-            return BundleEntry(id: name, filename: url.lastPathComponent, config: config)
-        }
-        .sorted { $0.title < $1.title }
-    }
+    public static let `default` = GridCanvasConfig(rows: GridDefaults.rows,
+                                                   cols: GridDefaults.cols,
+                                                   title: "Empty grid")
 }

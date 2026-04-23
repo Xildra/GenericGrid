@@ -10,13 +10,14 @@
 import SwiftUI
 
 struct GridZoneOverlayLayer: View {
+    let config: GridCanvasConfig
     let zones: [GridZoneDefinition]
     let cellSize: CGFloat
 
     var body: some View {
         ForEach(zones) { zone in
             let x = zone.colStart * cellSize
-            let y = zone.rowStart * cellSize
+            let y = config.yForRow(zone.rowStart, cellSize: cellSize)
             let w = (zone.colEnd - zone.colStart) * cellSize
             let h = (zone.rowEnd - zone.rowStart) * cellSize
             let shortSide = min(w, h)

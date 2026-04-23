@@ -24,7 +24,7 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
     var onConflict: ((GridCell, Item) -> Void)?
 
     private var W: CGFloat { CGFloat(engine.cols) * cellSize }
-    private var H: CGFloat { CGFloat(engine.rows) * cellSize }
+    private var H: CGFloat { engine.config.totalContentHeight(cellSize: cellSize) }
 
     var body: some View {
         Rectangle()
@@ -83,12 +83,14 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
     // MARK: - Helpers
 
     /// Converts a touch point to the anchor cell it falls into.
+    /// Y is converted back to a logical row through `rowForY` so
+    /// intermediate compartment headers are not valid drop targets.
     /// Delegates to `GridCanvasConfig.snap` which snaps to the owning
     /// zone's local step when inside a subdivision zone, or to the
     /// global half-cell guide otherwise.
     private func toCell(_ pt: CGPoint) -> GridCell? {
         let rowsD = Double(engine.rows), colsD = Double(engine.cols)
-        let r = Double(pt.y / cellSize)
+        guard let r = engine.config.rowForY(pt.y, cellSize: cellSize) else { return nil }
         let c = Double(pt.x / cellSize)
         guard r >= 0, r <= rowsD, c >= 0, c <= colsD else { return nil }
         let snapped = engine.config.snap(GridCell(r, c: c))

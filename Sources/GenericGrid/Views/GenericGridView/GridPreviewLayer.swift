@@ -13,6 +13,7 @@
 import SwiftUI
 
 struct GridPreviewLayer: View {
+    let config: GridCanvasConfig
     let cells: Set<GridCell>
     let isValid: Bool
     let cellSize: CGFloat
@@ -39,8 +40,9 @@ struct GridPreviewLayer: View {
         let minR = rs.min()!, maxR = rs.max()! + GridGesture.halfCell
         let minC = cs.min()!, maxC = cs.max()! + GridGesture.halfCell
         let inset = GridLayout.previewInset
+        let yTop = config.yForRow(minR, cellSize: cellSize)
         return CGRect(x: minC * cellSize + inset,
-                      y: minR * cellSize + inset,
+                      y: yTop + inset,
                       width:  (maxC - minC) * cellSize - inset * 2,
                       height: (maxR - minR) * cellSize - inset * 2)
     }
