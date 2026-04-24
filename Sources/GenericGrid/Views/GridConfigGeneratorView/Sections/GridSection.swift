@@ -25,8 +25,14 @@ struct GridSection: View {
             .focused($focusedField)
 
             DimensionsField(
-                rows: $config.rows,
-                cols: $config.cols,
+                rows: Binding(
+                    get: { config.rows },
+                    set: { config.setRows($0) }
+                ),
+                cols: Binding(
+                    get: { config.cols },
+                    set: { config.setCols($0) }
+                ),
                 focusedField: $focusedField
             )
 

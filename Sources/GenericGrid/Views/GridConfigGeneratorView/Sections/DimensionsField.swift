@@ -6,6 +6,9 @@
 //
 //  Compact 3-row control for the grid dimensions:
 //  labels / values with `×` separator / paired steppers.
+//  TextField edits are buffered and committed on submit/blur so
+//  intermediate partial values (e.g. "1" while typing "12") don't
+//  trigger destructive resizes of compartments and zones.
 //
 
 import SwiftUI
@@ -16,6 +19,11 @@ struct DimensionsField: View {
     @Binding var cols: Int
     @FocusState.Binding var focusedField: Bool
 
+    @State private var rowsText: String = ""
+    @State private var colsText: String = ""
+    @FocusState private var rowsFocused: Bool
+    @FocusState private var colsFocused: Bool
+
     private let separatorWidth: CGFloat = 24
 
     var body: some View {
@@ -23,6 +31,15 @@ struct DimensionsField: View {
             labelsRow
             valuesRow
             steppersRow
+        }
+        .onAppear { syncText() }
+        .onChange(of: rows) { _, _ in if !rowsFocused { syncText() } }
+        .onChange(of: cols) { _, _ in if !colsFocused { syncText() } }
+        .onChange(of: rowsFocused) { _, isFocused in
+            if !isFocused { commitRows() }
+        }
+        .onChange(of: colsFocused) { _, isFocused in
+            if !isFocused { commitCols() }
         }
     }
 
@@ -40,11 +57,11 @@ struct DimensionsField: View {
 
     private var valuesRow: some View {
         HStack(spacing: 0) {
-            countField(value: $rows)
+            rowsField
             Text("×")
                 .frame(width: separatorWidth)
                 .foregroundStyle(.secondary)
-            countField(value: $cols)
+            colsField
         }
         .font(.title3.monospacedDigit())
     }
@@ -61,13 +78,46 @@ struct DimensionsField: View {
         }
     }
 
-    private func countField(value: Binding<Int>) -> some View {
-        TextField("", value: value, format: .number)
+    private var rowsField: some View {
+        TextField("", text: $rowsText)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
+            .focused($rowsFocused)
             .focused($focusedField)
             #if os(iOS)
             .keyboardType(.numberPad)
             #endif
+            .onSubmit { commitRows() }
+    }
+
+    private var colsField: some View {
+        TextField("", text: $colsText)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .focused($colsFocused)
+            .focused($focusedField)
+            #if os(iOS)
+            .keyboardType(.numberPad)
+            #endif
+            .onSubmit { commitCols() }
+    }
+
+    private func syncText() {
+        rowsText = "\(rows)"
+        colsText = "\(cols)"
+    }
+
+    private func commitRows() {
+        if let parsed = Int(rowsText.trimmingCharacters(in: .whitespaces)), parsed > 0 {
+            rows = parsed
+        }
+        rowsText = "\(rows)"
+    }
+
+    private func commitCols() {
+        if let parsed = Int(colsText.trimmingCharacters(in: .whitespaces)), parsed > 0 {
+            cols = parsed
+        }
+        colsText = "\(cols)"
     }
 }
