@@ -4,9 +4,12 @@
 //
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
-//  Core JSON-driven configuration: grid dimensions, zones, labels,
-//  and the simple zone/snap/label lookups. Band geometry, band
-//  mutations, and bundle discovery live in dedicated extension files.
+//  Core JSON-driven configuration: grid dimensions, compartments
+//  (column bands), and the simple zone/snap/label lookups. Zones
+//  are owned by their compartment — the flat `zones` accessor is a
+//  read-only flattened view provided for convenience. Band geometry,
+//  band mutations, zone mutations, and bundle discovery live in
+//  dedicated extension files.
 //
 
 import SwiftUI
@@ -14,7 +17,6 @@ import SwiftUI
 public struct GridCanvasConfig: Codable, Sendable {
     public var rows: Int
     public var cols: Int
-    public var zones: [GridZoneDefinition]
     public var title: String?
 
     /// Optional labels for each row (index 0 = row 0).
@@ -23,10 +25,11 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// Ignored when `columnBands` is set and valid.
     public var colLabels: [String]?
 
-    /// Optional horizontal compartments of the grid, each carrying its
-    /// own set of column titles. When set and valid, takes precedence
-    /// over the flat `colLabels`. Bands must be contiguous and cover
-    /// every row from 0 to `rows - 1`.
+    /// Horizontal compartments of the grid. Each band carries its own
+    /// column titles and the zones placed inside its row range. When nil,
+    /// the grid is treated as a single implicit compartment (see
+    /// `effectiveBands`). As soon as a zone is added, the config is
+    /// promoted so `columnBands` is never nil for non-empty grids.
     public var columnBands: [ColumnBand]?
 
     /// Whether the main grid lines are drawn. Only a visual toggle —
@@ -39,13 +42,20 @@ public struct GridCanvasConfig: Codable, Sendable {
                 columnBands: [ColumnBand]? = nil,
                 showMainGrid: Bool = true) {
         self.rows = rows; self.cols = cols
-        self.zones = zones; self.title = title
+        self.title = title
         self.rowLabels = rowLabels; self.colLabels = colLabels
         self.columnBands = columnBands
         self.showMainGrid = showMainGrid
+        // Zones live inside compartments: distribute the top-level
+        // array into the matching band, synthesizing one if needed.
+        if !zones.isEmpty {
+            ingestLegacyZones(zones)
+        }
     }
 
-    // Custom decoding so older JSON without `showMainGrid` / `columnBands` still loads.
+    // Legacy `zones` is accepted on decode for backwards compatibility
+    // but is never emitted on encode — zones are written inside their
+    // owning compartment.
     private enum CodingKeys: String, CodingKey {
         case rows, cols, zones, title, rowLabels, colLabels, columnBands, showMainGrid
     }
@@ -54,12 +64,49 @@ public struct GridCanvasConfig: Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         rows = try c.decode(Int.self, forKey: .rows)
         cols = try c.decode(Int.self, forKey: .cols)
-        zones = try c.decodeIfPresent([GridZoneDefinition].self, forKey: .zones) ?? []
         title = try c.decodeIfPresent(String.self, forKey: .title)
         rowLabels = try c.decodeIfPresent([String].self, forKey: .rowLabels)
         colLabels = try c.decodeIfPresent([String].self, forKey: .colLabels)
         columnBands = try c.decodeIfPresent([ColumnBand].self, forKey: .columnBands)
         showMainGrid = try c.decodeIfPresent(Bool.self, forKey: .showMainGrid) ?? true
+        let legacyZones = try c.decodeIfPresent([GridZoneDefinition].self, forKey: .zones) ?? []
+        if !legacyZones.isEmpty {
+            ingestLegacyZones(legacyZones)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(rows, forKey: .rows)
+        try c.encode(cols, forKey: .cols)
+        try c.encodeIfPresent(title, forKey: .title)
+        try c.encodeIfPresent(rowLabels, forKey: .rowLabels)
+        try c.encodeIfPresent(colLabels, forKey: .colLabels)
+        try c.encodeIfPresent(columnBands, forKey: .columnBands)
+        try c.encode(showMainGrid, forKey: .showMainGrid)
+    }
+
+    /// Seeds columnBands with the supplied legacy flat zone list,
+    /// placing each zone inside the band containing its `rowStart`.
+    private mutating func ingestLegacyZones(_ legacy: [GridZoneDefinition]) {
+        promoteToColumnBandsIfNeeded()
+        guard var bands = columnBands, !bands.isEmpty else { return }
+        for zone in legacy {
+            let startRow = Int(zone.rowStart.rounded(.down))
+            let idx = bands.firstIndex(where: { $0.contains(row: startRow) })
+                ?? bands.indices.last ?? 0
+            bands[idx].zones.append(zone)
+        }
+        columnBands = bands
+    }
+
+    // MARK: - Flat zone view
+
+    /// Flattened, read-only view of every zone in the grid. Ordered by
+    /// compartment (top to bottom), preserving each compartment's local
+    /// zone order. Use `addZone`, `updateZone`, or `removeZone` to mutate.
+    public var zones: [GridZoneDefinition] {
+        effectiveBands.flatMap(\.zones)
     }
 
     // MARK: - Label helpers

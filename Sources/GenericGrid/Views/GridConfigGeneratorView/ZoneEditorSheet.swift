@@ -41,13 +41,16 @@ struct ZoneEditorSheet: View {
          onSave: @escaping (GridZoneDefinition) -> Void) {
         self.config = config
         self.onSave = onSave
-        self.isNew = zone == nil
 
         let defaultEnd = min(GridDefaults.newZoneEnd, Double(config.rows))
-        self.zone = zone ?? GridZoneDefinition(
+        let seed = zone ?? GridZoneDefinition(
             rowEnd: defaultEnd,
             colEnd: min(GridDefaults.newZoneEnd, Double(config.cols))
         )
+        self.zone = seed
+        // "New" means the zone isn't persisted yet — detected by id, so a
+        // pre-seeded default zone still shows the "New Zone" title.
+        self.isNew = !config.containsZone(id: seed.id)
     }
 
     // Size bindings: read the integer count, write end = start + count.
@@ -114,10 +117,11 @@ struct ZoneEditorSheet: View {
                     Section("Compartment") {
                         Picker("Compartment", selection: compartmentBinding) {
                             ForEach(Array(bands.enumerated()), id: \.element.id) { idx, band in
-                                Text("Rows \(band.rowStart)–\(band.rowEnd)")
+                                Text("Rows \(band.rowStart + 1)–\(band.rowEnd + 1)")
                                     .tag(idx)
                             }
                         }
+                        .pickerStyle(.menu)
                     }
                 }
 
@@ -158,7 +162,7 @@ struct ZoneEditorSheet: View {
                     .disabled(zone.label.isEmpty || zone.rowEnd <= zone.rowStart || zone.colEnd <= zone.colStart)
                 }
             }
-            .onTapGesture { focusedField = false }
+            .scrollDismissesKeyboard(.interactively)
         }
         #if os(iOS)
         .presentationDetents([.large])

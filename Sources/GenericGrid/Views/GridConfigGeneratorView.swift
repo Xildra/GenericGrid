@@ -23,14 +23,13 @@ public struct GridConfigGeneratorView: View {
 	@State private var exportDocument: ConfigDocument?
 	
 	@State private var sourceURL: URL?
-	@State private var editingBandID: UUID?
-	
+	@State private var editingBand: EditingBandRef?
+
 	@State private var splitRow: Int = 1
 	@State private var importError: String?
-	
+
     @State private var showZoneSheet = false
     @State private var showRowLabelsSheet = false
-    @State private var showBandLabelsSheet = false
     @State private var showSplitSheet = false
 	
     @State private var showImporter = false
@@ -77,8 +76,7 @@ public struct GridConfigGeneratorView: View {
             editingZone: $editingZone,
             showZoneSheet: $showZoneSheet,
             showRowLabelsSheet: $showRowLabelsSheet,
-            editingBandID: $editingBandID,
-            showBandLabelsSheet: $showBandLabelsSheet,
+            editingBand: $editingBand,
             showSplitSheet: $showSplitSheet,
             splitRow: $splitRow,
             onDismissFocus: { focusedField = false }
@@ -106,15 +104,18 @@ public struct GridConfigGeneratorView: View {
             )
             CompartmentsSection(
                 config: $config,
-                editingBandID: $editingBandID,
-                showBandLabelsSheet: $showBandLabelsSheet,
+                editingBand: $editingBand,
                 showSplitSheet: $showSplitSheet,
-                splitRow: $splitRow
+                splitRow: $splitRow,
+                onEditZone: { zone in
+                    editingZone = zone
+                    showZoneSheet = true
+                },
+                onAddZone: { band in
+                    editingZone = seededZone(in: band)
+                    showZoneSheet = true
+                }
             )
-            ZonesListSection(config: $config) { zone in
-                editingZone = zone
-                showZoneSheet = true
-            }
         }
         .navigationTitle("Aircraft Configuration Maker")
         #if os(iOS)
@@ -132,6 +133,18 @@ public struct GridConfigGeneratorView: View {
         .safeAreaInset(edge: .bottom) {
             saveButton
         }
+    }
+
+    /// Builds a new zone pre-positioned inside the given compartment.
+    private func seededZone(in band: ColumnBand) -> GridZoneDefinition {
+        let size = min(GridDefaults.newZoneEnd, Double(max(1, band.rowCount)))
+        let colSize = min(GridDefaults.newZoneEnd, Double(config.cols))
+        return GridZoneDefinition(
+            rowStart: Double(band.rowStart),
+            rowEnd: Double(band.rowStart) + size,
+            colStart: 0,
+            colEnd: colSize
+        )
     }
 
     private var saveButton: some View {

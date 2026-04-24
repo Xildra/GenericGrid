@@ -17,7 +17,7 @@ struct GridSection: View {
     @FocusState.Binding var focusedField: Bool
 
     var body: some View {
-        Section("Grid") {
+        Section("General") {
             TextField("Title", text: Binding(
                 get: { config.title ?? "" },
                 set: { config.title = $0.isEmpty ? nil : $0 }

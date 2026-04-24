@@ -26,12 +26,12 @@ struct ConfigGridPreviewView: View {
                                     showLines: config.showMainGrid)
                 GridZoneSubdivisionLayer(config: config, zones: config.zones, cellSize: cs)
 
-                ForEach(Array(config.zones.enumerated()), id: \.element.id) { idx, zone in
+                ForEach(config.zones) { zone in
                     DraggableZoneView(
                         zone: zone,
                         config: config,
                         cellSize: cs,
-                        onUpdate: { updated in config.zones[idx] = updated },
+                        onUpdate: { updated in config.updateZone(updated) },
                         onTap:    { onEditZone(zone) }
                     )
                 }

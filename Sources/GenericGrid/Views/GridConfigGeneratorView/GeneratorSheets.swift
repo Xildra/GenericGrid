@@ -20,8 +20,7 @@ struct GeneratorSheets: ViewModifier {
 
     @Binding var showRowLabelsSheet: Bool
 
-    @Binding var editingBandID: UUID?
-    @Binding var showBandLabelsSheet: Bool
+    @Binding var editingBand: EditingBandRef?
 
     @Binding var showSplitSheet: Bool
     @Binding var splitRow: Int
@@ -32,10 +31,10 @@ struct GeneratorSheets: ViewModifier {
         content
             .sheet(isPresented: $showZoneSheet, onDismiss: onDismissFocus) {
                 ZoneEditorSheet(zone: editingZone, config: config) { saved in
-                    if let idx = config.zones.firstIndex(where: { $0.id == saved.id }) {
-                        config.zones[idx] = saved
+                    if config.containsZone(id: saved.id) {
+                        config.updateZone(saved)
                     } else {
-                        config.zones.append(saved)
+                        config.addZone(saved)
                     }
                 }
             }
@@ -50,8 +49,8 @@ struct GeneratorSheets: ViewModifier {
                     config.rowLabels = nil
                 }
             }
-            .sheet(isPresented: $showBandLabelsSheet, onDismiss: onDismissFocus) {
-                bandLabelsSheet
+            .sheet(item: $editingBand, onDismiss: onDismissFocus) { ref in
+                CompartmentEditorSheet(config: $config, bandID: ref.id)
             }
             .sheet(isPresented: $showSplitSheet) {
                 SplitCompartmentSheet(
@@ -62,20 +61,13 @@ struct GeneratorSheets: ViewModifier {
                 }
             }
     }
+}
 
-    @ViewBuilder
-    private var bandLabelsSheet: some View {
-        if let id = editingBandID,
-           let band = config.effectiveBands.first(where: { $0.id == id }) {
-            LabelsEditorSheet(
-                kind: "Column",
-                count: config.cols,
-                labels: band.labels ?? (0..<config.cols).map { band.colLabel(at: $0) }
-            ) { saved in
-                config.updateBandLabels(id: id, labels: saved)
-            } onReset: {
-                config.updateBandLabels(id: id, labels: nil)
-            }
-        }
-    }
+/// Identifiable reference to the compartment currently being edited.
+/// Driving the sheet via `.sheet(item:)` avoids the empty-sheet race
+/// where `editingBandID` isn't yet propagated when the content closure
+/// is first evaluated.
+@available(iOS 17.0, macOS 14.0, *)
+struct EditingBandRef: Identifiable, Hashable {
+    let id: UUID
 }

@@ -87,6 +87,9 @@ public enum GridDash {
 public enum GridOpacity {
     // Grid
     static let gridLine: Double = 0.3
+    /// Tinted fill for the intermediate compartment header strips.
+    /// Kept low so the row integrates with the grid without flashing.
+    static let bandHeaderFill: Double = 0.08
     /// Opacity for zone-local subdivision lines (stronger than the global
     /// grid so the zone-local layout stands out even when whole-aligned).
     static let subdivisionLine: Double = 0.55

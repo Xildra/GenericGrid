@@ -100,7 +100,9 @@ struct ZoomableGridScaffold<Content: View>: View {
                     }
                 }
                 .frame(width: W, height: cs)
-                .background(.background.secondary)
+                .background(Color.accentColor.opacity(GridOpacity.bandHeaderFill))
+                .overlay(alignment: .top) { Divider() }
+                .overlay(alignment: .bottom) { Divider() }
                 .offset(x: 0, y: y)
             }
         }
