@@ -85,17 +85,21 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
     /// Converts a touch point to the anchor cell it falls into.
     /// Y is converted back to a logical row through `rowForY` so
     /// intermediate compartment headers are not valid drop targets.
+    /// X is converted using the owning compartment's cell width so
+    /// bands with custom column counts hit-test correctly.
     /// Delegates to `GridCanvasConfig.snap` which snaps to the owning
     /// zone's local step when inside a subdivision zone, or to the
     /// global half-cell guide otherwise.
     private func toCell(_ pt: CGPoint) -> GridCell? {
-        let rowsD = Double(engine.rows), colsD = Double(engine.cols)
+        let rowsD = Double(engine.rows)
         guard let r = engine.config.rowForY(pt.y, cellSize: cellSize) else { return nil }
-        let c = Double(pt.x / cellSize)
-        guard r >= 0, r <= rowsD, c >= 0, c <= colsD else { return nil }
+        let band = engine.config.band(forRow: Int(r.rounded(.down)))
+        let bandCols = Double(engine.config.cols(for: band))
+        let c = engine.config.colForX(pt.x, in: band, baseCellSize: cellSize)
+        guard r >= 0, r <= rowsD, c >= 0, c <= bandCols else { return nil }
         let snapped = engine.config.snap(GridCell(r, c: c))
         guard snapped.r + GridGesture.halfCell <= rowsD,
-              snapped.c + GridGesture.halfCell <= colsD else { return nil }
+              snapped.c + GridGesture.halfCell <= bandCols else { return nil }
         return snapped
     }
 }

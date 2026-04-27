@@ -116,6 +116,38 @@ extension GridCanvasConfig {
         CGFloat(totalVerticalCells) * cs
     }
 
+    // MARK: - Band-local column geometry
+
+    /// Effective column count for the given band: its override or the
+    /// grid-level default.
+    public func cols(for band: ColumnBand) -> Int {
+        band.effectiveCols(default: cols)
+    }
+
+    /// Pixel width of one cell inside the given band. The grid's total
+    /// width is `cs * grid.cols`, distributed evenly across the band's
+    /// own column count — bands with fewer cols get wider cells.
+    public func bandCellWidth(_ band: ColumnBand, baseCellSize cs: CGFloat) -> CGFloat {
+        let bandCols = max(1, cols(for: band))
+        return cs * CGFloat(cols) / CGFloat(bandCols)
+    }
+
+    /// X coordinate (in pixels) of a column coordinate inside the given
+    /// band. `col` is in the band's local column space.
+    public func xForCol(_ col: Double, in band: ColumnBand,
+                        baseCellSize cs: CGFloat) -> CGFloat {
+        CGFloat(col) * bandCellWidth(band, baseCellSize: cs)
+    }
+
+    /// Inverse of `xForCol`: converts a pixel x inside the given band
+    /// back to a column coordinate in the band's local space.
+    public func colForX(_ x: CGFloat, in band: ColumnBand,
+                        baseCellSize cs: CGFloat) -> Double {
+        let bandCellW = bandCellWidth(band, baseCellSize: cs)
+        guard bandCellW > 0 else { return 0 }
+        return Double(x / bandCellW)
+    }
+
     // MARK: - Validation
 
     /// Validates that bands are non-empty, sorted, contiguous, and

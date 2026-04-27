@@ -70,13 +70,15 @@ extension GridCanvasConfig {
     }
 
     /// Clamps a zone to the current grid and compartment bounds.
-    /// Returns nil if the zone no longer fits.
+    /// Returns nil if the zone no longer fits. Uses the band's
+    /// effective column count (its override or `grid.cols`).
     private func clampZone(_ zone: GridZoneDefinition,
                            band: ColumnBand) -> GridZoneDefinition? {
         var z = zone
-        if z.rowStart >= Double(rows) || z.colStart >= Double(cols) { return nil }
+        let bandCols = band.effectiveCols(default: cols)
+        if z.rowStart >= Double(rows) || z.colStart >= Double(bandCols) { return nil }
         z.rowEnd = min(z.rowEnd, Double(rows))
-        z.colEnd = min(z.colEnd, Double(cols))
+        z.colEnd = min(z.colEnd, Double(bandCols))
         let bandMax = Double(band.rowEnd + 1)
         z.rowEnd = min(z.rowEnd, bandMax)
         if z.rowEnd <= z.rowStart || z.colEnd <= z.colStart { return nil }

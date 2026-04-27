@@ -156,10 +156,11 @@ struct CompartmentsSection: View {
         )
     }
 
-    /// All column titles joined on one line — truncation at the row
-    /// level handles overflow, so we show as many as will fit.
+    /// All column titles of the band on one line — truncation at the
+    /// row level handles overflow. Uses the band's own column count.
     private func labelPreview(for band: ColumnBand) -> String {
-        (0..<config.cols)
+        let bandCols = band.effectiveCols(default: config.cols)
+        return (0..<bandCols)
             .map { band.colLabel(at: $0) }
             .joined(separator: " ")
     }

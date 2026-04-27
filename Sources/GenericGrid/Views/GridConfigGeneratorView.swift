@@ -135,10 +135,12 @@ public struct GridConfigGeneratorView: View {
         }
     }
 
-    /// Builds a new zone pre-positioned inside the given compartment.
+    /// Builds a new zone pre-positioned inside the given compartment,
+    /// using the compartment's own column count.
     private func seededZone(in band: ColumnBand) -> GridZoneDefinition {
+        let bandCols = band.effectiveCols(default: config.cols)
         let size = min(GridDefaults.newZoneEnd, Double(max(1, band.rowCount)))
-        let colSize = min(GridDefaults.newZoneEnd, Double(config.cols))
+        let colSize = min(GridDefaults.newZoneEnd, Double(bandCols))
         return GridZoneDefinition(
             rowStart: Double(band.rowStart),
             rowEnd: Double(band.rowStart) + size,

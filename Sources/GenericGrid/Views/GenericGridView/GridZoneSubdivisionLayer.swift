@@ -20,7 +20,10 @@ struct GridZoneSubdivisionLayer: View {
 
     var body: some View {
         ForEach(zones) { zone in
-            ZoneInternalGridView(zone: zone, cellSize: cellSize,
+            let band = config.band(forRow: Int(zone.rowStart.rounded(.down)))
+            ZoneInternalGridView(zone: zone,
+                                 bandCellWidth: config.bandCellWidth(band, baseCellSize: cellSize),
+                                 cellHeight: cellSize,
                                  yOrigin: config.yForRow(zone.rowStart, cellSize: cellSize))
                 .allowsHitTesting(false)
         }
@@ -30,14 +33,15 @@ struct GridZoneSubdivisionLayer: View {
 @available(iOS 17.0, macOS 14.0, *)
 private struct ZoneInternalGridView: View {
     let zone: GridZoneDefinition
-    let cellSize: CGFloat
+    let bandCellWidth: CGFloat
+    let cellHeight: CGFloat
     let yOrigin: CGFloat
 
     var body: some View {
-        let x = zone.colStart * cellSize
+        let x = CGFloat(zone.colStart) * bandCellWidth
         let y = yOrigin
-        let w = zone.colSize * cellSize
-        let h = zone.rowSize * cellSize
+        let w = CGFloat(zone.colSize) * bandCellWidth
+        let h = CGFloat(zone.rowSize) * cellHeight
         let rowCount = zone.rowCount
         let colCount = zone.colCount
 

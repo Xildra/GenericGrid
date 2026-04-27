@@ -39,18 +39,28 @@ struct DraggableZoneView: View {
 
     // MARK: - Geometry
 
-    private var x: CGFloat { draft.colStart * cellSize }
-    private var y: CGFloat { config.yForRow(draft.rowStart, cellSize: cellSize) }
-    private var w: CGFloat { (draft.colEnd - draft.colStart) * cellSize }
-    private var h: CGFloat { (draft.rowEnd - draft.rowStart) * cellSize }
+    /// Compartment that owns the zone — the zone is constrained to it.
+    private var ownerBand: ColumnBand {
+        config.band(forRow: Int(zone.rowStart.rounded(.down)))
+    }
 
-    private var maxCols: Int { config.cols }
+    /// Pixel width of one column inside the owning compartment.
+    private var bandCellW: CGFloat {
+        config.bandCellWidth(ownerBand, baseCellSize: cellSize)
+    }
+
+    private var x: CGFloat { CGFloat(draft.colStart) * bandCellW }
+    private var y: CGFloat { config.yForRow(draft.rowStart, cellSize: cellSize) }
+    private var w: CGFloat { CGFloat(draft.colEnd - draft.colStart) * bandCellW }
+    private var h: CGFloat { CGFloat(draft.rowEnd - draft.rowStart) * cellSize }
+
+    /// Maximum column index in the owning compartment's local space.
+    private var maxCols: Int { config.cols(for: ownerBand) }
 
     /// Row-range bounds (inclusive start, exclusive end) of the compartment
     /// that owns the zone — the zone cannot leave this range.
     private var bandRowBounds: (lo: Double, hi: Double) {
-        let band = config.band(forRow: Int(zone.rowStart.rounded(.down)))
-        return (Double(band.rowStart), Double(band.rowEnd + 1))
+        (Double(ownerBand.rowStart), Double(ownerBand.rowEnd + 1))
     }
 
     /// Snaps a value to the nearest half-cell (0, 0.5, 1, 1.5…).
@@ -104,7 +114,7 @@ struct DraggableZoneView: View {
             }
             .onChanged { v in
                 guard let start = anchor else { return }
-                let dc = Double(v.translation.width / cellSize)
+                let dc = Double(v.translation.width / bandCellW)
                 let dr = Double(v.translation.height / cellSize)
                 let colSpan = start.colEnd - start.colStart
                 let rowSpan = start.rowEnd - start.rowStart
@@ -159,7 +169,7 @@ struct DraggableZoneView: View {
             }
             .onChanged { v in
                 guard let start = anchor else { return }
-                let dx = Double(v.translation.width / cellSize)
+                let dx = Double(v.translation.width / bandCellW)
                 let dy = Double(v.translation.height / cellSize)
                 let (bandLo, bandHi) = bandRowBounds
                 switch edge {

@@ -21,6 +21,11 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
     public var rowEnd: Int
     /// Optional labels, one per column. When nil, falls back to A/B/C…
     public var labels: [String]?
+    /// Optional column count override for this compartment. When nil
+    /// the band inherits the grid's `cols`. Allows compartments to
+    /// have wider/narrower cells than the rest of the grid while the
+    /// total width stays the same.
+    public var cols: Int?
     /// Zones belonging to this compartment. A zone's `rowStart` must
     /// fall inside the band's row range — enforced by the mutating
     /// helpers on `GridCanvasConfig`.
@@ -30,16 +35,18 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
                 rowStart: Int,
                 rowEnd: Int,
                 labels: [String]? = nil,
+                cols: Int? = nil,
                 zones: [GridZoneDefinition] = []) {
         self.id = id
         self.rowStart = rowStart
         self.rowEnd = rowEnd
         self.labels = labels
+        self.cols = cols
         self.zones = zones
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, rowStart, rowEnd, labels, zones
+        case id, rowStart, rowEnd, labels, cols, zones
     }
 
     public init(from decoder: Decoder) throws {
@@ -48,7 +55,13 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
         rowStart = try c.decode(Int.self, forKey: .rowStart)
         rowEnd = try c.decode(Int.self, forKey: .rowEnd)
         labels = try c.decodeIfPresent([String].self, forKey: .labels)
+        cols = try c.decodeIfPresent(Int.self, forKey: .cols)
         zones = try c.decodeIfPresent([GridZoneDefinition].self, forKey: .zones) ?? []
+    }
+
+    /// Effective column count: this band's override or the grid default.
+    public func effectiveCols(default gridCols: Int) -> Int {
+        max(1, cols ?? gridCols)
     }
 
     /// Number of rows the band spans (inclusive range).

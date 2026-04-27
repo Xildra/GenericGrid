@@ -123,6 +123,30 @@ extension GridCanvasConfig {
         columnBands = bands
     }
 
+    /// Overrides the column count for the band at `index`. Pass `nil`
+    /// to drop the override and follow the grid's `cols`. Zones in the
+    /// band are clamped to the new column count and labels are trimmed
+    /// if they would exceed it.
+    public mutating func setBandCols(at index: Int, cols newCols: Int?) {
+        promoteToColumnBandsIfNeeded()
+        guard var bands = columnBands,
+              index >= 0, index < bands.count else { return }
+        let target = newCols.map { max(1, $0) }
+        bands[index].cols = target
+        let effective = target ?? cols
+        bands[index].zones = bands[index].zones.compactMap { zone in
+            var z = zone
+            if z.colStart >= Double(effective) { return nil }
+            z.colEnd = min(z.colEnd, Double(effective))
+            if z.colEnd <= z.colStart { return nil }
+            return z
+        }
+        if let labels = bands[index].labels, labels.count > effective {
+            bands[index].labels = Array(labels.prefix(effective))
+        }
+        columnBands = bands
+    }
+
     /// Moves zones between two adjacent bands so each zone lives in
     /// the band that currently owns its `rowStart`. Called after a
     /// boundary move to preserve the invariant.

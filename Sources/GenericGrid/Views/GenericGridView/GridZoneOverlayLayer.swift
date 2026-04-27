@@ -16,10 +16,12 @@ struct GridZoneOverlayLayer: View {
 
     var body: some View {
         ForEach(zones) { zone in
-            let x = zone.colStart * cellSize
+            let band = config.band(forRow: Int(zone.rowStart.rounded(.down)))
+            let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
+            let x = CGFloat(zone.colStart) * bandCellW
             let y = config.yForRow(zone.rowStart, cellSize: cellSize)
-            let w = (zone.colEnd - zone.colStart) * cellSize
-            let h = (zone.rowEnd - zone.rowStart) * cellSize
+            let w = CGFloat(zone.colEnd - zone.colStart) * bandCellW
+            let h = CGFloat(zone.rowEnd - zone.rowStart) * cellSize
             let shortSide = min(w, h)
             let labelSize = min(shortSide / GridFont.zoneLabelDivisor, GridFont.zoneLabelMax)
             let iconSize = min(shortSide / GridFont.zoneLabelDivisor, GridFont.ruleIcon)

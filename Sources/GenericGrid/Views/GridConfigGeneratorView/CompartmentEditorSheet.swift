@@ -27,6 +27,7 @@ struct CompartmentEditorSheet: View {
             Form {
                 if let band, let idx = bandIndex {
                     rangeSection(band: band, index: idx)
+                    columnsSection(band: band, index: idx)
                     labelsSection(band: band)
                 }
             }
@@ -121,11 +122,45 @@ struct CompartmentEditorSheet: View {
         }
     }
 
+    // MARK: - Columns
+
+    @ViewBuilder
+    private func columnsSection(band: ColumnBand, index: Int) -> some View {
+        let bandCols = band.effectiveCols(default: config.cols)
+        let isOverridden = band.cols != nil
+        Section {
+            Stepper(
+                value: Binding(
+                    get: { bandCols },
+                    set: { config.setBandCols(at: index, cols: $0) }
+                ),
+                in: 1...GridDefaults.stepperMax
+            ) {
+                HStack {
+                    Text("Columns")
+                    Spacer()
+                    Text("\(bandCols)").monospacedDigit().foregroundStyle(.secondary)
+                }
+            }
+            if isOverridden {
+                Button("Use grid default (\(config.cols))") {
+                    config.setBandCols(at: index, cols: nil)
+                }
+            }
+        } header: {
+            Text("Columns")
+        } footer: {
+            Text("Overrides the grid's column count for this compartment only — cells get wider when the count is lower.")
+                .font(.caption2)
+        }
+    }
+
     // MARK: - Labels
 
     private func labelsSection(band: ColumnBand) -> some View {
-        Section("Column titles") {
-            ForEach(0..<config.cols, id: \.self) { i in
+        let bandCols = band.effectiveCols(default: config.cols)
+        return Section("Column titles") {
+            ForEach(0..<bandCols, id: \.self) { i in
                 HStack {
                     Text("\(i + 1)")
                         .font(.caption2)
@@ -138,7 +173,8 @@ struct CompartmentEditorSheet: View {
     }
 
     private func labelBinding(band: ColumnBand, index: Int) -> Binding<String> {
-        Binding(
+        let bandCols = band.effectiveCols(default: config.cols)
+        return Binding(
             get: {
                 if let labels = band.labels, index < labels.count {
                     return labels[index]
@@ -146,7 +182,7 @@ struct CompartmentEditorSheet: View {
                 return band.colLabel(at: index)
             },
             set: { newValue in
-                var next = band.labels ?? (0..<config.cols).map { band.colLabel(at: $0) }
+                var next = band.labels ?? (0..<bandCols).map { band.colLabel(at: $0) }
                 while next.count <= index { next.append("") }
                 next[index] = newValue
                 config.updateBandLabels(id: bandID, labels: next)

@@ -72,13 +72,15 @@ struct ZoomableGridScaffold<Content: View>: View {
     // MARK: - Labels
 
     private func topBandLabels(band: ColumnBand, cellSize cs: CGFloat, margin: CGFloat) -> some View {
-        HStack(spacing: 0) {
-            ForEach(0..<config.cols, id: \.self) { c in
+        let bandCols = config.cols(for: band)
+        let bandCellW = config.bandCellWidth(band, baseCellSize: cs)
+        return HStack(spacing: 0) {
+            ForEach(0..<bandCols, id: \.self) { c in
                 Text(band.colLabel(at: c))
                     .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
                                   weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
-                    .frame(width: cs, height: margin)
+                    .frame(width: bandCellW, height: margin)
             }
         }
     }
@@ -90,13 +92,15 @@ struct ZoomableGridScaffold<Content: View>: View {
         ForEach(Array(bands.enumerated()), id: \.element.id) { idx, band in
             if idx > 0 {
                 let y = (CGFloat(band.rowStart) + CGFloat(idx) - 1) * cs
+                let bandCols = config.cols(for: band)
+                let bandCellW = config.bandCellWidth(band, baseCellSize: cs)
                 HStack(spacing: 0) {
-                    ForEach(0..<config.cols, id: \.self) { c in
+                    ForEach(0..<bandCols, id: \.self) { c in
                         Text(band.colLabel(at: c))
                             .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
                                           weight: .medium, design: .rounded))
                             .foregroundStyle(.secondary)
-                            .frame(width: cs, height: cs)
+                            .frame(width: bandCellW, height: cs)
                     }
                 }
                 .frame(width: W, height: cs)

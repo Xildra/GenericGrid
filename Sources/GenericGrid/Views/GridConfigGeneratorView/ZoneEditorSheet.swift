@@ -23,7 +23,8 @@ struct ZoneEditorSheet: View {
     private let config: GridCanvasConfig
     private let onSave: (GridZoneDefinition) -> Void
 
-    private var maxCols: Int { config.cols }
+    /// Effective column count for the zone's current compartment.
+    private var maxCols: Int { config.cols(for: currentBand) }
     private var bands: [ColumnBand] { config.effectiveBands }
 
     /// Band currently owning the zone (by `zone.rowStart`). Clamped values.
@@ -64,7 +65,9 @@ struct ZoneEditorSheet: View {
     }
 
     /// Picker binding that rehomes the zone into the selected compartment
-    /// when the user changes it.
+    /// when the user changes it. Both axes are clamped: rows to the
+    /// target band's row range, columns to its (possibly different)
+    /// column count.
     private var compartmentBinding: Binding<Int> {
         Binding(
             get: {
@@ -73,9 +76,14 @@ struct ZoneEditorSheet: View {
             set: { idx in
                 guard idx >= 0, idx < bands.count else { return }
                 let target = bands[idx]
-                let clampedSize = min(Double(zone.rowCount), Double(target.rowCount))
+                let rowSize = min(Double(zone.rowCount), Double(target.rowCount))
                 zone.rowStart = Double(target.rowStart)
-                zone.rowEnd = zone.rowStart + clampedSize
+                zone.rowEnd = zone.rowStart + rowSize
+
+                let targetCols = target.effectiveCols(default: config.cols)
+                let colSize = min(Double(zone.colCount), Double(targetCols))
+                zone.colStart = max(0, min(zone.colStart, Double(targetCols) - colSize))
+                zone.colEnd = zone.colStart + colSize
             }
         )
     }

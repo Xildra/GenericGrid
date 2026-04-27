@@ -20,8 +20,11 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
     var body: some View {
         ForEach(items) { item in
             if let t = item.itemType {
+                let band = config.band(forRow: Int(item.anchorRow.rounded(.down)))
                 GenericItemBlock(
-                    item: item, type: t, cellSize: cellSize,
+                    item: item, type: t,
+                    bandCellWidth: config.bandCellWidth(band, baseCellSize: cellSize),
+                    cellHeight: cellSize,
                     yOrigin: config.yForRow(item.anchorRow, cellSize: cellSize),
                     dimmed: movingItem === item
                 )
@@ -38,27 +41,31 @@ struct GenericItemBlock<T: GridItemType>: View {
     let effWidth: Int
     let effHeight: Int
     let type: T
-    let cellSize: CGFloat
+    let bandCellWidth: CGFloat
+    let cellHeight: CGFloat
     let yOrigin: CGFloat
     var dimmed: Bool = false
 
-    init<I: GridPlaceable>(item: I, type: T, cellSize: CGFloat,
+    init<I: GridPlaceable>(item: I, type: T,
+                           bandCellWidth: CGFloat,
+                           cellHeight: CGFloat,
                            yOrigin: CGFloat,
                            dimmed: Bool = false) where I.ItemType == T {
         self.anchorCol = item.anchorCol
         self.effWidth = item.effectiveWidth
         self.effHeight = item.effectiveHeight
         self.type = type
-        self.cellSize = cellSize
+        self.bandCellWidth = bandCellWidth
+        self.cellHeight = cellHeight
         self.yOrigin = yOrigin
         self.dimmed = dimmed
     }
 
     var body: some View {
         let inset = GridLayout.itemBlockInset
-        let w  = CGFloat(effWidth)  * cellSize - inset * 2
-        let h  = CGFloat(effHeight) * cellSize - inset * 2
-        let ox = anchorCol * cellSize + inset
+        let w  = CGFloat(effWidth)  * bandCellWidth - inset * 2
+        let h  = CGFloat(effHeight) * cellHeight - inset * 2
+        let ox = CGFloat(anchorCol) * bandCellWidth + inset
         let oy = yOrigin + inset
 
         RoundedRectangle(cornerRadius: GridCornerRadius.item)
