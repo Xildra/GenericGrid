@@ -55,7 +55,7 @@ struct GridConstantsTests {
     func cornerRadii() {
         #expect(GridCornerRadius.grid > 0)
         #expect(GridCornerRadius.zone >= 0)
-        #expect(GridCornerRadius.item > 0)
+        #expect(GridCornerRadius.item >= 0)
         #expect(GridCornerRadius.resizeHandle > 0)
     }
 

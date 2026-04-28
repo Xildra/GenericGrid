@@ -22,7 +22,8 @@ public enum GridLayout {
     /// Padding around zoom controls overlay.
     static let zoomControlsPadding: CGFloat = 12
     /// Inset applied to each item block (offset & frame shrink).
-    static let itemBlockInset: CGFloat = 2
+    /// 0 = the block fills its whole cell edge-to-edge.
+    static let itemBlockInset: CGFloat = 0
     /// Inset applied to the preview highlight rectangle.
     static let previewInset: CGFloat = 1
     /// Size (width & height) of zoom control buttons.
@@ -52,8 +53,8 @@ public enum GridCornerRadius {
     static let grid: CGFloat = 10
     /// Zone overlays and preview highlight.
     static let zone: CGFloat = 0
-    /// Placed item blocks.
-    static let item: CGFloat = 7
+    /// Placed item blocks. 0 = sharp corners, fills the cell.
+    static let item: CGFloat = 0
     /// Resize handle pills.
     static let resizeHandle: CGFloat = 2
 }
