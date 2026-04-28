@@ -120,11 +120,40 @@ public final class GridEngine<Item: GridPlaceable> {
     public typealias InsertHandler = (Item.ItemType, Double, Double, Bool) -> Void
     public typealias ConflictHandler = (GridCell, Item) -> Void
 
+    /// When `true`, placing a type that already has an item on the grid
+    /// **moves** that item to the new anchor instead of calling `insert`.
+    /// Suited to "one model = one slot" apps (e.g. one passenger = one
+    /// seat). Default `false` for backward compatibility — multi-instance
+    /// types stay supported.
+    public var uniqueTypes: Bool = false
+
     /// Attempts to place the currently selected type at the given anchor.
     /// Calls `insert` on success, or `onConflict` when the target cells are occupied.
+    /// When `uniqueTypes` is true and the type is already placed, the
+    /// existing item is moved instead of inserting a duplicate.
     public func place(at anchor: GridCell, insert: InsertHandler,
                       onConflict: ConflictHandler? = nil) {
         guard let t = selectedType else { return }
+
+        // Unique-types fast path: relocate the existing item.
+        if uniqueTypes, let existing = firstItem(matching: t) {
+            guard canPlace(anchor: anchor, type: t,
+                           rotated: existing.rotated, excluding: existing) else {
+                if let onConflict,
+                   let occupant = footprint(anchor: anchor, type: t, rotated: existing.rotated)
+                       .compactMap({ map[$0] }).first(where: { $0 !== existing }) {
+                    onConflict(anchor, occupant)
+                }
+                return
+            }
+            unregisterImmediate(existing)
+            existing.anchorRow = anchor.r
+            existing.anchorCol = anchor.c
+            existing.rotated = rotated
+            registerImmediate(existing)
+            return
+        }
+
         let cells = footprint(anchor: anchor, type: t, rotated: rotated)
         let rowsD = Double(rows), colsD = Double(cols)
 
@@ -147,6 +176,15 @@ public final class GridEngine<Item: GridPlaceable> {
             onConflict(anchor, existing)
         }
         // If occupied and no onConflict handler → silent no-op
+    }
+
+    /// First placed item whose type matches the given one (by `id`).
+    /// Used by `uniqueTypes` placement to find an item to move.
+    private func firstItem(matching type: Item.ItemType) -> Item? {
+        for item in map.values where item.itemType?.id == type.id {
+            return item
+        }
+        return nil
     }
 
     // MARK: - Move (drag & drop)
