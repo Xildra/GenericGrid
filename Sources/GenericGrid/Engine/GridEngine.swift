@@ -187,6 +187,22 @@ public final class GridEngine<Item: GridPlaceable> {
         return nil
     }
 
+    /// Replaces the given item at `cell` with the currently selected type.
+    /// Removes `replacing` via the supplied delete callback, syncs the
+    /// engine map, then runs the regular placement flow at the same
+    /// anchor — so `uniqueTypes` is honoured (a previously-seated
+    /// occurrence of the new type is **moved** rather than duplicated).
+    /// Use from a confirmation alert handler triggered by `onConflict`.
+    /// No-op (and no delete) when no type is selected.
+    public func replace(_ replacing: Item, at cell: GridCell,
+                        onDelete: (Item) -> Void,
+                        insert: InsertHandler) {
+        guard selectedType != nil else { return }
+        onDelete(replacing)
+        unregisterImmediate(replacing)
+        place(at: cell, insert: insert)
+    }
+
     // MARK: - Move (drag & drop)
 
     /// Begins dragging an existing item from the given cell.
