@@ -36,16 +36,24 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// zone rectangles and their own internal grids are always shown.
     public var showMainGrid: Bool
 
+    /// Whether zone titles are rendered inside the zone rectangle.
+    /// Off by default — most consumers identify zones from the sidebar
+    /// or by colour and prefer a clean canvas. Rule icons (lock, ban,
+    /// restricted) keep showing regardless.
+    public var showZoneLabels: Bool
+
     public init(rows: Int = GridDefaults.rows, cols: Int = GridDefaults.cols,
                 zones: [GridZoneDefinition] = [], title: String? = nil,
                 rowLabels: [String]? = nil, colLabels: [String]? = nil,
                 columnBands: [ColumnBand]? = nil,
-                showMainGrid: Bool = true) {
+                showMainGrid: Bool = true,
+                showZoneLabels: Bool = false) {
         self.rows = rows; self.cols = cols
         self.title = title
         self.rowLabels = rowLabels; self.colLabels = colLabels
         self.columnBands = columnBands
         self.showMainGrid = showMainGrid
+        self.showZoneLabels = showZoneLabels
         // Zones live inside compartments: distribute the top-level
         // array into the matching band, synthesizing one if needed.
         if !zones.isEmpty {
@@ -57,7 +65,8 @@ public struct GridCanvasConfig: Codable, Sendable {
     // but is never emitted on encode — zones are written inside their
     // owning compartment.
     private enum CodingKeys: String, CodingKey {
-        case rows, cols, zones, title, rowLabels, colLabels, columnBands, showMainGrid
+        case rows, cols, zones, title, rowLabels, colLabels, columnBands,
+             showMainGrid, showZoneLabels
     }
 
     public init(from decoder: Decoder) throws {
@@ -69,6 +78,7 @@ public struct GridCanvasConfig: Codable, Sendable {
         colLabels = try c.decodeIfPresent([String].self, forKey: .colLabels)
         columnBands = try c.decodeIfPresent([ColumnBand].self, forKey: .columnBands)
         showMainGrid = try c.decodeIfPresent(Bool.self, forKey: .showMainGrid) ?? true
+        showZoneLabels = try c.decodeIfPresent(Bool.self, forKey: .showZoneLabels) ?? false
         let legacyZones = try c.decodeIfPresent([GridZoneDefinition].self, forKey: .zones) ?? []
         if !legacyZones.isEmpty {
             ingestLegacyZones(legacyZones)
@@ -84,6 +94,7 @@ public struct GridCanvasConfig: Codable, Sendable {
         try c.encodeIfPresent(colLabels, forKey: .colLabels)
         try c.encodeIfPresent(columnBands, forKey: .columnBands)
         try c.encode(showMainGrid, forKey: .showMainGrid)
+        try c.encode(showZoneLabels, forKey: .showZoneLabels)
     }
 
     /// Seeds columnBands with the supplied legacy flat zone list,

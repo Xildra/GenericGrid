@@ -37,6 +37,7 @@ struct GridSection: View {
             )
 
             Toggle("Grid lines", isOn: $config.showMainGrid)
+            Toggle("Zone titles", isOn: $config.showZoneLabels)
 
             Button {
                 if config.rowLabels == nil {

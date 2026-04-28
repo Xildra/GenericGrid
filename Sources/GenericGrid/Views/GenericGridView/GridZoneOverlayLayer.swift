@@ -33,9 +33,11 @@ struct GridZoneOverlayLayer: View {
                     .strokeBorder(strokeColor(for: zone), lineWidth: GridLineWidth.zoneDefault)
 
                 VStack(spacing: GridLayout.zoneLabelSpacing) {
-                    Text(zone.label)
-                        .font(.system(size: labelSize, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    if config.showZoneLabels {
+                        Text(zone.label)
+                            .font(.system(size: labelSize, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                     if zone.rule == .locked {
                         Image(systemName: "lock.fill")
                             .font(.system(size: iconSize))

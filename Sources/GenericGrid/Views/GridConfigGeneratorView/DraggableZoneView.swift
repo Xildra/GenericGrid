@@ -82,9 +82,11 @@ struct DraggableZoneView: View {
                     .strokeBorder(strokeColor, lineWidth: GridLineWidth.zoneDefault)
 
                 VStack(spacing: GridLayout.zoneLabelSpacing) {
-                    Text(draft.label)
-                        .font(.system(size: labelSize, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    if config.showZoneLabels {
+                        Text(draft.label)
+                            .font(.system(size: labelSize, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                     ruleIcon
                 }
             }
