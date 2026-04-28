@@ -68,26 +68,20 @@ struct GenericItemBlock<T: GridItemType>: View {
         let ox = CGFloat(anchorCol) * bandCellWidth + inset
         let oy = yOrigin + inset
 
+        // Sober look: solid colour fill (no border, no secondary line)
+        // with the item name laid on top in white. Keeps the colour
+        // bold and immediately readable while removing the visual noise
+        // of the border + double opacity layers.
         RoundedRectangle(cornerRadius: GridCornerRadius.item)
-            .fill(type.color.opacity(dimmed ? GridOpacity.itemDimmedFill : GridOpacity.itemFill))
+            .fill(type.color.opacity(dimmed ? GridOpacity.itemDimmedFill : 1))
             .overlay(
-                RoundedRectangle(cornerRadius: GridCornerRadius.item)
-                    .stroke(type.color.opacity(dimmed ? GridOpacity.itemStrokeDimmed : 1),
-                            lineWidth: dimmed ? GridLineWidth.itemDimmed : GridLineWidth.item)
-            )
-            .overlay(
-                VStack(spacing: 1) {
-                    Text(type.name)
-                        .font(.system(size: fontSize(w, h), weight: .semibold))
-                        .foregroundStyle(type.color.opacity(dimmed ? GridOpacity.itemTextDimmed : 1))
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.5)
-                    Text(type.label)
-                        .font(.system(size: max(fontSize(w, h) - GridFont.itemSubtitleOffset, GridFont.itemSubtitleMin), weight: .regular, design: .monospaced))
-                        .foregroundStyle(type.color.opacity(dimmed ? GridOpacity.itemSubtextDimmed : GridOpacity.itemSubtext))
-                }
-                .padding(3)
+                Text(type.name)
+                    .font(.system(size: fontSize(w, h), weight: .semibold))
+                    .foregroundStyle(.white.opacity(dimmed ? GridOpacity.itemTextDimmed : 1))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.5)
+                    .padding(3)
             )
             .frame(width: w, height: h)
             .offset(x: ox, y: oy)

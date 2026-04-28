@@ -329,10 +329,10 @@ struct GridEngineTests {
     @Test("stats update after sync")
     func statsAfterSync() {
         let engine = makeEngine(rows: 10, cols: 10)
-        let item = MockItem(type: .small, row: 0, col: 0) // occupies 4 sub-cells
+        let item = MockItem(type: .small, row: 0, col: 0) // 1×1 item → 1 whole cell
         engine.sync([item])
-        #expect(engine.usedCells == 4)
-        #expect(engine.freeCells == 96)
+        #expect(engine.usedCells == 1)
+        #expect(engine.freeCells == 99)
     }
 
     // MARK: - Preview

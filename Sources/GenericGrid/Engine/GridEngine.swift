@@ -181,10 +181,59 @@ public final class GridEngine<Item: GridPlaceable> {
 
     // MARK: - Statistics
 
-    public var usedCells:  Int    { map.count }
-    public var totalCells: Int    { rows * cols }
-    public var freeCells:  Int    { totalCells - usedCells }
-    public var fillPct:    Double { totalCells > 0 ? Double(usedCells) / Double(totalCells) : 0 }
+    /// Whole-cell area occupied by placed items. Each item contributes
+    /// `effectiveWidth × effectiveHeight`. Computed from distinct items
+    /// because `map` keeps one entry per half-cell sub-cell.
+    public var usedCells: Int {
+        var seen = Set<ObjectIdentifier>()
+        var total = 0
+        for item in map.values where seen.insert(ObjectIdentifier(item)).inserted {
+            total += max(1, item.effectiveWidth * item.effectiveHeight)
+        }
+        return total
+    }
+
+    /// Total **placeable** whole cells across every compartment.
+    /// - Honours per-band column overrides.
+    /// - Excludes cells that fall fully inside a `.locked` or
+    ///   `.forbidden` zone (overlapping blocking zones are counted
+    ///   once thanks to the de-dup loop).
+    /// `.restricted` zones still count as placeable since they only
+    /// filter which types can be placed there.
+    public var totalCells: Int {
+        config.effectiveBands.reduce(0) { sum, band in
+            let bandCols = band.effectiveCols(default: config.cols)
+            return sum + band.rowCount * bandCols - blockedWholeCells(in: band)
+        }
+    }
+
+    public var freeCells: Int { max(0, totalCells - usedCells) }
+    public var fillPct: Double {
+        totalCells > 0 ? Double(usedCells) / Double(totalCells) : 0
+    }
+
+    /// Number of whole cells in the band that fall inside a `.locked`
+    /// or `.forbidden` zone — i.e. cannot accept any placement.
+    /// Overlapping blocking zones are counted once.
+    private func blockedWholeCells(in band: ColumnBand) -> Int {
+        let blockers = band.zones.filter { $0.rule == .locked || $0.rule == .forbidden }
+        guard !blockers.isEmpty else { return 0 }
+        let bandCols = band.effectiveCols(default: config.cols)
+        var count = 0
+        for r in band.rowStart...band.rowEnd {
+            let rd = Double(r)
+            for c in 0..<bandCols {
+                let cd = Double(c)
+                if blockers.contains(where: {
+                    rd >= $0.rowStart && rd + 1 <= $0.rowEnd &&
+                    cd >= $0.colStart && cd + 1 <= $0.colEnd
+                }) {
+                    count += 1
+                }
+            }
+        }
+        return count
+    }
 
     // MARK: - Preview
 
