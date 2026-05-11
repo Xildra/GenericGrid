@@ -28,7 +28,6 @@ public struct GridConfigGeneratorView: View {
 	@State private var splitRow: Int = 1
 	@State private var importError: String?
 
-    @State private var showZoneSheet = false
     @State private var showRowLabelsSheet = false
     @State private var showSplitSheet = false
 	
@@ -68,13 +67,11 @@ public struct GridConfigGeneratorView: View {
         } detail: {
             ConfigGridPreviewView(config: $config) { zone in
                 editingZone = zone
-                showZoneSheet = true
             }
         }
         .modifier(GeneratorSheets(
             config: $config,
             editingZone: $editingZone,
-            showZoneSheet: $showZoneSheet,
             showRowLabelsSheet: $showRowLabelsSheet,
             editingBand: $editingBand,
             showSplitSheet: $showSplitSheet,
@@ -109,11 +106,9 @@ public struct GridConfigGeneratorView: View {
                 splitRow: $splitRow,
                 onEditZone: { zone in
                     editingZone = zone
-                    showZoneSheet = true
                 },
                 onAddZone: { band in
                     editingZone = seededZone(in: band)
-                    showZoneSheet = true
                 }
             )
         }

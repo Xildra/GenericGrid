@@ -16,7 +16,6 @@ struct GeneratorSheets: ViewModifier {
     @Binding var config: GridCanvasConfig
 
     @Binding var editingZone: GridZoneDefinition?
-    @Binding var showZoneSheet: Bool
 
     @Binding var showRowLabelsSheet: Bool
 
@@ -29,8 +28,12 @@ struct GeneratorSheets: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .sheet(isPresented: $showZoneSheet, onDismiss: onDismissFocus) {
-                ZoneEditorSheet(zone: editingZone, config: config) { saved in
+            // `.sheet(item:)` makes the sheet content closure receive
+            // the zone directly, avoiding the race where the closure
+            // was evaluated before `editingZone` had propagated and
+            // the seed (with the band-correct rowStart) was lost.
+            .sheet(item: $editingZone, onDismiss: onDismissFocus) { zoneToEdit in
+                ZoneEditorSheet(zone: zoneToEdit, config: config) { saved in
                     if config.containsZone(id: saved.id) {
                         config.updateZone(saved)
                     } else {
