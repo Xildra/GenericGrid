@@ -22,6 +22,8 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
     let cellSize: CGFloat
     let onInsert: (Item.ItemType, Double, Double, Bool) -> Void
     var onConflict: ((GridCell, Item) -> Void)?
+    var onLock: ((GridCell) -> Void)?
+    var onUnlock: ((GridCell) -> Void)?
 
     private var W: CGFloat { CGFloat(engine.cols) * cellSize }
     private var H: CGFloat { engine.config.totalContentHeight(cellSize: cellSize) }
@@ -36,7 +38,11 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
                 if engine.selectedType != nil {
                     engine.place(at: cell, insert: onInsert, onConflict: onConflict)
                 } else {
-                    engine.toggleLocked(at: cell)
+                    switch engine.toggleLocked(at: cell) {
+                    case .locked(let c):   onLock?(c)
+                    case .unlocked(let c): onUnlock?(c)
+                    case .noChange:        break
+                    }
                 }
             }
             // `simultaneousGesture` lets the enclosing ScrollView keep handling

@@ -189,6 +189,15 @@ public final class GridEngine<Item: GridPlaceable> {
 
     // MARK: - Cell locking (runtime toggle)
 
+    /// Outcome of a `toggleLocked` call. Returned so the caller can
+    /// persist the change to its own storage (SwiftData, file…).
+    /// The cell carries whole-cell coordinates (anchorRow / anchorCol).
+    public enum LockToggleResult: Sendable {
+        case noChange
+        case locked(GridCell)
+        case unlocked(GridCell)
+    }
+
     /// Toggles a 1×1 `.locked` zone on the whole cell containing `cell`.
     /// Used by the operational grid to let the end-user mark individual
     /// cells as unavailable with a simple tap when no type is selected.
@@ -199,17 +208,15 @@ public final class GridEngine<Item: GridPlaceable> {
     /// tap-locked cell removes the lock and restores the underlying
     /// `.free` zone.
     ///
-    /// No-op when:
-    /// - the cell falls outside the grid or its band,
-    /// - the cell is occupied by a placed item,
-    /// - the cell is not inside a `.free` zone (and is not already a
-    ///   tap-created 1×1 lock).
-    public func toggleLocked(at cell: GridCell) {
+    /// Returns `.locked` / `.unlocked` with the whole-cell anchor when
+    /// the config was mutated, `.noChange` otherwise.
+    @discardableResult
+    public func toggleLocked(at cell: GridCell) -> LockToggleResult {
         let row = Int(cell.r.rounded(.down))
         let col = Int(cell.c.rounded(.down))
-        guard row >= 0, row < rows else { return }
+        guard row >= 0, row < rows else { return .noChange }
         let band = config.band(forRow: row)
-        guard col >= 0, col < config.cols(for: band) else { return }
+        guard col >= 0, col < config.cols(for: band) else { return .noChange }
 
         let subCells: [GridCell] = [
             GridCell(Double(row), c: Double(col)),
@@ -217,7 +224,9 @@ public final class GridEngine<Item: GridPlaceable> {
             GridCell(Double(row) + GridGesture.halfCell, c: Double(col)),
             GridCell(Double(row) + GridGesture.halfCell, c: Double(col) + GridGesture.halfCell),
         ]
-        guard !subCells.contains(where: { map[$0] != nil }) else { return }
+        guard !subCells.contains(where: { map[$0] != nil }) else { return .noChange }
+
+        let anchor = GridCell(Double(row), c: Double(col))
 
         if let existing = config.zones.first(where: {
             $0.rule == .locked &&
@@ -225,11 +234,10 @@ public final class GridEngine<Item: GridPlaceable> {
             $0.colStart == Double(col) && $0.colEnd == Double(col + 1)
         }) {
             config.removeZone(id: existing.id)
-            return
+            return .unlocked(anchor)
         }
 
-        let anchor = GridCell(Double(row), c: Double(col))
-        guard let z = config.zone(at: anchor), z.rule == .free else { return }
+        guard let z = config.zone(at: anchor), z.rule == .free else { return .noChange }
 
         let zone = GridZoneDefinition(
             label: "Bloqué",
@@ -241,6 +249,7 @@ public final class GridEngine<Item: GridPlaceable> {
             color: .gray
         )
         config.addZone(zone, prepend: true)
+        return .locked(anchor)
     }
 
     /// Replaces the given item at `cell` with the currently selected type.

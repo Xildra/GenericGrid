@@ -24,6 +24,12 @@ public struct GenericGridView<Item: GridPlaceable>: View {
     var onDelete: ((Item) -> Void)?
     /// Optional callback when placing on an already occupied cell.
     var onConflict: ((GridCell, Item) -> Void)?
+    /// Optional callback when a free cell becomes runtime-locked via tap.
+    /// The cell carries whole-cell anchor coordinates.
+    var onLock: ((GridCell) -> Void)?
+    /// Optional callback when a previously tap-locked cell is unlocked.
+    /// The cell carries whole-cell anchor coordinates.
+    var onUnlock: ((GridCell) -> Void)?
 
     @State private var zoom: CGFloat = GridZoom.default
 
@@ -31,12 +37,16 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                 items: [Item],
                 onInsert: @escaping (Item.ItemType, Double, Double, Bool) -> Void,
                 onDelete: ((Item) -> Void)? = nil,
-                onConflict: ((GridCell, Item) -> Void)? = nil) {
+                onConflict: ((GridCell, Item) -> Void)? = nil,
+                onLock: ((GridCell) -> Void)? = nil,
+                onUnlock: ((GridCell) -> Void)? = nil) {
         self.engine = engine
         self.items = items
         self.onInsert = onInsert
         self.onDelete = onDelete
         self.onConflict = onConflict
+        self.onLock = onLock
+        self.onUnlock = onUnlock
     }
 
     public var body: some View {
@@ -52,7 +62,9 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                 GridZoneOverlayLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
                 GridItemsLayer(config: engine.config, items: items, cellSize: cs, movingItem: engine.movingItem)
                 GridPreviewLayer(config: engine.config, cells: engine.previewCells, isValid: engine.isPreviewValid, cellSize: cs)
-                GridGestureLayer(engine: engine, cellSize: cs, onInsert: onInsert, onConflict: onConflict)
+                GridGestureLayer(engine: engine, cellSize: cs,
+                                 onInsert: onInsert, onConflict: onConflict,
+                                 onLock: onLock, onUnlock: onUnlock)
             }
         }
     }
