@@ -187,6 +187,62 @@ public final class GridEngine<Item: GridPlaceable> {
         return nil
     }
 
+    // MARK: - Cell locking (runtime toggle)
+
+    /// Toggles a 1×1 `.locked` zone on the whole cell containing `cell`.
+    /// Used by the operational grid to let the end-user mark individual
+    /// cells as unavailable with a simple tap when no type is selected.
+    ///
+    /// The toggle only activates on cells covered by a `.free` zone —
+    /// cells outside any zone, or inside a `.locked` / `.forbidden` /
+    /// `.restricted` zone, are left untouched. Toggling on a previously
+    /// tap-locked cell removes the lock and restores the underlying
+    /// `.free` zone.
+    ///
+    /// No-op when:
+    /// - the cell falls outside the grid or its band,
+    /// - the cell is occupied by a placed item,
+    /// - the cell is not inside a `.free` zone (and is not already a
+    ///   tap-created 1×1 lock).
+    public func toggleLocked(at cell: GridCell) {
+        let row = Int(cell.r.rounded(.down))
+        let col = Int(cell.c.rounded(.down))
+        guard row >= 0, row < rows else { return }
+        let band = config.band(forRow: row)
+        guard col >= 0, col < config.cols(for: band) else { return }
+
+        let subCells: [GridCell] = [
+            GridCell(Double(row), c: Double(col)),
+            GridCell(Double(row), c: Double(col) + GridGesture.halfCell),
+            GridCell(Double(row) + GridGesture.halfCell, c: Double(col)),
+            GridCell(Double(row) + GridGesture.halfCell, c: Double(col) + GridGesture.halfCell),
+        ]
+        guard !subCells.contains(where: { map[$0] != nil }) else { return }
+
+        if let existing = config.zones.first(where: {
+            $0.rule == .locked &&
+            $0.rowStart == Double(row) && $0.rowEnd == Double(row + 1) &&
+            $0.colStart == Double(col) && $0.colEnd == Double(col + 1)
+        }) {
+            config.removeZone(id: existing.id)
+            return
+        }
+
+        let anchor = GridCell(Double(row), c: Double(col))
+        guard let z = config.zone(at: anchor), z.rule == .free else { return }
+
+        let zone = GridZoneDefinition(
+            label: "Bloqué",
+            rule: .locked,
+            rowStart: Double(row),
+            rowEnd: Double(row + 1),
+            colStart: Double(col),
+            colEnd: Double(col + 1),
+            color: .gray
+        )
+        config.addZone(zone, prepend: true)
+    }
+
     /// Replaces the given item at `cell` with the currently selected type.
     /// Removes `replacing` via the supplied delete callback, syncs the
     /// engine map, then runs the regular placement flow at the same

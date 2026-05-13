@@ -16,11 +16,20 @@ extension GridCanvasConfig {
     /// Inserts a zone into the compartment containing its `rowStart`.
     /// Promotes the config to explicit compartments first so the zone
     /// always lands in a real band.
-    public mutating func addZone(_ zone: GridZoneDefinition) {
+    ///
+    /// Pass `prepend: true` to insert the zone at the front of its band's
+    /// zone list. Used when a zone must win the first-match lookup of
+    /// `zone(at:)` against an existing overlapping zone (e.g. a runtime
+    /// lock dropped on top of a `.free` zone).
+    public mutating func addZone(_ zone: GridZoneDefinition, prepend: Bool = false) {
         promoteToColumnBandsIfNeeded()
         guard var bands = columnBands, !bands.isEmpty else { return }
         let idx = bandIndex(forRow: Int(zone.rowStart.rounded(.down)))
-        bands[idx].zones.append(zone)
+        if prepend {
+            bands[idx].zones.insert(zone, at: 0)
+        } else {
+            bands[idx].zones.append(zone)
+        }
         columnBands = bands
     }
 

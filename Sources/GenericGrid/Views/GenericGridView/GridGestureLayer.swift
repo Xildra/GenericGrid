@@ -32,9 +32,12 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
             .contentShape(Rectangle())
             .frame(width: W, height: H)
             .onTapGesture(coordinateSpace: .local) { location in
-                guard engine.selectedType != nil,
-                      let cell = toCell(location) else { return }
-                engine.place(at: cell, insert: onInsert, onConflict: onConflict)
+                guard let cell = toCell(location) else { return }
+                if engine.selectedType != nil {
+                    engine.place(at: cell, insert: onInsert, onConflict: onConflict)
+                } else {
+                    engine.toggleLocked(at: cell)
+                }
             }
             // `simultaneousGesture` lets the enclosing ScrollView keep handling
             // quick swipes — our long-press only takes over when the finger
