@@ -48,21 +48,26 @@ extension GridCanvasConfig {
 
     // MARK: - Row strips
 
-    /// Maximal horizontal slices of the grid where the column partition
-    /// is consistent. A strip starts at any row that is the `rowStart`
-    /// of at least one band, and ends just before the next strip's
-    /// start. For pure horizontal splits there is one strip per band;
-    /// when bands are stacked side by side (vertical splits) several
-    /// bands share the same strip.
+    /// Horizontal slices of the grid delimited by *global* horizontal
+    /// cuts — rows that no band crosses. A strip header is only
+    /// inserted between adjacent strips, so this guarantees that no
+    /// band is split visually by a header it doesn't actually break
+    /// against. For pure horizontal splits every band boundary is a
+    /// global cut and the behaviour matches the 1D model; for
+    /// asymmetric 2D layouts (e.g. a full-height band next to a
+    /// horizontally-split column) no intermediate header is inserted,
+    /// so the full-height band keeps its true row count.
     public var rowStrips: [(rowStart: Int, rowEnd: Int)] {
-        var starts = Set<Int>([0])
-        for band in effectiveBands { starts.insert(band.rowStart) }
-        let sorted = starts.sorted()
+        let bands = effectiveBands
+        var cuts = Set<Int>([0, rows])
+        for r in 1..<rows {
+            let isCrossed = bands.contains { $0.rowStart < r && $0.rowEnd >= r }
+            if !isCrossed { cuts.insert(r) }
+        }
+        let sorted = cuts.sorted()
         var strips: [(Int, Int)] = []
-        for i in 0..<sorted.count {
-            let start = sorted[i]
-            let end = (i + 1 < sorted.count) ? sorted[i + 1] - 1 : rows - 1
-            strips.append((start, end))
+        for i in 0..<sorted.count - 1 {
+            strips.append((sorted[i], sorted[i + 1] - 1))
         }
         return strips
     }

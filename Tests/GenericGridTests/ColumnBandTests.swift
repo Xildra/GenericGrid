@@ -246,6 +246,37 @@ struct ColumnBandTests {
         #expect(config.totalContentHeight(cellSize: 10) == 110)  // 10 + 1
     }
 
+    @Test("rowStrips skip non-global cuts when a band crosses the row")
+    func rowStripsAsymmetric2D() {
+        // Left column is a single full-height band; right column has a
+        // horizontal split at row 5. Row 5 is therefore NOT a global cut,
+        // so the grid must keep a single strip (no intermediate header)
+        // and `totalVerticalCells` must equal `rows` — otherwise the
+        // full-height band gets visually clipped.
+        let left      = ColumnBand(rowStart: 0, rowEnd: 9, colStart: 0, colEnd: 1)
+        let upperRight = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 2, colEnd: 3)
+        let lowerRight = ColumnBand(rowStart: 5, rowEnd: 9, colStart: 2, colEnd: 3)
+        let config = GridCanvasConfig(rows: 10, cols: 4,
+                                      columnBands: [left, upperRight, lowerRight])
+        #expect(config.rowStrips.count == 1)
+        #expect(config.totalVerticalCells == 10)
+        #expect(config.yForRow(9, cellSize: 10) == 90)
+    }
+
+    @Test("rowStrips inserts a header at a global cut even with vertical splits")
+    func rowStripsGlobalCutSurvivesVerticalSplit() {
+        // Pure horizontal split at row 5, then the top band split
+        // vertically. Row 5 is still a global cut, so a header is
+        // inserted and `totalVerticalCells` grows by one.
+        let upperLeft  = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 1)
+        let upperRight = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 2, colEnd: 3)
+        let bottom     = ColumnBand(rowStart: 5, rowEnd: 9, colStart: 0, colEnd: 3)
+        let config = GridCanvasConfig(rows: 10, cols: 4,
+                                      columnBands: [upperLeft, upperRight, bottom])
+        #expect(config.rowStrips.count == 2)
+        #expect(config.totalVerticalCells == 11)
+    }
+
     // MARK: - Codable
 
     @Test("columnBands round-trip through JSON")
