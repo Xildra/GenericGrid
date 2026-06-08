@@ -36,11 +36,13 @@ struct ZoomableGridScaffold<Content: View>: View {
             let W  = CGFloat(config.cols) * cs
             let H  = config.totalContentHeight(cellSize: cs)
             let bands = config.effectiveBands
+            let strips = config.rowStrips
 
             ScrollView([.horizontal, .vertical], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
-                    if hasLabels {
-                        topBandLabels(band: bands[0], cellSize: cs, margin: margin)
+                    if hasLabels, let topStrip = strips.first {
+                        topStripLabels(bands: bands.filter { $0.rowStart == topStrip.rowStart },
+                                       cellSize: cs, margin: margin)
                             .offset(x: margin, y: 0)
                         rowLabels(cellSize: cs, margin: margin)
                             .offset(x: 0, y: margin)
@@ -48,8 +50,9 @@ struct ZoomableGridScaffold<Content: View>: View {
                     content(cs)
                         .frame(width: W, height: H)
                         .offset(x: margin, y: margin)
-                    if hasLabels, bands.count > 1 {
-                        intermediateBandHeaders(bands: bands, cellSize: cs, width: W)
+                    if hasLabels, strips.count > 1 {
+                        intermediateStripHeaders(bands: bands, strips: strips,
+                                                 cellSize: cs, width: W)
                             .offset(x: margin, y: margin)
                     }
                 }
@@ -71,43 +74,60 @@ struct ZoomableGridScaffold<Content: View>: View {
 
     // MARK: - Labels
 
-    private func topBandLabels(band: ColumnBand, cellSize cs: CGFloat, margin: CGFloat) -> some View {
-        let bandCols = config.cols(for: band)
-        let bandCellW = config.bandCellWidth(band, baseCellSize: cs)
-        return HStack(spacing: 0) {
-            ForEach(0..<bandCols, id: \.self) { c in
-                Text(band.colLabel(at: c))
-                    .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
-                                  weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .frame(width: bandCellW, height: margin)
+    /// Column labels for every band that starts in the top row strip.
+    /// Each band is positioned at its own X offset and divided into its
+    /// effective subdivision count.
+    private func topStripLabels(bands: [ColumnBand], cellSize cs: CGFloat,
+                                margin: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(bands, id: \.id) { band in
+                bandColumnLabels(band: band, cellSize: cs, height: margin)
+                    .offset(x: config.xForBand(band, baseCellSize: cs), y: 0)
             }
         }
     }
 
+    /// Strip header rows inserted between consecutive row strips. Each
+    /// header strip sits above the strip's first data row and is filled
+    /// per-band so vertical splits remain visually distinct.
     @ViewBuilder
-    private func intermediateBandHeaders(bands: [ColumnBand],
-                                         cellSize cs: CGFloat,
-                                         width W: CGFloat) -> some View {
-        ForEach(Array(bands.enumerated()), id: \.element.id) { idx, band in
+    private func intermediateStripHeaders(bands: [ColumnBand],
+                                          strips: [(rowStart: Int, rowEnd: Int)],
+                                          cellSize cs: CGFloat,
+                                          width W: CGFloat) -> some View {
+        ForEach(Array(strips.enumerated()), id: \.element.rowStart) { idx, strip in
             if idx > 0 {
-                let y = (CGFloat(band.rowStart) + CGFloat(idx) - 1) * cs
-                let bandCols = config.cols(for: band)
-                let bandCellW = config.bandCellWidth(band, baseCellSize: cs)
-                HStack(spacing: 0) {
-                    ForEach(0..<bandCols, id: \.self) { c in
-                        Text(band.colLabel(at: c))
-                            .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
-                                          weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary)
-                            .frame(width: bandCellW, height: cs)
+                let y = (CGFloat(strip.rowStart) + CGFloat(idx) - 1) * cs
+                ZStack(alignment: .topLeading) {
+                    Rectangle()
+                        .fill(Color.accentColor.opacity(GridOpacity.bandHeaderFill))
+                        .frame(width: W, height: cs)
+                    ForEach(bands.filter { $0.rowStart == strip.rowStart }, id: \.id) { band in
+                        bandColumnLabels(band: band, cellSize: cs, height: cs)
+                            .offset(x: config.xForBand(band, baseCellSize: cs), y: 0)
                     }
                 }
                 .frame(width: W, height: cs)
-                .background(Color.accentColor.opacity(GridOpacity.bandHeaderFill))
                 .overlay(alignment: .top) { Divider() }
                 .overlay(alignment: .bottom) { Divider() }
                 .offset(x: 0, y: y)
+            }
+        }
+    }
+
+    /// One row of labels for a band, sized to its column extent and
+    /// divided into its effective subdivision count.
+    private func bandColumnLabels(band: ColumnBand, cellSize cs: CGFloat,
+                                  height: CGFloat) -> some View {
+        let bandSubdivisions = config.cols(for: band)
+        let bandCellW = config.bandCellWidth(band, baseCellSize: cs)
+        return HStack(spacing: 0) {
+            ForEach(0..<bandSubdivisions, id: \.self) { c in
+                Text(band.colLabel(at: c))
+                    .font(.system(size: min(cs * GridFont.colLabelScale, GridFont.colLabelMax),
+                                  weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .frame(width: bandCellW, height: height)
             }
         }
     }

@@ -20,21 +20,26 @@ public struct GridConfigGeneratorView: View {
 
     @State private var config: GridCanvasConfig
     @State private var editingZone: GridZoneDefinition?
+    /// Band the next "Add zone" call should target. Captured when the
+    /// user picks "Add zone" on a specific compartment so vertical
+    /// splits land the zone in the right column range.
+    @State private var newZoneTargetBandID: UUID?
 	@State private var exportDocument: ConfigDocument?
-	
+
 	@State private var sourceURL: URL?
 	@State private var editingBand: EditingBandRef?
 
-	@State private var splitRow: Int = 1
+	/// Band targeted by the split sheet — nil means "let the sheet pick".
+	@State private var splitBandID: UUID?
 	@State private var importError: String?
 
     @State private var showRowLabelsSheet = false
     @State private var showSplitSheet = false
-	
+
     @State private var showImporter = false
     @State private var showExporter = false
     @State private var saveSuccess = false
-	
+
     @FocusState private var focusedField: Bool
 
     /// Callback after a successful save — receives the URL of the written file.
@@ -72,10 +77,11 @@ public struct GridConfigGeneratorView: View {
         .modifier(GeneratorSheets(
             config: $config,
             editingZone: $editingZone,
+            newZoneTargetBandID: $newZoneTargetBandID,
             showRowLabelsSheet: $showRowLabelsSheet,
             editingBand: $editingBand,
             showSplitSheet: $showSplitSheet,
-            splitRow: $splitRow,
+            splitBandID: $splitBandID,
             onDismissFocus: { focusedField = false }
         ))
         .modifier(GeneratorFileTransfer(
@@ -103,11 +109,12 @@ public struct GridConfigGeneratorView: View {
                 config: $config,
                 editingBand: $editingBand,
                 showSplitSheet: $showSplitSheet,
-                splitRow: $splitRow,
+                splitBandID: $splitBandID,
                 onEditZone: { zone in
                     editingZone = zone
                 },
                 onAddZone: { band in
+                    newZoneTargetBandID = band.id
                     editingZone = seededZone(in: band)
                 }
             )

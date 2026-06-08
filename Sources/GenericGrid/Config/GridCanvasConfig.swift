@@ -51,7 +51,7 @@ public struct GridCanvasConfig: Codable, Sendable {
         self.rows = rows; self.cols = cols
         self.title = title
         self.rowLabels = rowLabels; self.colLabels = colLabels
-        self.columnBands = columnBands
+        self.columnBands = columnBands.map { Self.normaliseBands($0, cols: cols) }
         self.showMainGrid = showMainGrid
         self.showZoneLabels = showZoneLabels
         // Zones live inside compartments: distribute the top-level
@@ -76,12 +76,34 @@ public struct GridCanvasConfig: Codable, Sendable {
         title = try c.decodeIfPresent(String.self, forKey: .title)
         rowLabels = try c.decodeIfPresent([String].self, forKey: .rowLabels)
         colLabels = try c.decodeIfPresent([String].self, forKey: .colLabels)
-        columnBands = try c.decodeIfPresent([ColumnBand].self, forKey: .columnBands)
+        var normalisedBands: [ColumnBand]? = nil
+        if let decodedBands = try c.decodeIfPresent([ColumnBand].self, forKey: .columnBands) {
+            var bands = decodedBands
+            for i in bands.indices where bands[i].colEnd < bands[i].colStart {
+                bands[i].colEnd = max(0, cols - 1)
+            }
+            normalisedBands = bands
+        }
+        columnBands = normalisedBands
         showMainGrid = try c.decodeIfPresent(Bool.self, forKey: .showMainGrid) ?? true
         showZoneLabels = try c.decodeIfPresent(Bool.self, forKey: .showZoneLabels) ?? false
         let legacyZones = try c.decodeIfPresent([GridZoneDefinition].self, forKey: .zones) ?? []
         if !legacyZones.isEmpty {
             ingestLegacyZones(legacyZones)
+        }
+    }
+
+    /// Replaces the "spans to grid end" sentinel (`colEnd < colStart`)
+    /// with the grid's actual last column index. Callers building bands
+    /// without explicit column bounds get a full-width band, preserving
+    /// pre-2D-compartment behaviour and existing JSON files.
+    private static func normaliseBands(_ bands: [ColumnBand], cols: Int) -> [ColumnBand] {
+        bands.map { band in
+            var b = band
+            if b.colEnd < b.colStart {
+                b.colEnd = max(0, cols - 1)
+            }
+            return b
         }
     }
 
@@ -189,7 +211,7 @@ public struct GridCanvasConfig: Codable, Sendable {
         #endif
         let bands = effectiveBands
         let maxWidth = bands.flatMap { band in
-            (0..<cols).map { c in
+            (0..<band.effectiveCols(default: cols)).map { c in
                 (band.colLabel(at: c) as NSString)
                     .size(withAttributes: [.font: font]).width
             }

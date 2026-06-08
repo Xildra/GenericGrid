@@ -18,7 +18,7 @@ struct CompartmentsSection: View {
     @Binding var config: GridCanvasConfig
     @Binding var editingBand: EditingBandRef?
     @Binding var showSplitSheet: Bool
-    @Binding var splitRow: Int
+    @Binding var splitBandID: UUID?
 
     /// Expanded compartment ids — ephemeral UI state, not persisted.
     @State private var expanded: Set<UUID> = []
@@ -37,12 +37,12 @@ struct CompartmentsSection: View {
             }
 
             Button {
-                splitRow = defaultSplitRow()
+                splitBandID = nil
                 showSplitSheet = true
             } label: {
                 Label("Split compartment", systemImage: "rectangle.split.1x2")
             }
-            .disabled(config.rows < 2)
+            .disabled(config.rows < 2 && config.cols < 2)
         } header: {
             header
         }
@@ -102,8 +102,12 @@ struct CompartmentsSection: View {
 
     private func compartmentLabel(_ band: ColumnBand) -> some View {
         let zoneCount = zones(in: band).count
+        let hasVerticalSplits = config.effectiveBands.contains { $0.colStart != 0 || $0.colEnd != config.cols - 1 }
+        let rangeText: String = hasVerticalSplits
+            ? "R\(band.rowStart + 1)–\(band.rowEnd + 1) · C\(band.colStart + 1)–\(band.colEnd + 1)"
+            : "Rows \(band.rowStart + 1)–\(band.rowEnd + 1)"
         return HStack(spacing: 10) {
-            Text("Rows \(band.rowStart + 1)–\(band.rowEnd + 1)")
+            Text(rangeText)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
                 .layoutPriority(1)
@@ -163,13 +167,5 @@ struct CompartmentsSection: View {
         return (0..<bandCols)
             .map { band.colLabel(at: $0) }
             .joined(separator: " ")
-    }
-
-    /// Middle of the largest existing band, clamped to a valid split row.
-    private func defaultSplitRow() -> Int {
-        let bands = config.effectiveBands
-        let target = bands.max(by: { $0.rowCount < $1.rowCount }) ?? bands[0]
-        let mid = target.rowStart + max(1, target.rowCount / 2)
-        return min(max(1, mid), config.rows - 1)
     }
 }

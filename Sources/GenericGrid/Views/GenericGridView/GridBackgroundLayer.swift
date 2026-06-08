@@ -36,16 +36,19 @@ struct GridBackgroundLayer: View {
             }
 
             // Vertical lines: per compartment, spanning its data rows
-            // and its intermediate header strip when present.
-            for (idx, band) in config.effectiveBands.enumerated() {
-                let bandCols = config.cols(for: band)
+            // and its intermediate strip header when one sits above it.
+            for band in config.effectiveBands {
+                let bandSubdivisions = config.cols(for: band)
                 let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
+                let xOff = config.xForBand(band, baseCellSize: cellSize)
                 var yStart = config.yForRow(Double(band.rowStart), cellSize: cellSize)
                 let yEnd = yStart + CGFloat(band.rowCount) * cellSize
-                if idx > 0 { yStart -= cellSize }   // include header strip
-                for c in 0...bandCols {
+                if config.rowStripIndex(forRow: band.rowStart) > 0 {
+                    yStart -= cellSize   // include strip header above the band
+                }
+                for c in 0...bandSubdivisions {
                     var p = Path()
-                    let x = CGFloat(c) * bandCellW
+                    let x = xOff + CGFloat(c) * bandCellW
                     p.move(to: .init(x: x, y: yStart))
                     p.addLine(to: .init(x: x, y: yEnd))
                     ctx.stroke(p, with: sep, lineWidth: GridLineWidth.gridLine)

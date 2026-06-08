@@ -4,9 +4,14 @@
 //
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
-//  Band geometry: resolution, lookups, visual Y coordinates,
-//  validation, and overall content sizing that depends on
-//  intermediate compartment header strips.
+//  Band geometry: resolution, lookups, visual coordinates, validation,
+//  and overall content sizing. Bands tile the grid as a rectangular
+//  partition (every cell belongs to exactly one band, no gap, no
+//  overlap). Their column range may not span the full width when a
+//  band has been split vertically — so column geometry is band-local
+//  (X offset + cell width derived from the band's own col extent),
+//  and vertical geometry is driven by "row strips" (maximal row
+//  ranges where the column partition is consistent).
 //
 
 import SwiftUI
@@ -22,39 +27,96 @@ extension GridCanvasConfig {
     /// `editingBandID` captured from the fallback still matches.
     public static let fallbackBandID = UUID(uuidString: "00000000-0000-0000-0000-0000000FA11B")!
 
-    /// Resolved, always-valid list of bands covering the whole grid.
-    /// Falls back to a single band wrapping `colLabels` when `columnBands`
-    /// is nil or fails validation.
+    /// Resolved, always-valid list of bands tiling the whole grid.
+    /// Falls back to a single full-grid band wrapping `colLabels` when
+    /// `columnBands` is nil or fails validation.
     public var effectiveBands: [ColumnBand] {
         if let bands = columnBands,
-           Self.validate(bands: bands, totalRows: rows) {
+           Self.validate(bands: bands, totalRows: rows, totalCols: cols) {
             return bands
         }
         return [ColumnBand(id: Self.fallbackBandID,
                            rowStart: 0,
                            rowEnd: max(0, rows - 1),
+                           colStart: 0,
+                           colEnd: max(0, cols - 1),
                            labels: colLabels)]
     }
 
     /// Number of distinct compartments in the grid.
     public var bandCount: Int { effectiveBands.count }
 
-    /// Total vertical cell-slot count: data rows + intermediate headers.
-    /// Intermediate headers (between compartments) each occupy one cell row.
+    // MARK: - Row strips
+
+    /// Maximal horizontal slices of the grid where the column partition
+    /// is consistent. A strip starts at any row that is the `rowStart`
+    /// of at least one band, and ends just before the next strip's
+    /// start. For pure horizontal splits there is one strip per band;
+    /// when bands are stacked side by side (vertical splits) several
+    /// bands share the same strip.
+    public var rowStrips: [(rowStart: Int, rowEnd: Int)] {
+        var starts = Set<Int>([0])
+        for band in effectiveBands { starts.insert(band.rowStart) }
+        let sorted = starts.sorted()
+        var strips: [(Int, Int)] = []
+        for i in 0..<sorted.count {
+            let start = sorted[i]
+            let end = (i + 1 < sorted.count) ? sorted[i + 1] - 1 : rows - 1
+            strips.append((start, end))
+        }
+        return strips
+    }
+
+    /// Zero-based index of the strip containing the given logical row.
+    public func rowStripIndex(forRow r: Int) -> Int {
+        let clamped = max(0, min(rows - 1, r))
+        let strips = rowStrips
+        for (i, strip) in strips.enumerated() where clamped >= strip.rowStart && clamped <= strip.rowEnd {
+            return i
+        }
+        return 0
+    }
+
+    /// Total vertical cell-slot count: data rows + intermediate strip
+    /// header rows. Intermediate headers (between strips) each occupy
+    /// one cell row; the first strip uses the top `labelMargin` instead.
     public var totalVerticalCells: Int {
-        rows + max(0, bandCount - 1)
+        rows + max(0, rowStrips.count - 1)
     }
 
     // MARK: - Lookups
 
-    /// The compartment containing the given logical row (clamped to valid range).
+    /// The compartment containing the given (row, col) position
+    /// (clamped to valid range). Disambiguates between bands stacked
+    /// side by side in the same row range.
+    public func band(forRow r: Int, col c: Int) -> ColumnBand {
+        let cr = max(0, min(rows - 1, r))
+        let cc = max(0, min(cols - 1, c))
+        let bands = effectiveBands
+        return bands.first { $0.contains(row: cr, col: cc) } ?? bands[0]
+    }
+
+    /// Convenience: first band intersecting the given row. Use the
+    /// `(row, col)` variant when several bands share the row range,
+    /// otherwise this returns the leftmost one.
     public func band(forRow r: Int) -> ColumnBand {
         let clamped = max(0, min(rows - 1, r))
         let bands = effectiveBands
         return bands.first { $0.contains(row: clamped) } ?? bands[0]
     }
 
-    /// Zero-based index of the compartment containing the given logical row.
+    /// Index of the band containing (row, col) in `effectiveBands`.
+    public func bandIndex(forRow r: Int, col c: Int) -> Int {
+        let cr = max(0, min(rows - 1, r))
+        let cc = max(0, min(cols - 1, c))
+        let bands = effectiveBands
+        for (i, band) in bands.enumerated() where band.contains(row: cr, col: cc) {
+            return i
+        }
+        return 0
+    }
+
+    /// Convenience: first band index intersecting the given row.
     public func bandIndex(forRow r: Int) -> Int {
         let clamped = max(0, min(rows - 1, r))
         let bands = effectiveBands
@@ -64,48 +126,59 @@ extension GridCanvasConfig {
         return 0
     }
 
-    /// Vertical offset (in cells) added by intermediate compartment headers
-    /// above the given logical row. The first band's header lives in the
-    /// top `labelMargin`, so it does not contribute.
+    /// Vertical offset (in cells) added by intermediate strip headers
+    /// above the given logical row. The first strip's header lives in
+    /// the top `labelMargin`, so it does not contribute.
     public func bandHeaderOffsetCells(forRow r: Int) -> Int {
-        bandIndex(forRow: r)
+        rowStripIndex(forRow: r)
     }
 
-    /// Column label at column `col` within the compartment containing row `r`.
+    /// The band that currently owns the zone with the given identifier,
+    /// or nil when no band contains it. With 2D compartments a zone's
+    /// `(rowStart, colStart)` is band-local so this id-based lookup is
+    /// the reliable way for renderers to recover the owning band.
+    public func band(forZoneID id: UUID) -> ColumnBand? {
+        effectiveBands.first { $0.zones.contains(where: { $0.id == id }) }
+    }
+
+    /// Column label at column `col` within the band containing (r, col).
     public func colLabel(at col: Int, forRow r: Int) -> String {
-        band(forRow: r).colLabel(at: col)
+        let band = band(forRow: r, col: col)
+        let local = col - band.colStart
+        return band.colLabel(at: max(0, local))
     }
 
     // MARK: - Visual Y geometry
 
     /// Visual Y coordinate of a given logical row, accounting for
-    /// intermediate compartment header strips.
+    /// intermediate strip header rows.
     public func yForRow(_ r: Double, cellSize cs: CGFloat) -> CGFloat {
-        let idx = bandIndex(forRow: Int(r.rounded(.down)))
+        let idx = rowStripIndex(forRow: Int(r.rounded(.down)))
         return (CGFloat(r) + CGFloat(idx)) * cs
     }
 
     /// Converts a visual Y coordinate (within the content area) back to
     /// a logical row index. Returns nil when the point falls inside an
-    /// intermediate compartment header strip (not a data row).
+    /// intermediate strip header strip (not a data row).
     public func rowForY(_ y: CGFloat, cellSize cs: CGFloat) -> Double? {
         guard cs > 0 else { return nil }
         let slot = Double(y / cs)
         guard slot >= 0 else { return nil }
-        let bands = effectiveBands
-        var logicalStart = 0
-        for (i, band) in bands.enumerated() {
-            let visualStart = Double(logicalStart + i)
-            let visualEnd = visualStart + Double(band.rowCount)
+        let strips = rowStrips
+        var cursor = 0
+        for (i, strip) in strips.enumerated() {
+            let stripRows = strip.rowEnd - strip.rowStart + 1
+            let visualStart = Double(cursor)
+            let visualEnd = visualStart + Double(stripRows)
             if i > 0 {
                 let headerStart = visualStart - 1
                 if slot >= headerStart && slot < visualStart { return nil }
             }
             if slot < visualEnd {
                 let local = slot - visualStart
-                return Double(band.rowStart) + max(0, local)
+                return Double(strip.rowStart) + max(0, local)
             }
-            logicalStart += band.rowCount
+            cursor += stripRows + 1 // +1 for the header strip below
         }
         return nil
     }
@@ -118,51 +191,68 @@ extension GridCanvasConfig {
 
     // MARK: - Band-local column geometry
 
-    /// Effective column count for the given band: its override or the
-    /// grid-level default.
+    /// Effective subdivision count for the given band: its override or
+    /// the band's natural column count.
     public func cols(for band: ColumnBand) -> Int {
         band.effectiveCols(default: cols)
     }
 
-    /// Pixel width of one cell inside the given band. The grid's total
-    /// width is `cs * grid.cols`, distributed evenly across the band's
-    /// own column count — bands with fewer cols get wider cells.
+    /// Pixel width of one cell inside the given band. The band's
+    /// horizontal extent is `band.colCount * cellSize`; that width is
+    /// distributed across the band's subdivision count, so a band with
+    /// fewer subdivisions than its natural width gets wider cells.
     public func bandCellWidth(_ band: ColumnBand, baseCellSize cs: CGFloat) -> CGFloat {
-        let bandCols = max(1, cols(for: band))
-        return cs * CGFloat(cols) / CGFloat(bandCols)
+        let bandSubdivisions = max(1, cols(for: band))
+        let natural = max(1, band.colCount)
+        return cs * CGFloat(natural) / CGFloat(bandSubdivisions)
     }
 
-    /// X coordinate (in pixels) of a column coordinate inside the given
-    /// band. `col` is in the band's local column space.
+    /// X offset (in pixels) of the band's left edge in the grid.
+    public func xForBand(_ band: ColumnBand, baseCellSize cs: CGFloat) -> CGFloat {
+        CGFloat(band.colStart) * cs
+    }
+
+    /// Absolute X coordinate (in pixels) of a column coordinate inside
+    /// the given band. `col` is in the band's local column space
+    /// (0 = band's first subdivision).
     public func xForCol(_ col: Double, in band: ColumnBand,
                         baseCellSize cs: CGFloat) -> CGFloat {
-        CGFloat(col) * bandCellWidth(band, baseCellSize: cs)
+        xForBand(band, baseCellSize: cs) + CGFloat(col) * bandCellWidth(band, baseCellSize: cs)
     }
 
-    /// Inverse of `xForCol`: converts a pixel x inside the given band
-    /// back to a column coordinate in the band's local space.
+    /// Inverse of `xForCol`: converts an absolute pixel x to a column
+    /// coordinate in the given band's local space.
     public func colForX(_ x: CGFloat, in band: ColumnBand,
                         baseCellSize cs: CGFloat) -> Double {
         let bandCellW = bandCellWidth(band, baseCellSize: cs)
         guard bandCellW > 0 else { return 0 }
-        return Double(x / bandCellW)
+        let local = x - xForBand(band, baseCellSize: cs)
+        return Double(local / bandCellW)
     }
 
     // MARK: - Validation
 
-    /// Validates that bands are non-empty, sorted, contiguous, and
-    /// exactly cover `[0, totalRows - 1]` with no gap or overlap.
-    public static func validate(bands: [ColumnBand], totalRows: Int) -> Bool {
-        guard totalRows > 0, !bands.isEmpty else { return false }
-        let sorted = bands.sorted { $0.rowStart < $1.rowStart }
-        guard sorted.first?.rowStart == 0 else { return false }
-        guard sorted.last?.rowEnd == totalRows - 1 else { return false }
-        for i in 0..<sorted.count {
-            guard sorted[i].rowStart <= sorted[i].rowEnd else { return false }
-            if i > 0 {
-                guard sorted[i - 1].rowEnd + 1 == sorted[i].rowStart else { return false }
+    /// Validates that bands form a rectangular tiling of the grid:
+    /// every `(row, col)` cell belongs to exactly one band, with no
+    /// gap or overlap. Bands themselves must be non-empty rectangles
+    /// inside the grid bounds.
+    public static func validate(bands: [ColumnBand], totalRows: Int, totalCols: Int) -> Bool {
+        guard totalRows > 0, totalCols > 0, !bands.isEmpty else { return false }
+        var covered = Array(repeating: Array(repeating: false, count: totalCols),
+                            count: totalRows)
+        for band in bands {
+            guard band.rowStart >= 0, band.rowEnd < totalRows,
+                  band.colStart >= 0, band.colEnd < totalCols,
+                  band.rowStart <= band.rowEnd,
+                  band.colStart <= band.colEnd else { return false }
+            for r in band.rowStart...band.rowEnd {
+                for c in band.colStart...band.colEnd {
+                    if covered[r][c] { return false }
+                    covered[r][c] = true
+                }
             }
         }
+        for row in covered where row.contains(false) { return false }
         return true
     }
 }

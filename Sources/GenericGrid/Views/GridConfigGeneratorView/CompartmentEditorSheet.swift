@@ -4,9 +4,10 @@
 //
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
-//  Modal sheet for editing a compartment (column band): its row
-//  range (boundaries with its neighbours) and its column titles.
-//  Changes apply live to the bound config.
+//  Modal sheet for editing a 2D compartment: its row range AND its
+//  column range (boundaries with its neighbours along each axis),
+//  its subdivision count override, and its column titles. Buttons
+//  also expose horizontal / vertical splits directly from the band.
 //
 
 import SwiftUI
@@ -19,15 +20,15 @@ struct CompartmentEditorSheet: View {
     let bandID: UUID
 
     private var bands: [ColumnBand] { config.effectiveBands }
-    private var bandIndex: Int? { bands.firstIndex(where: { $0.id == bandID }) }
     private var band: ColumnBand? { bands.first(where: { $0.id == bandID }) }
 
     var body: some View {
         NavigationStack {
             Form {
-                if let band, let idx = bandIndex {
-                    rangeSection(band: band, index: idx)
-                    columnsSection(band: band, index: idx)
+                if let band {
+                    rangeSection(band: band)
+                    splitsSection(band: band)
+                    columnsSection(band: band)
                     labelsSection(band: band)
                 }
             }
@@ -51,28 +52,33 @@ struct CompartmentEditorSheet: View {
     // MARK: - Range
 
     @ViewBuilder
-    private func rangeSection(band: ColumnBand, index: Int) -> some View {
-        let canEditStart = index > 0
-        let canEditEnd = index < bands.count - 1
+    private func rangeSection(band: ColumnBand) -> some View {
+        let canResizeTop    = config.canResizeRowStart(bandID: band.id)
+        let canResizeBot    = config.canResizeRowEnd(bandID: band.id)
+        let canResizeLeft   = config.canResizeColStart(bandID: band.id)
+        let canResizeRight  = config.canResizeColEnd(bandID: band.id)
+        let canResizeAny    = canResizeTop || canResizeBot || canResizeLeft || canResizeRight
 
-        if canEditStart || canEditEnd {
+        if canResizeAny {
             Section {
-                if canEditStart {
-                    firstRowStepper(band: band, index: index)
-                }
-                if canEditEnd {
-                    lastRowStepper(band: band, index: index)
-                }
+                if canResizeTop    { firstRowStepper(band: band) }
+                if canResizeBot    { lastRowStepper(band: band) }
+                if canResizeLeft   { firstColStepper(band: band) }
+                if canResizeRight  { lastColStepper(band: band) }
             } header: {
                 Text("Range")
             } footer: {
-                Text("Moving a boundary grows or shrinks the neighbouring compartment accordingly.")
+                Text("Moving a boundary grows or shrinks the neighbouring compartment along that edge.")
                     .font(.caption2)
             }
         } else {
             Section {
                 LabeledContent("Rows") {
                     Text("\(band.rowStart + 1)–\(band.rowEnd + 1)")
+                        .monospacedDigit().foregroundStyle(.secondary)
+                }
+                LabeledContent("Columns") {
+                    Text("\(band.colStart + 1)–\(band.colEnd + 1)")
                         .monospacedDigit().foregroundStyle(.secondary)
                 }
             } header: {
@@ -84,33 +90,51 @@ struct CompartmentEditorSheet: View {
         }
     }
 
-    private func firstRowStepper(band: ColumnBand, index: Int) -> some View {
-        let prev = bands[index - 1]
-        let minStart = prev.rowStart + 1          // predecessor keeps ≥ 1 row
-        let maxStart = band.rowEnd                 // this band keeps ≥ 1 row
-        return Stepper(
+    private func firstRowStepper(band: ColumnBand) -> some View {
+        Stepper(
             value: Binding(
                 get: { band.rowStart + 1 },
-                set: { config.setBandStart(at: index, rowStart: $0 - 1) }
+                set: { config.setBandRowStart(id: band.id, newStart: $0 - 1) }
             ),
-            in: (minStart + 1)...(maxStart + 1)
+            in: 2...(band.rowEnd + 1)
         ) {
             rangeLabel("First row", value: band.rowStart + 1)
         }
     }
 
-    private func lastRowStepper(band: ColumnBand, index: Int) -> some View {
-        let next = bands[index + 1]
-        let minEnd = band.rowStart                 // this band keeps ≥ 1 row
-        let maxEnd = next.rowEnd - 1               // successor keeps ≥ 1 row
-        return Stepper(
+    private func lastRowStepper(band: ColumnBand) -> some View {
+        Stepper(
             value: Binding(
                 get: { band.rowEnd + 1 },
-                set: { config.setBandEnd(at: index, rowEnd: $0 - 1) }
+                set: { config.setBandRowEnd(id: band.id, newEnd: $0 - 1) }
             ),
-            in: (minEnd + 1)...(maxEnd + 1)
+            in: (band.rowStart + 1)...config.rows
         ) {
             rangeLabel("Last row", value: band.rowEnd + 1)
+        }
+    }
+
+    private func firstColStepper(band: ColumnBand) -> some View {
+        Stepper(
+            value: Binding(
+                get: { band.colStart + 1 },
+                set: { config.setBandColStart(id: band.id, newStart: $0 - 1) }
+            ),
+            in: 2...(band.colEnd + 1)
+        ) {
+            rangeLabel("First column", value: band.colStart + 1)
+        }
+    }
+
+    private func lastColStepper(band: ColumnBand) -> some View {
+        Stepper(
+            value: Binding(
+                get: { band.colEnd + 1 },
+                set: { config.setBandColEnd(id: band.id, newEnd: $0 - 1) }
+            ),
+            in: (band.colStart + 1)...config.cols
+        ) {
+            rangeLabel("Last column", value: band.colEnd + 1)
         }
     }
 
@@ -122,35 +146,69 @@ struct CompartmentEditorSheet: View {
         }
     }
 
+    // MARK: - Splits
+
+    @ViewBuilder
+    private func splitsSection(band: ColumnBand) -> some View {
+        let canSplitH = band.rowCount >= 2
+        let canSplitV = band.colCount >= 2
+        if canSplitH || canSplitV {
+            Section {
+                if canSplitH {
+                    Button {
+                        let row = band.rowStart + max(1, band.rowCount / 2)
+                        config.splitBand(id: band.id, atRow: row)
+                    } label: {
+                        Label("Split horizontally", systemImage: "rectangle.split.1x2")
+                    }
+                }
+                if canSplitV {
+                    Button {
+                        let col = band.colStart + max(1, band.colCount / 2)
+                        config.splitBand(id: band.id, atCol: col)
+                    } label: {
+                        Label("Split vertically", systemImage: "rectangle.split.2x1")
+                    }
+                }
+            } header: {
+                Text("Split")
+            } footer: {
+                Text("Splits cut this compartment in half along the chosen axis. Use the range steppers above to fine-tune the boundary.")
+                    .font(.caption2)
+            }
+        }
+    }
+
     // MARK: - Columns
 
     @ViewBuilder
-    private func columnsSection(band: ColumnBand, index: Int) -> some View {
+    private func columnsSection(band: ColumnBand) -> some View {
         let bandCols = band.effectiveCols(default: config.cols)
+        let natural = max(1, band.colCount)
         let isOverridden = band.cols != nil
         Section {
             Stepper(
                 value: Binding(
                     get: { bandCols },
-                    set: { config.setBandCols(at: index, cols: $0) }
+                    set: { config.setBandCols(id: band.id, cols: $0) }
                 ),
                 in: 1...GridDefaults.stepperMax
             ) {
                 HStack {
-                    Text("Columns")
+                    Text("Subdivisions")
                     Spacer()
                     Text("\(bandCols)").monospacedDigit().foregroundStyle(.secondary)
                 }
             }
             if isOverridden {
-                Button("Use grid default (\(config.cols))") {
-                    config.setBandCols(at: index, cols: nil)
+                Button("Use natural width (\(natural))") {
+                    config.setBandCols(id: band.id, cols: nil)
                 }
             }
         } header: {
-            Text("Columns")
+            Text("Subdivisions")
         } footer: {
-            Text("Overrides the grid's column count for this compartment only — cells get wider when the count is lower.")
+            Text("Overrides how the compartment's horizontal extent is divided — cells get wider when the count is lower than the natural width.")
                 .font(.caption2)
         }
     }

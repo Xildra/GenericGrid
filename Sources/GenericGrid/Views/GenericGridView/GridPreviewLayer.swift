@@ -45,8 +45,9 @@ struct GridPreviewLayer: View {
         let inset = GridLayout.previewInset
         let band = config.band(forRow: Int(minR.rounded(.down)))
         let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
+        let xOff = config.xForBand(band, baseCellSize: cellSize)
         let yTop = config.yForRow(minR, cellSize: cellSize)
-        return CGRect(x: CGFloat(minC) * bandCellW + inset,
+        return CGRect(x: xOff + CGFloat(minC) * bandCellW + inset,
                       y: yTop + inset,
                       width:  CGFloat(maxC - minC) * bandCellW - inset * 2,
                       height: CGFloat(maxR - minR) * cellSize - inset * 2)

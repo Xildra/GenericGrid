@@ -21,15 +21,21 @@ struct ZoneEditorSheet: View {
 
     private let isNew: Bool
     private let config: GridCanvasConfig
+    private let targetBandID: UUID?
     private let onSave: (GridZoneDefinition) -> Void
 
     /// Effective column count for the zone's current compartment.
     private var maxCols: Int { config.cols(for: currentBand) }
     private var bands: [ColumnBand] { config.effectiveBands }
 
-    /// Band currently owning the zone (by `zone.rowStart`). Clamped values.
+    /// Band currently owning the zone — id-based for persisted zones,
+    /// fallback to the seed `targetBandID` for new ones, finally to a
+    /// row-based lookup so legacy single-band configs keep working.
     private var currentBand: ColumnBand {
-        config.band(forRow: Int(zone.rowStart.rounded(.down)))
+        if !isNew, let band = config.band(forZoneID: zone.id) { return band }
+        if let id = targetBandID,
+           let band = bands.first(where: { $0.id == id }) { return band }
+        return config.band(forRow: Int(zone.rowStart.rounded(.down)))
     }
 
     /// Row-range bounds within the current band (lo inclusive, hi exclusive).
@@ -39,8 +45,10 @@ struct ZoneEditorSheet: View {
 
     init(zone: GridZoneDefinition?,
          config: GridCanvasConfig,
+         targetBandID: UUID? = nil,
          onSave: @escaping (GridZoneDefinition) -> Void) {
         self.config = config
+        self.targetBandID = targetBandID
         self.onSave = onSave
 
         let defaultEnd = min(GridDefaults.newZoneEnd, Double(config.rows))
@@ -125,7 +133,7 @@ struct ZoneEditorSheet: View {
                     Section("Compartment") {
                         Picker("Compartment", selection: compartmentBinding) {
                             ForEach(Array(bands.enumerated()), id: \.element.id) { idx, band in
-                                Text("Rows \(band.rowStart + 1)–\(band.rowEnd + 1)")
+                                Text(compartmentLabel(band))
                                     .tag(idx)
                             }
                         }
@@ -206,5 +214,18 @@ struct ZoneEditorSheet: View {
                     .monospacedDigit()
             }
         }
+    }
+
+    /// Label for the compartment picker. Shows the row range and adds
+    /// the column range when the grid has more than one column-strip
+    /// (i.e. some bands were split vertically), so 2D compartments are
+    /// distinguishable.
+    private func compartmentLabel(_ band: ColumnBand) -> String {
+        let rows = "Rows \(band.rowStart + 1)–\(band.rowEnd + 1)"
+        let hasVerticalSplits = bands.contains { $0.colStart != 0 || $0.colEnd != config.cols - 1 }
+        if hasVerticalSplits {
+            return rows + " · Cols \(band.colStart + 1)–\(band.colEnd + 1)"
+        }
+        return rows
     }
 }

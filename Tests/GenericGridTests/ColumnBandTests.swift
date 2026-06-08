@@ -52,52 +52,72 @@ struct ColumnBandTests {
 
     @Test("validate accepts a single band covering the grid")
     func validateSingleBand() {
-        let band = ColumnBand(rowStart: 0, rowEnd: 9)
-        #expect(GridCanvasConfig.validate(bands: [band], totalRows: 10))
+        let band = ColumnBand(rowStart: 0, rowEnd: 9, colStart: 0, colEnd: 1)
+        #expect(GridCanvasConfig.validate(bands: [band], totalRows: 10, totalCols: 2))
     }
 
     @Test("validate accepts two contiguous bands")
     func validateContiguous() {
-        let a = ColumnBand(rowStart: 0, rowEnd: 4)
-        let b = ColumnBand(rowStart: 5, rowEnd: 9)
-        #expect(GridCanvasConfig.validate(bands: [a, b], totalRows: 10))
+        let a = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 1)
+        let b = ColumnBand(rowStart: 5, rowEnd: 9, colStart: 0, colEnd: 1)
+        #expect(GridCanvasConfig.validate(bands: [a, b], totalRows: 10, totalCols: 2))
     }
 
     @Test("validate rejects a gap between bands")
     func validateRejectsGap() {
-        let a = ColumnBand(rowStart: 0, rowEnd: 4)
-        let b = ColumnBand(rowStart: 6, rowEnd: 9)
-        #expect(!GridCanvasConfig.validate(bands: [a, b], totalRows: 10))
+        let a = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 1)
+        let b = ColumnBand(rowStart: 6, rowEnd: 9, colStart: 0, colEnd: 1)
+        #expect(!GridCanvasConfig.validate(bands: [a, b], totalRows: 10, totalCols: 2))
     }
 
     @Test("validate rejects overlapping bands")
     func validateRejectsOverlap() {
-        let a = ColumnBand(rowStart: 0, rowEnd: 5)
-        let b = ColumnBand(rowStart: 5, rowEnd: 9)
-        #expect(!GridCanvasConfig.validate(bands: [a, b], totalRows: 10))
+        let a = ColumnBand(rowStart: 0, rowEnd: 5, colStart: 0, colEnd: 1)
+        let b = ColumnBand(rowStart: 5, rowEnd: 9, colStart: 0, colEnd: 1)
+        #expect(!GridCanvasConfig.validate(bands: [a, b], totalRows: 10, totalCols: 2))
     }
 
     @Test("validate rejects bands not starting at 0")
     func validateRejectsNonZeroStart() {
-        let a = ColumnBand(rowStart: 1, rowEnd: 9)
-        #expect(!GridCanvasConfig.validate(bands: [a], totalRows: 10))
+        let a = ColumnBand(rowStart: 1, rowEnd: 9, colStart: 0, colEnd: 1)
+        #expect(!GridCanvasConfig.validate(bands: [a], totalRows: 10, totalCols: 2))
     }
 
     @Test("validate rejects bands not ending at totalRows - 1")
     func validateRejectsWrongEnd() {
-        let a = ColumnBand(rowStart: 0, rowEnd: 7)
-        #expect(!GridCanvasConfig.validate(bands: [a], totalRows: 10))
+        let a = ColumnBand(rowStart: 0, rowEnd: 7, colStart: 0, colEnd: 1)
+        #expect(!GridCanvasConfig.validate(bands: [a], totalRows: 10, totalCols: 2))
     }
 
     @Test("validate rejects inverted start/end")
     func validateRejectsInverted() {
-        let a = ColumnBand(rowStart: 5, rowEnd: 2)
-        #expect(!GridCanvasConfig.validate(bands: [a], totalRows: 10))
+        let a = ColumnBand(rowStart: 5, rowEnd: 2, colStart: 0, colEnd: 1)
+        #expect(!GridCanvasConfig.validate(bands: [a], totalRows: 10, totalCols: 2))
     }
 
     @Test("validate rejects empty bands")
     func validateRejectsEmpty() {
-        #expect(!GridCanvasConfig.validate(bands: [], totalRows: 10))
+        #expect(!GridCanvasConfig.validate(bands: [], totalRows: 10, totalCols: 2))
+    }
+
+    @Test("validate accepts a 2x2 rectangular tiling")
+    func validate2DTiling() {
+        let topLeft  = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 1)
+        let topRight = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 2, colEnd: 3)
+        let botLeft  = ColumnBand(rowStart: 5, rowEnd: 9, colStart: 0, colEnd: 1)
+        let botRight = ColumnBand(rowStart: 5, rowEnd: 9, colStart: 2, colEnd: 3)
+        #expect(GridCanvasConfig.validate(bands: [topLeft, topRight, botLeft, botRight],
+                                          totalRows: 10, totalCols: 4))
+    }
+
+    @Test("validate rejects a 2D tiling with an uncovered cell")
+    func validate2DTilingWithHole() {
+        let topLeft  = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 1)
+        let topRight = ColumnBand(rowStart: 0, rowEnd: 4, colStart: 2, colEnd: 3)
+        // Missing bottom-right band — leaves the bottom-right quadrant uncovered.
+        let botLeft  = ColumnBand(rowStart: 5, rowEnd: 9, colStart: 0, colEnd: 1)
+        #expect(!GridCanvasConfig.validate(bands: [topLeft, topRight, botLeft],
+                                           totalRows: 10, totalCols: 4))
     }
 
     // MARK: - effectiveBands fallback

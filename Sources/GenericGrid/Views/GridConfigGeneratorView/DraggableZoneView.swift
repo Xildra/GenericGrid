@@ -41,7 +41,8 @@ struct DraggableZoneView: View {
 
     /// Compartment that owns the zone — the zone is constrained to it.
     private var ownerBand: ColumnBand {
-        config.band(forRow: Int(zone.rowStart.rounded(.down)))
+        config.band(forZoneID: zone.id)
+            ?? config.band(forRow: Int(zone.rowStart.rounded(.down)))
     }
 
     /// Pixel width of one column inside the owning compartment.
@@ -49,7 +50,12 @@ struct DraggableZoneView: View {
         config.bandCellWidth(ownerBand, baseCellSize: cellSize)
     }
 
-    private var x: CGFloat { CGFloat(draft.colStart) * bandCellW }
+    /// X offset of the owning compartment in the grid.
+    private var bandXOff: CGFloat {
+        config.xForBand(ownerBand, baseCellSize: cellSize)
+    }
+
+    private var x: CGFloat { bandXOff + CGFloat(draft.colStart) * bandCellW }
     private var y: CGFloat { config.yForRow(draft.rowStart, cellSize: cellSize) }
     private var w: CGFloat { CGFloat(draft.colEnd - draft.colStart) * bandCellW }
     private var h: CGFloat { CGFloat(draft.rowEnd - draft.rowStart) * cellSize }

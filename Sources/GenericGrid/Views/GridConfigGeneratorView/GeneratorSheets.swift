@@ -5,7 +5,7 @@
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
 //  Groups the sheet presenters used by the config generator
-//  (zone editor, row-labels editor, band-labels editor, split
+//  (zone editor, row-labels editor, compartment editor, split
 //  compartment) so the root view stays focused on layout.
 //
 
@@ -16,13 +16,19 @@ struct GeneratorSheets: ViewModifier {
     @Binding var config: GridCanvasConfig
 
     @Binding var editingZone: GridZoneDefinition?
+    /// Band the next "Add zone" action should write into. Captured when
+    /// the user picks "Add zone" on a specific compartment so vertical
+    /// splits land the zone in the right column range.
+    @Binding var newZoneTargetBandID: UUID?
 
     @Binding var showRowLabelsSheet: Bool
 
     @Binding var editingBand: EditingBandRef?
 
     @Binding var showSplitSheet: Bool
-    @Binding var splitRow: Int
+    /// Band the split sheet should target. Nil = let the sheet pick the
+    /// best splittable band for the chosen axis.
+    @Binding var splitBandID: UUID?
 
     let onDismissFocus: () -> Void
 
@@ -33,9 +39,14 @@ struct GeneratorSheets: ViewModifier {
             // was evaluated before `editingZone` had propagated and
             // the seed (with the band-correct rowStart) was lost.
             .sheet(item: $editingZone, onDismiss: onDismissFocus) { zoneToEdit in
-                ZoneEditorSheet(zone: zoneToEdit, config: config) { saved in
+                ZoneEditorSheet(zone: zoneToEdit,
+                                config: config,
+                                targetBandID: newZoneTargetBandID) { saved in
                     if config.containsZone(id: saved.id) {
                         config.updateZone(saved)
+                    } else if let id = newZoneTargetBandID {
+                        config.addZone(saved, toBandID: id)
+                        newZoneTargetBandID = nil
                     } else {
                         config.addZone(saved)
                     }
@@ -55,12 +66,17 @@ struct GeneratorSheets: ViewModifier {
             .sheet(item: $editingBand, onDismiss: onDismissFocus) { ref in
                 CompartmentEditorSheet(config: $config, bandID: ref.id)
             }
-            .sheet(isPresented: $showSplitSheet) {
+            .sheet(isPresented: $showSplitSheet, onDismiss: { splitBandID = nil }) {
                 SplitCompartmentSheet(
-                    splitRow: $splitRow,
-                    totalRows: config.rows
-                ) { row in
-                    config.splitBand(at: row)
+                    config: config,
+                    bandID: splitBandID
+                ) { id, axis, pos in
+                    switch axis {
+                    case .horizontal:
+                        config.splitBand(id: id, atRow: pos)
+                    case .vertical:
+                        config.splitBand(id: id, atCol: pos)
+                    }
                 }
             }
     }

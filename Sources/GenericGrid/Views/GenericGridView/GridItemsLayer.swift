@@ -23,6 +23,7 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
                 let band = config.band(forRow: Int(item.anchorRow.rounded(.down)))
                 GenericItemBlock(
                     item: item, type: t,
+                    xOrigin: config.xForBand(band, baseCellSize: cellSize),
                     bandCellWidth: config.bandCellWidth(band, baseCellSize: cellSize),
                     cellHeight: cellSize,
                     yOrigin: config.yForRow(item.anchorRow, cellSize: cellSize),
@@ -41,12 +42,14 @@ struct GenericItemBlock<T: GridItemType>: View {
     let effWidth: Int
     let effHeight: Int
     let type: T
+    let xOrigin: CGFloat
     let bandCellWidth: CGFloat
     let cellHeight: CGFloat
     let yOrigin: CGFloat
     var dimmed: Bool = false
 
     init<I: GridPlaceable>(item: I, type: T,
+                           xOrigin: CGFloat,
                            bandCellWidth: CGFloat,
                            cellHeight: CGFloat,
                            yOrigin: CGFloat,
@@ -55,6 +58,7 @@ struct GenericItemBlock<T: GridItemType>: View {
         self.effWidth = item.effectiveWidth
         self.effHeight = item.effectiveHeight
         self.type = type
+        self.xOrigin = xOrigin
         self.bandCellWidth = bandCellWidth
         self.cellHeight = cellHeight
         self.yOrigin = yOrigin
@@ -65,7 +69,7 @@ struct GenericItemBlock<T: GridItemType>: View {
         let inset = GridLayout.itemBlockInset
         let w  = CGFloat(effWidth)  * bandCellWidth - inset * 2
         let h  = CGFloat(effHeight) * cellHeight - inset * 2
-        let ox = CGFloat(anchorCol) * bandCellWidth + inset
+        let ox = xOrigin + CGFloat(anchorCol) * bandCellWidth + inset
         let oy = yOrigin + inset
 
         // Sober look: solid colour fill (no border, no secondary line)
