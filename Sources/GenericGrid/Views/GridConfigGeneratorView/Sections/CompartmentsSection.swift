@@ -35,14 +35,6 @@ struct CompartmentsSection: View {
             .onDelete { offsets in
                 config.mergeBands(at: offsets)
             }
-
-            Button {
-                splitBandID = nil
-                showSplitSheet = true
-            } label: {
-                Label("Split compartment", systemImage: "rectangle.split.1x2")
-            }
-            .disabled(config.rows < 2 && config.cols < 2)
         } header: {
             header
         }
@@ -130,7 +122,14 @@ struct CompartmentsSection: View {
             HStack(spacing: 10) {
                 Circle().fill(zone.color)
                     .frame(width: GridLayout.colorCircleSize, height: GridLayout.colorCircleSize)
-                Text(zone.label).font(.subheadline)
+                if zone.label.isEmpty {
+                    Text("Untitled zone")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .italic()
+                } else {
+                    Text(zone.label).font(.subheadline)
+                }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.caption).foregroundStyle(.tertiary)

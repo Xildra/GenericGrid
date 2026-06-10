@@ -175,7 +175,9 @@ struct ZoneEditorSheet: View {
                         onSave(zone)
                         dismiss()
                     }
-                    .disabled(zone.label.isEmpty || zone.rowEnd <= zone.rowStart || zone.colEnd <= zone.colStart)
+                    // Title is optional — saving a zone with an empty
+                    // label is fine; only the geometry must be valid.
+                    .disabled(zone.rowEnd <= zone.rowStart || zone.colEnd <= zone.colStart)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
