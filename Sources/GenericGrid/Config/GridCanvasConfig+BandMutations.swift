@@ -11,7 +11,7 @@
 //  `(rowStart, colStart)`.
 //
 
-import Foundation
+import SwiftUI
 
 extension GridCanvasConfig {
 
@@ -293,6 +293,23 @@ extension GridCanvasConfig {
         bands[rightIdx].colStart = newEnd + 1
         bands[rightIdx].cols = nil
         rebalanceZones(between: idx, and: rightIdx, in: &bands)
+        columnBands = bands
+    }
+
+    // MARK: - Border
+
+    /// Sets (or clears) the custom border for the band with the given
+    /// identifier. Pass `color: nil` to disable the custom border —
+    /// the regular grid lines around the band remain visible. Pass
+    /// `width: 0` to keep the colour stored but render nothing.
+    public mutating func setBandBorder(id: UUID,
+                                       color: Color?,
+                                       width: Double?) {
+        promoteToColumnBandsIfNeeded()
+        guard var bands = columnBands,
+              let idx = bands.firstIndex(where: { $0.id == id }) else { return }
+        bands[idx].borderColorHex = color?.toHex()
+        bands[idx].borderWidth = width
         columnBands = bands
     }
 

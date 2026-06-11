@@ -35,6 +35,8 @@ struct ConfigGridPreviewView: View {
                         onTap:    { onEditZone(zone) }
                     )
                 }
+
+                GridCompartmentBordersLayer(config: config, cellSize: cs)
             }
         }
         .safeAreaPadding(.bottom, GridLayout.previewBottomInset)

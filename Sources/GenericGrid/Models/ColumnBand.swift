@@ -14,7 +14,7 @@
 //  resolved against `GridCanvasConfig.cols` at load time.
 //
 
-import Foundation
+import SwiftUI
 
 public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
 
@@ -37,6 +37,14 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
     /// their horizontal extent more or less finely than their natural
     /// width.
     public var cols: Int?
+    /// Optional custom border colour, drawn on top of the regular grid
+    /// lines around the band's rectangle. Stored as a hex string for
+    /// JSON portability. Nil = no custom border (regular grid lines
+    /// still show).
+    public var borderColorHex: String?
+    /// Optional custom border width, in points. Ignored when
+    /// `borderColorHex` is nil. A value of 0 hides the border.
+    public var borderWidth: Double?
     /// Zones belonging to this compartment. A zone's `(rowStart, colStart)`
     /// must fall inside the band's range — enforced by the mutating
     /// helpers on `GridCanvasConfig`.
@@ -49,6 +57,8 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
                 colEnd: Int = -1,
                 labels: [String]? = nil,
                 cols: Int? = nil,
+                borderColorHex: String? = nil,
+                borderWidth: Double? = nil,
                 zones: [GridZoneDefinition] = []) {
         self.id = id
         self.rowStart = rowStart
@@ -57,11 +67,14 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
         self.colEnd = colEnd
         self.labels = labels
         self.cols = cols
+        self.borderColorHex = borderColorHex
+        self.borderWidth = borderWidth
         self.zones = zones
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, rowStart, rowEnd, colStart, colEnd, labels, cols, zones
+        case id, rowStart, rowEnd, colStart, colEnd, labels, cols,
+             borderColorHex, borderWidth, zones
     }
 
     public init(from decoder: Decoder) throws {
@@ -73,7 +86,22 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
         colEnd = try c.decodeIfPresent(Int.self, forKey: .colEnd) ?? -1
         labels = try c.decodeIfPresent([String].self, forKey: .labels)
         cols = try c.decodeIfPresent(Int.self, forKey: .cols)
+        borderColorHex = try c.decodeIfPresent(String.self, forKey: .borderColorHex)
+        borderWidth = try c.decodeIfPresent(Double.self, forKey: .borderWidth)
         zones = try c.decodeIfPresent([GridZoneDefinition].self, forKey: .zones) ?? []
+    }
+
+    /// Resolved SwiftUI border colour, backed by `borderColorHex`.
+    /// Nil when no custom border is set.
+    public var borderColor: Color? {
+        get { borderColorHex.map { Color(hex: $0) } }
+        set { borderColorHex = newValue?.toHex() }
+    }
+
+    /// `true` when this band has a visible custom border (non-nil
+    /// colour and non-zero width).
+    public var hasCustomBorder: Bool {
+        borderColorHex != nil && (borderWidth ?? 0) > 0
     }
 
     /// Natural column count: width of the band's column range.

@@ -60,6 +60,7 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                                     showLines: engine.config.showMainGrid)
                 GridZoneSubdivisionLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
                 GridZoneOverlayLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
+                GridCompartmentBordersLayer(config: engine.config, cellSize: cs)
                 GridItemsLayer(config: engine.config, items: items, cellSize: cs, movingItem: engine.movingItem)
                 GridPreviewLayer(config: engine.config, cells: engine.previewCells, isValid: engine.isPreviewValid, cellSize: cs)
                 GridGestureLayer(engine: engine, cellSize: cs,

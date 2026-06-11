@@ -28,6 +28,7 @@ struct CompartmentEditorSheet: View {
                 if let band {
                     rangeSection(band: band)
                     splitsSection(band: band)
+                    borderSection(band: band)
                     columnsSection(band: band)
                     labelsSection(band: band)
                 }
@@ -176,6 +177,56 @@ struct CompartmentEditorSheet: View {
                 Text("Splits cut this compartment in half along the chosen axis. Use the range steppers above to fine-tune the boundary.")
                     .font(.caption2)
             }
+        }
+    }
+
+    // MARK: - Border
+
+    @ViewBuilder
+    private func borderSection(band: ColumnBand) -> some View {
+        let enabled = band.borderColorHex != nil
+        Section {
+            Toggle("Custom border", isOn: Binding(
+                get: { enabled },
+                set: { isOn in
+                    if isOn {
+                        config.setBandBorder(id: band.id,
+                                             color: .accentColor,
+                                             width: 2)
+                    } else {
+                        config.setBandBorder(id: band.id,
+                                             color: nil,
+                                             width: nil)
+                    }
+                }
+            ))
+            if enabled {
+                ColorPicker("Colour", selection: Binding(
+                    get: { band.borderColor ?? .accentColor },
+                    set: { config.setBandBorder(id: band.id,
+                                                color: $0,
+                                                width: band.borderWidth ?? 2) }
+                ), supportsOpacity: false)
+
+                Stepper(value: Binding(
+                    get: { Int(band.borderWidth ?? 2) },
+                    set: { config.setBandBorder(id: band.id,
+                                                color: band.borderColor,
+                                                width: Double($0)) }
+                ), in: 1...10) {
+                    HStack {
+                        Text("Width")
+                        Spacer()
+                        Text("\(Int(band.borderWidth ?? 2)) pt")
+                            .monospacedDigit().foregroundStyle(.secondary)
+                    }
+                }
+            }
+        } header: {
+            Text("Border")
+        } footer: {
+            Text("Draws a custom stroke around the compartment, on top of the regular grid lines.")
+                .font(.caption2)
         }
     }
 
