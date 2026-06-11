@@ -26,6 +26,12 @@ struct GridCompartmentBordersLayer: View {
             for band in config.effectiveBands where band.hasCustomBorder {
                 guard let color = band.borderColor,
                       let width = band.borderWidth, width > 0 else { continue }
+                // The configured width is defined at the nominal cell
+                // size and scales with it, so the border keeps the same
+                // proportions at every zoom level instead of staying a
+                // fixed-pt stroke that dwarfs zoomed-out cells.
+                let lineWidth = max(GridLineWidth.gridLine,
+                                    CGFloat(width) * cellSize / GridCellSize.default)
                 let x = config.xForBand(band, baseCellSize: cellSize)
                 let y = config.yForRow(Double(band.rowStart), cellSize: cellSize)
                 let w = CGFloat(band.colCount) * cellSize
@@ -33,13 +39,13 @@ struct GridCompartmentBordersLayer: View {
                 // Inset by half the stroke width so the visible rect
                 // matches the band's cell boundaries (strokes are
                 // centred on the path by default).
-                let inset = CGFloat(width) / 2
+                let inset = lineWidth / 2
                 let rect = CGRect(x: x + inset, y: y + inset,
                                   width: max(0, w - inset * 2),
                                   height: max(0, h - inset * 2))
                 ctx.stroke(Path(rect),
                            with: .color(color),
-                           lineWidth: CGFloat(width))
+                           lineWidth: lineWidth)
             }
         }
         .frame(width: W, height: H)
