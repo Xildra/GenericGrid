@@ -100,12 +100,18 @@ public final class GridEngine<Item: GridPlaceable> {
     public func canPlace(anchor: GridCell, type: Item.ItemType, rotated: Bool,
                          excluding: Item? = nil) -> Bool {
         let cells = footprint(anchor: anchor, type: type, rotated: rotated)
+        return fitsBoundsAndZones(cells: cells, typeName: type.name) &&
+            cells.allSatisfy { map[$0] == nil || map[$0] === excluding }
+    }
+
+    /// `true` when every sub-cell is inside the grid and accepted by
+    /// the zone rules — everything `canPlace` checks except occupancy.
+    private func fitsBoundsAndZones(cells: [GridCell], typeName: String?) -> Bool {
         let rowsD = Double(rows), colsD = Double(cols)
         return cells.allSatisfy { cell in
             cell.r >= 0 && cell.r + GridGesture.halfCell <= rowsD &&
             cell.c >= 0 && cell.c + GridGesture.halfCell <= colsD &&
-            (map[cell] == nil || map[cell] === excluding) &&
-            config.canAccept(cell: cell, typeName: type.name)
+            config.canAccept(cell: cell, typeName: typeName)
         }
     }
 
@@ -135,12 +141,15 @@ public final class GridEngine<Item: GridPlaceable> {
                       onConflict: ConflictHandler? = nil) {
         guard let t = selectedType else { return }
 
-        // Unique-types fast path: relocate the existing item.
+        // Unique-types fast path: relocate the existing item. The
+        // engine's current `rotated` flag drives both the validation
+        // and the assignment, so the footprint that lands is exactly
+        // the one that was checked.
         if uniqueTypes, let existing = firstItem(matching: t) {
             guard canPlace(anchor: anchor, type: t,
-                           rotated: existing.rotated, excluding: existing) else {
+                           rotated: rotated, excluding: existing) else {
                 if let onConflict,
-                   let occupant = footprint(anchor: anchor, type: t, rotated: existing.rotated)
+                   let occupant = footprint(anchor: anchor, type: t, rotated: rotated)
                        .compactMap({ map[$0] }).first(where: { $0 !== existing }) {
                     onConflict(anchor, occupant)
                 }
@@ -155,27 +164,14 @@ public final class GridEngine<Item: GridPlaceable> {
         }
 
         let cells = footprint(anchor: anchor, type: t, rotated: rotated)
-        let rowsD = Double(rows), colsD = Double(cols)
+        guard fitsBoundsAndZones(cells: cells, typeName: t.name) else { return }
 
-        // Bounds check
-        let inBounds = cells.allSatisfy {
-            $0.r >= 0 && $0.r + GridGesture.halfCell <= rowsD && $0.c >= 0 && $0.c + GridGesture.halfCell <= colsD
-        }
-        guard inBounds else { return }
-
-        // Zone rules check
-        let zoneOk = cells.allSatisfy { config.canAccept(cell: $0, typeName: t.name) }
-        guard zoneOk else { return }
-
-        // Check for existing occupant
-        let occupant = cells.compactMap({ map[$0] }).first
-
-        if occupant == nil {
+        if let occupant = cells.compactMap({ map[$0] }).first {
+            onConflict?(anchor, occupant)
+            // Occupied and no onConflict handler → silent no-op.
+        } else {
             insert(t, anchor.r, anchor.c, rotated)
-        } else if let onConflict, let existing = occupant {
-            onConflict(anchor, existing)
         }
-        // If occupied and no onConflict handler → silent no-op
     }
 
     /// First placed item whose type matches the given one (by `id`).
@@ -192,11 +188,15 @@ public final class GridEngine<Item: GridPlaceable> {
     /// Outcome of a `toggleLocked` call. Returned so the caller can
     /// persist the change to its own storage (SwiftData, file…).
     /// The cell carries whole-cell coordinates (anchorRow / anchorCol).
-    public enum LockToggleResult: Sendable {
+    public enum LockToggleResult: Sendable, Equatable {
         case noChange
         case locked(GridCell)
         case unlocked(GridCell)
     }
+
+    /// Label given to the 1×1 zones created by `toggleLocked`.
+    /// Override to localise or rename runtime locks.
+    public var lockLabel: String = "Bloqué"
 
     /// Toggles a 1×1 `.locked` zone on the whole cell containing `cell`.
     /// Used by the operational grid to let the end-user mark individual
@@ -214,9 +214,9 @@ public final class GridEngine<Item: GridPlaceable> {
     public func toggleLocked(at cell: GridCell) -> LockToggleResult {
         let row = Int(cell.r.rounded(.down))
         let col = Int(cell.c.rounded(.down))
-        guard row >= 0, row < rows else { return .noChange }
-        let band = config.band(forRow: row)
-        guard col >= 0, col < config.cols(for: band) else { return .noChange }
+        guard row >= 0, row < rows, col >= 0 else { return .noChange }
+        let band = config.band(forRow: row, atCol: Double(col))
+        guard col < band.colStart + config.cols(for: band) else { return .noChange }
 
         let subCells: [GridCell] = [
             GridCell(Double(row), c: Double(col)),
@@ -240,7 +240,7 @@ public final class GridEngine<Item: GridPlaceable> {
         guard let z = config.zone(at: anchor), z.rule == .free else { return .noChange }
 
         let zone = GridZoneDefinition(
-            label: "Bloqué",
+            label: lockLabel,
             rule: .locked,
             rowStart: Double(row),
             rowEnd: Double(row + 1),
@@ -333,7 +333,9 @@ public final class GridEngine<Item: GridPlaceable> {
 
     /// Number of whole cells in the band that fall inside a `.locked`
     /// or `.forbidden` zone — i.e. cannot accept any placement.
-    /// Overlapping blocking zones are counted once.
+    /// Overlapping blocking zones are counted once. Cells and zones
+    /// share the absolute coordinate space, offset by the band's
+    /// `colStart` for subdivision columns.
     private func blockedWholeCells(in band: ColumnBand) -> Int {
         let blockers = band.zones.filter { $0.rule == .locked || $0.rule == .forbidden }
         guard !blockers.isEmpty else { return 0 }
@@ -342,7 +344,7 @@ public final class GridEngine<Item: GridPlaceable> {
         for r in band.rowStart...band.rowEnd {
             let rd = Double(r)
             for c in 0..<bandCols {
-                let cd = Double(c)
+                let cd = Double(band.colStart + c)
                 if blockers.contains(where: {
                     rd >= $0.rowStart && rd + 1 <= $0.rowEnd &&
                     cd >= $0.colStart && cd + 1 <= $0.colEnd
