@@ -10,9 +10,14 @@
 import SwiftUI
 
 public extension Color {
+    /// Creates a colour from a 6-digit (`"#FF5733"`) or shorthand
+    /// 3-digit (`"#F53"`) hex string; the `#` prefix is optional.
+    /// An unparseable string yields black.
     init(hex: String) {
         var s = hex.trimmingCharacters(in: .alphanumerics.inverted)
-        if s.hasPrefix("#") { s.removeFirst() }
+        if s.count == 3 {
+            s = s.map { "\($0)\($0)" }.joined()
+        }
         var rgb: UInt64 = 0
         Scanner(string: s).scanHexInt64(&rgb)
         self.init(

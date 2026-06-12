@@ -269,17 +269,27 @@ public struct GridCanvasConfig: Codable, Sendable {
 
     // MARK: - JSON loading
 
+    /// Loads a config from a local or imported URL, surfacing read and
+    /// decode errors. Prefer this over `load(url:)` when you need to
+    /// know *why* a file failed to load.
+    public init(contentsOf url: URL) throws {
+        let data = try Data(contentsOf: url)
+        self = try JSONDecoder().decode(GridCanvasConfig.self, from: data)
+    }
+
     /// Loads a config from a JSON file in the given bundle.
+    /// Returns nil on any failure — use `init(contentsOf:)` to surface
+    /// the underlying error.
     public static func load(from filename: String, bundle: Bundle = .main) -> GridCanvasConfig? {
-        guard let url = bundle.url(forResource: filename, withExtension: "json"),
-              let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(GridCanvasConfig.self, from: data)
+        guard let url = bundle.url(forResource: filename, withExtension: "json") else { return nil }
+        return try? GridCanvasConfig(contentsOf: url)
     }
 
     /// Loads a config from a local or imported URL.
+    /// Returns nil on any failure — use `init(contentsOf:)` to surface
+    /// the underlying error.
     public static func load(url: URL) -> GridCanvasConfig? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(GridCanvasConfig.self, from: data)
+        try? GridCanvasConfig(contentsOf: url)
     }
 
     // MARK: - Default config (empty grid)

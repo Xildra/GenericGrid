@@ -145,7 +145,7 @@ extension GridCanvasConfig {
         }) {
             bands[nIdx].rowEnd = target.rowEnd
             bands[nIdx].zones.append(contentsOf: target.zones)
-            bands.remove(at: idx > nIdx ? idx : idx)
+            bands.remove(at: idx)
             columnBands = bands
             return
         }
@@ -156,7 +156,7 @@ extension GridCanvasConfig {
         }) {
             bands[nIdx].rowStart = target.rowStart
             bands[nIdx].zones.insert(contentsOf: target.zones, at: 0)
-            bands.remove(at: idx > nIdx ? idx : idx)
+            bands.remove(at: idx)
             columnBands = bands
             return
         }
@@ -168,7 +168,7 @@ extension GridCanvasConfig {
             bands[nIdx].colEnd = target.colEnd
             bands[nIdx].zones.append(contentsOf: target.zones)
             bands[nIdx].cols = nil
-            bands.remove(at: idx > nIdx ? idx : idx)
+            bands.remove(at: idx)
             columnBands = bands
             return
         }
@@ -180,7 +180,7 @@ extension GridCanvasConfig {
             bands[nIdx].colStart = target.colStart
             bands[nIdx].zones.insert(contentsOf: target.zones, at: 0)
             bands[nIdx].cols = nil
-            bands.remove(at: idx > nIdx ? idx : idx)
+            bands.remove(at: idx)
             columnBands = bands
             return
         }
