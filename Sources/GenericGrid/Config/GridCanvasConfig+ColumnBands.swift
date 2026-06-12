@@ -304,23 +304,28 @@ extension GridCanvasConfig {
     /// every `(row, col)` cell belongs to exactly one band, with no
     /// gap or overlap. Bands themselves must be non-empty rectangles
     /// inside the grid bounds.
+    ///
+    /// Runs in O(bands²) with no allocation — in-bounds rectangles
+    /// that are pairwise disjoint and whose areas sum to the grid's
+    /// area necessarily cover every cell exactly once. Kept cheap on
+    /// purpose: `effectiveBands` revalidates on every access and is
+    /// called from rendering paths.
     public static func validate(bands: [ColumnBand], totalRows: Int, totalCols: Int) -> Bool {
         guard totalRows > 0, totalCols > 0, !bands.isEmpty else { return false }
-        var covered = Array(repeating: Array(repeating: false, count: totalCols),
-                            count: totalRows)
-        for band in bands {
+        var area = 0
+        for (i, band) in bands.enumerated() {
             guard band.rowStart >= 0, band.rowEnd < totalRows,
                   band.colStart >= 0, band.colEnd < totalCols,
                   band.rowStart <= band.rowEnd,
                   band.colStart <= band.colEnd else { return false }
-            for r in band.rowStart...band.rowEnd {
-                for c in band.colStart...band.colEnd {
-                    if covered[r][c] { return false }
-                    covered[r][c] = true
+            area += band.rowCount * band.colCount
+            for other in bands[(i + 1)...] {
+                if band.rowStart <= other.rowEnd && other.rowStart <= band.rowEnd &&
+                   band.colStart <= other.colEnd && other.colStart <= band.colEnd {
+                    return false
                 }
             }
         }
-        for row in covered where row.contains(false) { return false }
-        return true
+        return area == totalRows * totalCols
     }
 }

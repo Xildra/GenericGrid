@@ -191,8 +191,14 @@ public struct GridCanvasConfig: Codable, Sendable {
     // MARK: - Zone queries
 
     /// Returns the first zone that contains the given cell, if any.
+    /// Iterates compartments directly (no flattened-array allocation)
+    /// while preserving the `zones` order, so this stays cheap when
+    /// called once per sub-cell during placement validation.
     public func zone(at cell: GridCell) -> GridZoneDefinition? {
-        zones.first { $0.contains(cell) }
+        for band in effectiveBands {
+            for z in band.zones where z.contains(cell) { return z }
+        }
+        return nil
     }
 
     /// Returns `true` if a cell accepts placement of the given item type.
@@ -217,10 +223,12 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// The main grid is therefore only a guide outside zones — zones
     /// govern their own placement and never inherit half-cell offsets.
     public func snap(_ cell: GridCell) -> GridCell {
-        if let z = zones.first(where: { $0.containsPoint(cell) }) {
-            let localR = (cell.r - z.rowStart).rounded(.down)
-            let localC = (cell.c - z.colStart).rounded(.down)
-            return GridCell(z.rowStart + localR, c: z.colStart + localC)
+        for band in effectiveBands {
+            for z in band.zones where z.containsPoint(cell) {
+                let localR = (cell.r - z.rowStart).rounded(.down)
+                let localC = (cell.c - z.colStart).rounded(.down)
+                return GridCell(z.rowStart + localR, c: z.colStart + localC)
+            }
         }
         return GridCell(GridCell.snapHalf(cell.r), c: GridCell.snapHalf(cell.c))
     }
