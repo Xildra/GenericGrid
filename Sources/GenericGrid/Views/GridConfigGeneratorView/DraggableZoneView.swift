@@ -42,7 +42,7 @@ struct DraggableZoneView: View {
     /// Compartment that owns the zone — the zone is constrained to it.
     private var ownerBand: ColumnBand {
         config.band(forZoneID: zone.id)
-            ?? config.band(forRow: Int(zone.rowStart.rounded(.down)))
+            ?? config.band(forRow: Int(zone.rowStart.rounded(.down)), atCol: zone.colStart)
     }
 
     /// Pixel width of one column inside the owning compartment.
@@ -55,13 +55,19 @@ struct DraggableZoneView: View {
         config.xForBand(ownerBand, baseCellSize: cellSize)
     }
 
-    private var x: CGFloat { bandXOff + CGFloat(draft.colStart) * bandCellW }
+    private var x: CGFloat {
+        bandXOff + CGFloat(draft.colStart - Double(ownerBand.colStart)) * bandCellW
+    }
     private var y: CGFloat { config.yForRow(draft.rowStart, cellSize: cellSize) }
     private var w: CGFloat { CGFloat(draft.colEnd - draft.colStart) * bandCellW }
     private var h: CGFloat { CGFloat(draft.rowEnd - draft.rowStart) * cellSize }
 
-    /// Maximum column index in the owning compartment's local space.
-    private var maxCols: Int { config.cols(for: ownerBand) }
+    /// Column bounds (inclusive start, exclusive end) of the compartment
+    /// that owns the zone, in absolute coordinates.
+    private var bandColBounds: (lo: Double, hi: Double) {
+        let lo = Double(ownerBand.colStart)
+        return (lo, lo + Double(config.cols(for: ownerBand)))
+    }
 
     /// Row-range bounds (inclusive start, exclusive end) of the compartment
     /// that owns the zone — the zone cannot leave this range.
@@ -127,7 +133,8 @@ struct DraggableZoneView: View {
                 let colSpan = start.colEnd - start.colStart
                 let rowSpan = start.rowEnd - start.rowStart
                 let (bandLo, bandHi) = bandRowBounds
-                let newColStart = clamp(start.colStart + dc, lo: 0, hi: Double(maxCols) - colSpan)
+                let (colLo, colHi) = bandColBounds
+                let newColStart = clamp(start.colStart + dc, lo: colLo, hi: colHi - colSpan)
                 let newRowStart = clamp(start.rowStart + dr, lo: bandLo, hi: bandHi - rowSpan)
                 draft.colStart = newColStart
                 draft.colEnd   = newColStart + colSpan
@@ -180,15 +187,16 @@ struct DraggableZoneView: View {
                 let dx = Double(v.translation.width / bandCellW)
                 let dy = Double(v.translation.height / cellSize)
                 let (bandLo, bandHi) = bandRowBounds
+                let (colLo, colHi) = bandColBounds
                 switch edge {
                 case .top:
                     draft.rowStart = clamp(start.rowStart + dy, lo: bandLo, hi: start.rowEnd - GridGesture.minZoneSpan)
                 case .bottom:
                     draft.rowEnd   = clamp(start.rowEnd + dy, lo: start.rowStart + GridGesture.minZoneSpan, hi: bandHi)
                 case .leading:
-                    draft.colStart = clamp(start.colStart + dx, lo: 0, hi: start.colEnd - GridGesture.minZoneSpan)
+                    draft.colStart = clamp(start.colStart + dx, lo: colLo, hi: start.colEnd - GridGesture.minZoneSpan)
                 case .trailing:
-                    draft.colEnd   = clamp(start.colEnd + dx, lo: start.colStart + GridGesture.minZoneSpan, hi: Double(maxCols))
+                    draft.colEnd   = clamp(start.colEnd + dx, lo: start.colStart + GridGesture.minZoneSpan, hi: colHi)
                 }
             }
             .onEnded { _ in

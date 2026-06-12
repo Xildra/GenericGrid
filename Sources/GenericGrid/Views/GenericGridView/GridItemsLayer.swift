@@ -20,11 +20,15 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
     var body: some View {
         ForEach(items) { item in
             if let t = item.itemType {
-                let band = config.band(forRow: Int(item.anchorRow.rounded(.down)))
+                let band = config.band(forRow: Int(item.anchorRow.rounded(.down)),
+                                       atCol: item.anchorCol)
+                let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
+                let localCol = item.anchorCol - Double(band.colStart)
                 GenericItemBlock(
                     item: item, type: t,
-                    xOrigin: config.xForBand(band, baseCellSize: cellSize),
-                    bandCellWidth: config.bandCellWidth(band, baseCellSize: cellSize),
+                    xOrigin: config.xForBand(band, baseCellSize: cellSize)
+                        + CGFloat(localCol) * bandCellW,
+                    bandCellWidth: bandCellW,
                     cellHeight: cellSize,
                     yOrigin: config.yForRow(item.anchorRow, cellSize: cellSize),
                     dimmed: movingItem === item
@@ -38,10 +42,10 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
 // MARK: - Generic block for a single placed item
 
 struct GenericItemBlock<T: GridItemType>: View {
-    let anchorCol: Double
     let effWidth: Int
     let effHeight: Int
     let type: T
+    /// Pixel x of the item's left edge (band offset already applied).
     let xOrigin: CGFloat
     let bandCellWidth: CGFloat
     let cellHeight: CGFloat
@@ -54,7 +58,6 @@ struct GenericItemBlock<T: GridItemType>: View {
                            cellHeight: CGFloat,
                            yOrigin: CGFloat,
                            dimmed: Bool = false) where I.ItemType == T {
-        self.anchorCol = item.anchorCol
         self.effWidth = item.effectiveWidth
         self.effHeight = item.effectiveHeight
         self.type = type
@@ -69,7 +72,7 @@ struct GenericItemBlock<T: GridItemType>: View {
         let inset = GridLayout.itemBlockInset
         let w  = CGFloat(effWidth)  * bandCellWidth - inset * 2
         let h  = CGFloat(effHeight) * cellHeight - inset * 2
-        let ox = xOrigin + CGFloat(anchorCol) * bandCellWidth + inset
+        let ox = xOrigin + inset
         let oy = yOrigin + inset
 
         // Sober look: solid colour fill (no border, no secondary line)

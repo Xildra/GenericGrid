@@ -131,6 +131,29 @@ extension GridCanvasConfig {
         return 0
     }
 
+    /// Band owning the given absolute position. Like `band(forRow:col:)`
+    /// but takes a fractional column and tolerates columns that overflow
+    /// a band's natural range (possible when a subdivision override
+    /// exceeds the band's natural width): it then falls back to the
+    /// rightmost band of the row starting at or before the column.
+    public func band(forRow r: Int, atCol c: Double) -> ColumnBand {
+        let row = max(0, min(rows - 1, r))
+        let bands = effectiveBands
+        var fallback: ColumnBand? = nil
+        var rightmost: ColumnBand? = nil
+        for band in bands where band.contains(row: row) {
+            if fallback == nil { fallback = band }
+            if c >= Double(band.colStart) && c < Double(band.colEnd + 1) {
+                return band
+            }
+            if Double(band.colStart) <= c,
+               rightmost.map({ band.colStart > $0.colStart }) ?? true {
+                rightmost = band
+            }
+        }
+        return rightmost ?? fallback ?? bands[0]
+    }
+
     /// Vertical offset (in cells) added by intermediate strip headers
     /// above the given logical row. The first strip's header lives in
     /// the top `labelMargin`, so it does not contribute.
@@ -139,9 +162,10 @@ extension GridCanvasConfig {
     }
 
     /// The band that currently owns the zone with the given identifier,
-    /// or nil when no band contains it. With 2D compartments a zone's
-    /// `(rowStart, colStart)` is band-local so this id-based lookup is
-    /// the reliable way for renderers to recover the owning band.
+    /// or nil when no band contains it. Zone coordinates are absolute,
+    /// but ownership drives which compartment's cell width the zone is
+    /// rendered with — this id-based lookup is the reliable way for
+    /// renderers to recover the owning band.
     public func band(forZoneID id: UUID) -> ColumnBand? {
         effectiveBands.first { $0.zones.contains(where: { $0.id == id }) }
     }
@@ -233,6 +257,45 @@ extension GridCanvasConfig {
         guard bandCellW > 0 else { return 0 }
         let local = x - xForBand(band, baseCellSize: cs)
         return Double(local / bandCellW)
+    }
+
+    // MARK: - Hit testing
+
+    /// Converts a touch point (in the content area's coordinate space)
+    /// to the snapped anchor cell it falls into, or nil when the point
+    /// lies outside the grid or on an intermediate compartment header.
+    ///
+    /// The owning compartment is resolved from **both** axes — y picks
+    /// the row, x picks the band among compartments sharing that row —
+    /// so side-by-side compartments hit-test correctly. The column is
+    /// converted through the band's own cell width, then re-based into
+    /// absolute coordinates (`band.colStart + local`). Snapping
+    /// delegates to `snap`, which uses the owning zone's unit grid
+    /// inside zones and the half-cell guide elsewhere.
+    public func cell(at point: CGPoint, cellSize cs: CGFloat) -> GridCell? {
+        guard cs > 0, let r = rowForY(point.y, cellSize: cs) else { return nil }
+        let rowsD = Double(rows)
+        guard r >= 0, r <= rowsD else { return nil }
+        let row = max(0, min(rows - 1, Int(r.rounded(.down))))
+
+        // Resolve the band horizontally among those covering the row.
+        let bandsInRow = effectiveBands.filter { $0.contains(row: row) }
+        guard !bandsInRow.isEmpty else { return nil }
+        let band = bandsInRow.first(where: { b in
+            let x0 = xForBand(b, baseCellSize: cs)
+            let x1 = x0 + CGFloat(b.colCount) * cs
+            return point.x >= x0 && point.x < x1
+        }) ?? bandsInRow.max(by: { $0.colEnd < $1.colEnd })!
+        let local = colForX(point.x, in: band, baseCellSize: cs)
+        let bandCols = Double(cols(for: band))
+        guard local >= 0, local <= bandCols else { return nil }
+
+        let c = Double(band.colStart) + local
+        let snapped = snap(GridCell(r, c: c))
+        guard snapped.r + GridGesture.halfCell <= rowsD,
+              snapped.c + GridGesture.halfCell <= Double(band.colStart) + bandCols
+        else { return nil }
+        return snapped
     }
 
     // MARK: - Validation

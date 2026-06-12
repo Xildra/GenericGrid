@@ -21,10 +21,12 @@ struct GridZoneSubdivisionLayer: View {
     var body: some View {
         ForEach(zones) { zone in
             let band = config.band(forZoneID: zone.id)
-                ?? config.band(forRow: Int(zone.rowStart.rounded(.down)))
+                ?? config.band(forRow: Int(zone.rowStart.rounded(.down)), atCol: zone.colStart)
+            let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
             ZoneInternalGridView(zone: zone,
-                                 xOrigin: config.xForBand(band, baseCellSize: cellSize),
-                                 bandCellWidth: config.bandCellWidth(band, baseCellSize: cellSize),
+                                 xOrigin: config.xForBand(band, baseCellSize: cellSize)
+                                     + CGFloat(zone.colStart - Double(band.colStart)) * bandCellW,
+                                 bandCellWidth: bandCellW,
                                  cellHeight: cellSize,
                                  yOrigin: config.yForRow(zone.rowStart, cellSize: cellSize))
                 .allowsHitTesting(false)
@@ -35,13 +37,14 @@ struct GridZoneSubdivisionLayer: View {
 @available(iOS 17.0, macOS 14.0, *)
 private struct ZoneInternalGridView: View {
     let zone: GridZoneDefinition
+    /// Pixel x of the zone's left edge (band offset already applied).
     let xOrigin: CGFloat
     let bandCellWidth: CGFloat
     let cellHeight: CGFloat
     let yOrigin: CGFloat
 
     var body: some View {
-        let x = xOrigin + CGFloat(zone.colStart) * bandCellWidth
+        let x = xOrigin
         let y = yOrigin
         let w = CGFloat(zone.colSize) * bandCellWidth
         let h = CGFloat(zone.rowSize) * cellHeight

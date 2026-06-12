@@ -17,9 +17,10 @@ struct GridZoneOverlayLayer: View {
     var body: some View {
         ForEach(zones) { zone in
             let band = config.band(forZoneID: zone.id)
-                ?? config.band(forRow: Int(zone.rowStart.rounded(.down)))
+                ?? config.band(forRow: Int(zone.rowStart.rounded(.down)), atCol: zone.colStart)
             let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
-            let x = config.xForBand(band, baseCellSize: cellSize) + CGFloat(zone.colStart) * bandCellW
+            let x = config.xForBand(band, baseCellSize: cellSize)
+                + CGFloat(zone.colStart - Double(band.colStart)) * bandCellW
             let y = config.yForRow(zone.rowStart, cellSize: cellSize)
             let w = CGFloat(zone.colEnd - zone.colStart) * bandCellW
             let h = CGFloat(zone.rowEnd - zone.rowStart) * cellSize

@@ -102,8 +102,10 @@ extension GridCanvasConfig {
             return Array(lbls.dropFirst(leftWidth).prefix(rightWidth))
         }
 
-        let leftZones = target.zones.filter { Int($0.colStart.rounded(.down)) + target.colStart < col }
-        let rightZones = target.zones.filter { Int($0.colStart.rounded(.down)) + target.colStart >= col }
+        // Zone coordinates are absolute, so redistribution is pure
+        // ownership transfer — no re-basing needed.
+        let leftZones = target.zones.filter { Int($0.colStart.rounded(.down)) < col }
+        let rightZones = target.zones.filter { Int($0.colStart.rounded(.down)) >= col }
 
         let left = ColumnBand(id: target.id,
                               rowStart: target.rowStart,
@@ -336,10 +338,11 @@ extension GridCanvasConfig {
         let target = newCols.map { max(1, $0) }
         bands[idx].cols = target
         let effective = target ?? max(1, bands[idx].colCount)
+        let colLimit = Double(bands[idx].colStart + effective)
         bands[idx].zones = bands[idx].zones.compactMap { zone in
             var z = zone
-            if z.colStart >= Double(effective) { return nil }
-            z.colEnd = min(z.colEnd, Double(effective))
+            if z.colStart >= colLimit { return nil }
+            z.colEnd = min(z.colEnd, colLimit)
             if z.colEnd <= z.colStart { return nil }
             return z
         }
@@ -420,7 +423,8 @@ extension GridCanvasConfig {
 
     /// Moves zones between two bands so each zone lives in the band
     /// that currently owns its `(rowStart, colStart)`. Called after a
-    /// boundary move to preserve the invariant.
+    /// boundary move to preserve the invariant. Zone coordinates are
+    /// absolute, so moving a zone is pure ownership transfer.
     private func rebalanceZones(between a: Int, and b: Int,
                                 in bands: inout [ColumnBand]) {
         let bandA = bands[a]
@@ -429,11 +433,11 @@ extension GridCanvasConfig {
         var zonesB = bandB.zones
 
         let fromA = zonesA.filter { !bandA.contains(row: Int($0.rowStart.rounded(.down)),
-                                                   col: Int($0.colStart.rounded(.down)) + bandA.colStart) }
+                                                    col: Int($0.colStart.rounded(.down))) }
         zonesA.removeAll { zone in fromA.contains(where: { $0.id == zone.id }) }
 
         let fromB = zonesB.filter { !bandB.contains(row: Int($0.rowStart.rounded(.down)),
-                                                   col: Int($0.colStart.rounded(.down)) + bandB.colStart) }
+                                                    col: Int($0.colStart.rounded(.down))) }
         zonesB.removeAll { zone in fromB.contains(where: { $0.id == zone.id }) }
 
         zonesA.append(contentsOf: fromB)

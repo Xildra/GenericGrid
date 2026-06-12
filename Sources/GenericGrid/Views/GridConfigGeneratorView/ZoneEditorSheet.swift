@@ -35,12 +35,19 @@ struct ZoneEditorSheet: View {
         if !isNew, let band = config.band(forZoneID: zone.id) { return band }
         if let id = targetBandID,
            let band = bands.first(where: { $0.id == id }) { return band }
-        return config.band(forRow: Int(zone.rowStart.rounded(.down)))
+        return config.band(forRow: Int(zone.rowStart.rounded(.down)), atCol: zone.colStart)
     }
 
     /// Row-range bounds within the current band (lo inclusive, hi exclusive).
     private var bandRowBounds: (lo: Double, hi: Double) {
         (Double(currentBand.rowStart), Double(currentBand.rowEnd + 1))
+    }
+
+    /// Column bounds within the current band (lo inclusive, hi exclusive),
+    /// in absolute coordinates.
+    private var bandColBounds: (lo: Double, hi: Double) {
+        let lo = Double(currentBand.colStart)
+        return (lo, lo + Double(maxCols))
     }
 
     init(zone: GridZoneDefinition?,
@@ -51,11 +58,22 @@ struct ZoneEditorSheet: View {
         self.targetBandID = targetBandID
         self.onSave = onSave
 
-        let defaultEnd = min(GridDefaults.newZoneEnd, Double(config.rows))
-        let seed = zone ?? GridZoneDefinition(
-            rowEnd: defaultEnd,
+        var seed = zone ?? GridZoneDefinition(
+            rowEnd: min(GridDefaults.newZoneEnd, Double(config.rows)),
             colEnd: min(GridDefaults.newZoneEnd, Double(config.cols))
         )
+        // A brand-new zone seeded for a specific compartment starts
+        // inside that compartment's bounds instead of the grid origin.
+        if zone == nil, let id = targetBandID,
+           let band = config.effectiveBands.first(where: { $0.id == id }) {
+            let bandCols = band.effectiveCols(default: config.cols)
+            let rowSize = min(GridDefaults.newZoneEnd, Double(max(1, band.rowCount)))
+            let colSize = min(GridDefaults.newZoneEnd, Double(bandCols))
+            seed.rowStart = Double(band.rowStart)
+            seed.rowEnd = seed.rowStart + rowSize
+            seed.colStart = Double(band.colStart)
+            seed.colEnd = seed.colStart + colSize
+        }
         self.zone = seed
         // "New" means the zone isn't persisted yet — detected by id, so a
         // pre-seeded default zone still shows the "New Zone" title.
@@ -75,7 +93,7 @@ struct ZoneEditorSheet: View {
     /// Picker binding that rehomes the zone into the selected compartment
     /// when the user changes it. Both axes are clamped: rows to the
     /// target band's row range, columns to its (possibly different)
-    /// column count.
+    /// column bounds.
     private var compartmentBinding: Binding<Int> {
         Binding(
             get: {
@@ -90,7 +108,9 @@ struct ZoneEditorSheet: View {
 
                 let targetCols = target.effectiveCols(default: config.cols)
                 let colSize = min(Double(zone.colCount), Double(targetCols))
-                zone.colStart = max(0, min(zone.colStart, Double(targetCols) - colSize))
+                let colLo = Double(target.colStart)
+                let colHi = colLo + Double(targetCols)
+                zone.colStart = max(colLo, min(zone.colStart, colHi - colSize))
                 zone.colEnd = zone.colStart + colSize
             }
         )
@@ -143,18 +163,19 @@ struct ZoneEditorSheet: View {
 
                 Section {
                     let (bandLo, bandHi) = bandRowBounds
+                    let (colLo, colHi) = bandColBounds
                     let rowStartMax = max(bandLo, bandHi - Double(zone.rowCount))
                     let rowCountMax = max(1, Int(bandHi - bandLo) - Int(zone.rowStart - bandLo))
                     positionStepper("Row start", value: $zone.rowStart,
                                     range: bandLo...rowStartMax,
                                     onChange: { zone.rowEnd = $0 + Double(zone.rowCount) })
                     positionStepper("Col start", value: $zone.colStart,
-                                    range: 0...max(0, Double(maxCols) - Double(zone.colCount)),
+                                    range: colLo...max(colLo, colHi - Double(zone.colCount)),
                                     onChange: { zone.colEnd = $0 + Double(zone.colCount) })
                     intStepper("Row count", value: rowCountBinding,
                                range: 1...rowCountMax)
                     intStepper("Col count", value: colCountBinding,
-                               range: 1...max(1, maxCols - Int(zone.colStart)))
+                               range: 1...max(1, Int(colHi - zone.colStart)))
                 } header: {
                     Text("Placement & size")
                 } footer: {

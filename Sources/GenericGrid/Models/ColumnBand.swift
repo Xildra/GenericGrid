@@ -45,9 +45,10 @@ public struct ColumnBand: Codable, Identifiable, Hashable, Sendable {
     /// Optional custom border width, in points. Ignored when
     /// `borderColorHex` is nil. A value of 0 hides the border.
     public var borderWidth: Double?
-    /// Zones belonging to this compartment. A zone's `(rowStart, colStart)`
-    /// must fall inside the band's range — enforced by the mutating
-    /// helpers on `GridCanvasConfig`.
+    /// Zones belonging to this compartment, in absolute grid
+    /// coordinates. A zone's `(rowStart, colStart)` must fall inside
+    /// the band's range — enforced by the mutating helpers on
+    /// `GridCanvasConfig`.
     public var zones: [GridZoneDefinition]
 
     public init(id: UUID = UUID(),

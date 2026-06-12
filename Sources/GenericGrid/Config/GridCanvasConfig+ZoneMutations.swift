@@ -16,10 +16,9 @@ import Foundation
 
 extension GridCanvasConfig {
 
-    /// Inserts a zone into the compartment containing its `rowStart`.
-    /// With vertical splits several bands may share that row range —
-    /// in which case the first matching band wins. Use the
-    /// `toBandID:` overload when the target band is known.
+    /// Inserts a zone into the compartment containing its absolute
+    /// `(rowStart, colStart)` origin. Use the `toBandID:` overload when
+    /// the target band is known explicitly.
     ///
     /// Pass `prepend: true` to insert the zone at the front of its band's
     /// zone list. Used when a zone must win the first-match lookup of
@@ -28,7 +27,8 @@ extension GridCanvasConfig {
     public mutating func addZone(_ zone: GridZoneDefinition, prepend: Bool = false) {
         promoteToColumnBandsIfNeeded()
         guard var bands = columnBands, !bands.isEmpty else { return }
-        let idx = bandIndex(forRow: Int(zone.rowStart.rounded(.down)))
+        let idx = bandIndex(forRow: Int(zone.rowStart.rounded(.down)),
+                            col: Int(zone.colStart.rounded(.down)))
         if prepend {
             bands[idx].zones.insert(zone, at: 0)
         } else {
@@ -72,7 +72,8 @@ extension GridCanvasConfig {
             }
         }
         // Not found → treat as insert to stay idempotent.
-        let idx = bandIndex(forRow: Int(zone.rowStart.rounded(.down)))
+        let idx = bandIndex(forRow: Int(zone.rowStart.rounded(.down)),
+                            col: Int(zone.colStart.rounded(.down)))
         bands[idx].zones.append(zone)
         columnBands = bands
     }

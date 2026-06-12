@@ -96,16 +96,15 @@ extension GridCanvasConfig {
     }
 
     /// Clamps a zone to its band's bounds. Returns nil if the zone no
-    /// longer fits. Uses the band's effective subdivision count.
+    /// longer fits. Zone coordinates are absolute; the column limit is
+    /// the band's start plus its effective subdivision count.
     private func clampZone(_ zone: GridZoneDefinition,
                            band: ColumnBand) -> GridZoneDefinition? {
         var z = zone
-        let bandCols = band.effectiveCols(default: cols)
-        if z.rowStart >= Double(rows) || z.colStart >= Double(bandCols) { return nil }
-        z.rowEnd = min(z.rowEnd, Double(rows))
-        z.colEnd = min(z.colEnd, Double(bandCols))
-        let bandMaxRow = Double(band.rowEnd + 1)
-        z.rowEnd = min(z.rowEnd, bandMaxRow)
+        let colLimit = Double(band.colStart + band.effectiveCols(default: cols))
+        if z.rowStart >= Double(rows) || z.colStart >= colLimit { return nil }
+        z.rowEnd = min(z.rowEnd, Double(rows), Double(band.rowEnd + 1))
+        z.colEnd = min(z.colEnd, colLimit)
         if z.rowEnd <= z.rowStart || z.colEnd <= z.colStart { return nil }
         return z
     }

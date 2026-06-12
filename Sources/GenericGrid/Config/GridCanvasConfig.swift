@@ -11,6 +11,14 @@
 //  band mutations, zone mutations, and bundle discovery live in
 //  dedicated extension files.
 //
+//  Coordinate convention: every position (zones, items, engine
+//  cells) uses ABSOLUTE grid coordinates on both axes. A column
+//  inside a compartment is expressed as `band.colStart + local
+//  subdivision index`, so for compartments without a subdivision
+//  override (the common case) columns are plain grid columns.
+//  Legacy files (schemaVersion < 2) stored zone columns relative to
+//  their compartment and are migrated on decode.
+//
 
 import SwiftUI
 
@@ -65,12 +73,18 @@ public struct GridCanvasConfig: Codable, Sendable {
     // but is never emitted on encode — zones are written inside their
     // owning compartment.
     private enum CodingKeys: String, CodingKey {
-        case rows, cols, zones, title, rowLabels, colLabels, columnBands,
-             showMainGrid, showZoneLabels
+        case schemaVersion, rows, cols, zones, title, rowLabels, colLabels,
+             columnBands, showMainGrid, showZoneLabels
     }
+
+    /// Version of the encoded format. Version 2 stores zone columns in
+    /// absolute grid coordinates; version 1 (or absent) stored them
+    /// relative to their owning compartment and is migrated on decode.
+    private static let schemaVersion = 2
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        let version = try c.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
         rows = try c.decode(Int.self, forKey: .rows)
         cols = try c.decode(Int.self, forKey: .cols)
         title = try c.decodeIfPresent(String.self, forKey: .title)
@@ -81,6 +95,17 @@ public struct GridCanvasConfig: Codable, Sendable {
             var bands = decodedBands
             for i in bands.indices where bands[i].colEnd < bands[i].colStart {
                 bands[i].colEnd = max(0, cols - 1)
+            }
+            if version < 2 {
+                // Legacy zone columns were relative to their band:
+                // re-base them into absolute grid coordinates.
+                for i in bands.indices where bands[i].colStart != 0 {
+                    let offset = Double(bands[i].colStart)
+                    for z in bands[i].zones.indices {
+                        bands[i].zones[z].colStart += offset
+                        bands[i].zones[z].colEnd += offset
+                    }
+                }
             }
             normalisedBands = bands
         }
@@ -109,6 +134,7 @@ public struct GridCanvasConfig: Codable, Sendable {
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(Self.schemaVersion, forKey: .schemaVersion)
         try c.encode(rows, forKey: .rows)
         try c.encode(cols, forKey: .cols)
         try c.encodeIfPresent(title, forKey: .title)
@@ -120,13 +146,16 @@ public struct GridCanvasConfig: Codable, Sendable {
     }
 
     /// Seeds columnBands with the supplied legacy flat zone list,
-    /// placing each zone inside the band containing its `rowStart`.
+    /// placing each zone inside the band containing its
+    /// `(rowStart, colStart)` origin.
     private mutating func ingestLegacyZones(_ legacy: [GridZoneDefinition]) {
         promoteToColumnBandsIfNeeded()
         guard var bands = columnBands, !bands.isEmpty else { return }
         for zone in legacy {
             let startRow = Int(zone.rowStart.rounded(.down))
-            let idx = bands.firstIndex(where: { $0.contains(row: startRow) })
+            let startCol = Int(zone.colStart.rounded(.down))
+            let idx = bands.firstIndex(where: { $0.contains(row: startRow, col: startCol) })
+                ?? bands.firstIndex(where: { $0.contains(row: startRow) })
                 ?? bands.indices.last ?? 0
             bands[idx].zones.append(zone)
         }

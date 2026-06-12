@@ -5,6 +5,8 @@
 //  Copyright © 2026 GenericGrid. All rights reserved.
 //
 //  Describes a rectangular zone on the grid.
+//  - Coordinates are ABSOLUTE grid coordinates on both axes (rows
+//    and columns), regardless of which compartment owns the zone.
 //  - Position (start) is free and can fall anywhere on the canvas.
 //  - Size (end - start) is an integer on each axis, so the zone's
 //    interior always draws a clean `rowCount × colCount` grid.
