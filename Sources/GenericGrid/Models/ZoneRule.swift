@@ -9,7 +9,7 @@
 
 import Foundation
 
-public enum ZoneRule: String, Codable, Hashable, Sendable {
+public enum ZoneRule: String, Codable, Hashable, Sendable, CaseIterable {
     /// Any item can be placed freely.
     case free
     /// Items cannot be placed in or removed from this zone.
