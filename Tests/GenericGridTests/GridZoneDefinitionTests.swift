@@ -104,6 +104,53 @@ struct GridZoneDefinitionTests {
         #expect(degenerate.colCount == 1)
     }
 
+    // MARK: - Capacity & fit
+
+    @Test("capacity is rowCount × colCount")
+    func capacity() {
+        let zone = GridZoneDefinition(rowStart: 0, rowEnd: 3, colStart: 0, colEnd: 4)
+        #expect(zone.capacity == 12)
+    }
+
+    @Test("fits accepts a footprint within the zone box")
+    func fitsWithin() {
+        let zone = GridZoneDefinition(rowStart: 0, rowEnd: 3, colStart: 0, colEnd: 4) // 3×4
+        #expect(zone.fits(width: 4, height: 3))   // exact
+        #expect(zone.fits(width: 2, height: 2))   // smaller
+    }
+
+    @Test("fits rejects a footprint larger than the zone")
+    func fitsTooBig() {
+        let zone = GridZoneDefinition(rowStart: 0, rowEnd: 3, colStart: 0, colEnd: 4)
+        #expect(!zone.fits(width: 5, height: 3))  // too wide
+        #expect(!zone.fits(width: 4, height: 4))  // too tall
+    }
+
+    @Test("fits accepts via rotation only when allowed")
+    func fitsRotated() {
+        let zone = GridZoneDefinition(rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 2) // 4×2
+        #expect(zone.fits(width: 4, height: 2, allowRotation: true))
+        #expect(!zone.fits(width: 4, height: 2, allowRotation: false))
+    }
+
+    // MARK: - Accepts (rule)
+
+    @Test("accepts follows the zone rule")
+    func acceptsByRule() {
+        #expect(GridZoneDefinition(rule: .free, rowEnd: 1, colEnd: 1).accepts(typeName: "X"))
+        #expect(!GridZoneDefinition(rule: .locked, rowEnd: 1, colEnd: 1).accepts(typeName: "X"))
+        #expect(!GridZoneDefinition(rule: .forbidden, rowEnd: 1, colEnd: 1).accepts(typeName: "X"))
+    }
+
+    @Test("restricted zone accepts only listed types")
+    func acceptsRestricted() {
+        let zone = GridZoneDefinition(rule: .restricted, rowEnd: 1, colEnd: 1,
+                                      allowedTypeNames: ["Business"])
+        #expect(zone.accepts(typeName: "Business"))
+        #expect(!zone.accepts(typeName: "Economy"))
+        #expect(!zone.accepts(typeName: nil))
+    }
+
     // MARK: - Color
 
     @Test("color getter returns default gray when no hex")

@@ -204,14 +204,7 @@ public struct GridCanvasConfig: Codable, Sendable {
     /// Returns `true` if a cell accepts placement of the given item type.
     public func canAccept(cell: GridCell, typeName: String?) -> Bool {
         guard let z = zone(at: cell) else { return true } // outside any zone → free
-        switch z.rule {
-        case .free:       return true
-        case .locked:     return false
-        case .forbidden:  return false
-        case .restricted:
-            guard let allowed = z.allowedTypeNames, let name = typeName else { return false }
-            return allowed.contains(name)
-        }
+        return z.accepts(typeName: typeName)
     }
 
     // MARK: - Zone-aware snap

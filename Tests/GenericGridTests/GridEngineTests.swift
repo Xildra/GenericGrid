@@ -335,6 +335,66 @@ struct GridEngineTests {
         #expect(engine.freeCells == 99)
     }
 
+    // MARK: - Zone queries
+
+    @Test("zoneCount counts all zones")
+    func zoneCount() {
+        let engine = makeEngine(zones: [
+            GridZoneDefinition(rule: .free,   rowStart: 0, rowEnd: 2, colStart: 0, colEnd: 2),
+            GridZoneDefinition(rule: .locked, rowStart: 0, rowEnd: 2, colStart: 3, colEnd: 5),
+        ])
+        #expect(engine.zoneCount == 2)
+    }
+
+    @Test("isZoneEmpty reflects occupancy")
+    func isZoneEmpty() {
+        let zone = GridZoneDefinition(rule: .free, rowStart: 0, rowEnd: 3, colStart: 0, colEnd: 3)
+        let engine = makeEngine(zones: [zone])
+        #expect(engine.isZoneEmpty(zone))
+        engine.sync([MockItem(type: .small, row: 1, col: 1)])
+        #expect(!engine.isZoneEmpty(zone))
+    }
+
+    @Test("usedCells(in:) counts whole cells inside the zone")
+    func usedCellsInZone() {
+        let zone = GridZoneDefinition(rule: .free, rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 4)
+        let engine = makeEngine(zones: [zone])
+        engine.sync([
+            MockItem(type: .small, row: 0, col: 0),   // 1×1
+            MockItem(type: .large, row: 2, col: 2),   // 2×2
+        ])
+        #expect(engine.usedCells(in: zone) == 5)       // 1 + 4
+    }
+
+    @Test("zonesAccepting filters by fit, emptiness and rule")
+    func zonesAccepting() {
+        let big    = GridZoneDefinition(label: "Big",   rule: .free,   rowStart: 0, rowEnd: 4, colStart: 0, colEnd: 4)
+        let small  = GridZoneDefinition(label: "Small", rule: .free,   rowStart: 5, rowEnd: 6, colStart: 0, colEnd: 1)
+        let locked = GridZoneDefinition(label: "Lock",  rule: .locked, rowStart: 0, rowEnd: 4, colStart: 5, colEnd: 9)
+        let engine = makeEngine(rows: 10, cols: 10, zones: [big, small, locked])
+        // A 2×2 palette fits in `big` only.
+        #expect(engine.zonesAccepting(width: 2, height: 2).map(\.label) == ["Big"])
+    }
+
+    @Test("zonesAccepting honours restricted allow-list")
+    func zonesAcceptingRestricted() {
+        let zone = GridZoneDefinition(label: "VIP", rule: .restricted,
+                                      rowStart: 0, rowEnd: 3, colStart: 0, colEnd: 3,
+                                      allowedTypeNames: ["Business"])
+        let engine = makeEngine(zones: [zone])
+        #expect(engine.zonesAccepting(width: 1, height: 1, typeName: "Business").count == 1)
+        #expect(engine.zonesAccepting(width: 1, height: 1, typeName: "Economy").isEmpty)
+    }
+
+    @Test("zonesAccepting excludes occupied zones")
+    func zonesAcceptingExcludesOccupied() {
+        let zone = GridZoneDefinition(label: "Z", rule: .free, rowStart: 0, rowEnd: 2, colStart: 0, colEnd: 2)
+        let engine = makeEngine(zones: [zone])
+        #expect(engine.zonesAccepting(width: 2, height: 2).count == 1)
+        engine.sync([MockItem(type: .small, row: 0, col: 0)])
+        #expect(engine.zonesAccepting(width: 2, height: 2).isEmpty)
+    }
+
     // MARK: - Preview
 
     @Test("previewCells empty when idle")
