@@ -71,28 +71,23 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
                 case .moving:
                     engine.updateMove(to: cell)
                 case .idle, .previewing:
+                    // Long-press + drag is reserved for moving an existing
+                    // item. Placement is done by tap or drag-and-drop, so a
+                    // selected type no longer starts a drag-preview here.
                     let startCell = toCell(drag.startLocation) ?? cell
-                    if engine.selectedType != nil {
-                        engine.interaction = .previewing(anchor: cell)
-                    } else if let item = engine.map[startCell] {
+                    if let item = engine.map[startCell] {
                         engine.beginMove(item: item, at: startCell)
                         engine.updateMove(to: cell)
                     }
                 }
             }
-            .onEnded { value in
-                guard case .second(_, let drag?) = value,
-                      let cell = toCell(drag.location) else {
-                    engine.cancelInteraction(); return
-                }
-                switch engine.interaction {
-                case .moving:
+            .onEnded { _ in
+                // Only moves are driven by this gesture now; commit on release,
+                // otherwise make sure any stray interaction is cleared.
+                if case .moving = engine.interaction {
                     engine.commitMove()
-                case .previewing:
-                    engine.place(at: cell, insert: onInsert, onConflict: onConflict)
-                    engine.interaction = .idle
-                case .idle:
-                    break
+                } else {
+                    engine.cancelInteraction()
                 }
             }
     }

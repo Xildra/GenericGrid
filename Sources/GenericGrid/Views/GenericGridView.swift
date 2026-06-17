@@ -31,10 +31,20 @@ public struct GenericGridView<Item: GridPlaceable>: View {
     /// The cell carries whole-cell anchor coordinates.
     var onUnlock: ((GridCell) -> Void)?
 
+    /// When `true`, each placed item is drawn filling the zone that contains
+    /// its anchor (falls back to its own footprint when outside any zone).
+    /// Purely visual — the item's stored size is unchanged.
+    var itemsFillZone: Bool = false
+    /// Fill opacity for placed items (1 = opaque). Lets a caller dim items so
+    /// the zone colour stays readable underneath.
+    var itemOpacity: CGFloat = 1
+
     @State private var zoom: CGFloat = GridZoom.default
 
     public init(engine: GridEngine<Item>,
                 items: [Item],
+                itemsFillZone: Bool = false,
+                itemOpacity: CGFloat = 1,
                 onInsert: @escaping (Item.ItemType, Double, Double, Bool) -> Void,
                 onDelete: ((Item) -> Void)? = nil,
                 onConflict: ((GridCell, Item) -> Void)? = nil,
@@ -42,6 +52,8 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                 onUnlock: ((GridCell) -> Void)? = nil) {
         self.engine = engine
         self.items = items
+        self.itemsFillZone = itemsFillZone
+        self.itemOpacity = itemOpacity
         self.onInsert = onInsert
         self.onDelete = onDelete
         self.onConflict = onConflict
@@ -61,7 +73,9 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                 GridZoneSubdivisionLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
                 GridZoneOverlayLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
                 GridCompartmentBordersLayer(config: engine.config, cellSize: cs)
-                GridItemsLayer(config: engine.config, items: items, cellSize: cs, movingItem: engine.movingItem)
+                GridItemsLayer(config: engine.config, items: items, cellSize: cs,
+                               movingItem: engine.movingItem,
+                               fillZone: itemsFillZone, opacity: itemOpacity)
                 GridPreviewLayer(config: engine.config, cells: engine.previewCells, isValid: engine.isPreviewValid, cellSize: cs)
                 GridGestureLayer(engine: engine, cellSize: cs,
                                  onInsert: onInsert, onConflict: onConflict,

@@ -16,79 +16,95 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
     let items: [Item]
     let cellSize: CGFloat
     let movingItem: Item?
+    /// When `true`, an item is drawn filling the zone that contains its anchor
+    /// (falls back to its own footprint outside any zone). Purely visual — the
+    /// item's stored size is unchanged.
+    var fillZone: Bool = false
+    /// Fill opacity applied to every item block (1 = opaque).
+    var opacity: CGFloat = 1
 
     var body: some View {
         ForEach(items) { item in
             if let t = item.itemType {
-                let band = config.band(forRow: Int(item.anchorRow.rounded(.down)),
-                                       atCol: item.anchorCol)
-                let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
-                let localCol = item.anchorCol - Double(band.colStart)
                 GenericItemBlock(
-                    item: item, type: t,
-                    xOrigin: config.xForBand(band, baseCellSize: cellSize)
-                        + CGFloat(localCol) * bandCellW,
-                    bandCellWidth: bandCellW,
-                    cellHeight: cellSize,
-                    yOrigin: config.yForRow(item.anchorRow, cellSize: cellSize),
+                    name: t.name,
+                    label: t.label,
+                    color: t.color,
+                    rect: itemRect(for: item),
+                    opacity: opacity,
                     dimmed: movingItem === item
                 )
                 .allowsHitTesting(false)
             }
         }
     }
+
+    /// Pixel rect of an item: the containing zone when `fillZone` is on and the
+    /// anchor sits inside a zone, otherwise the item's own footprint. Mirrors
+    /// the band-aware maths used by the zone overlay so the two stay aligned.
+    private func itemRect(for item: Item) -> CGRect {
+        if fillZone,
+           let zone = config.zone(at: GridCell(item.anchorRow, c: item.anchorCol)) {
+            let band = config.band(forZoneID: zone.id)
+                ?? config.band(forRow: Int(zone.rowStart.rounded(.down)), atCol: zone.colStart)
+            let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
+            return CGRect(
+                x: config.xForBand(band, baseCellSize: cellSize)
+                    + CGFloat(zone.colStart - Double(band.colStart)) * bandCellW,
+                y: config.yForRow(zone.rowStart, cellSize: cellSize),
+                width: CGFloat(zone.colEnd - zone.colStart) * bandCellW,
+                height: CGFloat(zone.rowEnd - zone.rowStart) * cellSize)
+        }
+        let band = config.band(forRow: Int(item.anchorRow.rounded(.down)), atCol: item.anchorCol)
+        let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
+        let localCol = item.anchorCol - Double(band.colStart)
+        return CGRect(
+            x: config.xForBand(band, baseCellSize: cellSize) + CGFloat(localCol) * bandCellW,
+            y: config.yForRow(item.anchorRow, cellSize: cellSize),
+            width: CGFloat(item.effectiveWidth) * bandCellW,
+            height: CGFloat(item.effectiveHeight) * cellSize)
+    }
 }
 
 // MARK: - Generic block for a single placed item
 
-struct GenericItemBlock<T: GridItemType>: View {
-    let effWidth: Int
-    let effHeight: Int
-    let type: T
-    /// Pixel x of the item's left edge (band offset already applied).
-    let xOrigin: CGFloat
-    let bandCellWidth: CGFloat
-    let cellHeight: CGFloat
-    let yOrigin: CGFloat
+struct GenericItemBlock: View {
+    let name: String
+    let label: String
+    let color: Color
+    /// Final pixel rect (before inset) where the block is drawn.
+    let rect: CGRect
+    var opacity: CGFloat = 1
     var dimmed: Bool = false
-
-    init<I: GridPlaceable>(item: I, type: T,
-                           xOrigin: CGFloat,
-                           bandCellWidth: CGFloat,
-                           cellHeight: CGFloat,
-                           yOrigin: CGFloat,
-                           dimmed: Bool = false) where I.ItemType == T {
-        self.effWidth = item.effectiveWidth
-        self.effHeight = item.effectiveHeight
-        self.type = type
-        self.xOrigin = xOrigin
-        self.bandCellWidth = bandCellWidth
-        self.cellHeight = cellHeight
-        self.yOrigin = yOrigin
-        self.dimmed = dimmed
-    }
 
     var body: some View {
         let inset = GridLayout.itemBlockInset
-        let w  = CGFloat(effWidth)  * bandCellWidth - inset * 2
-        let h  = CGFloat(effHeight) * cellHeight - inset * 2
-        let ox = xOrigin + inset
-        let oy = yOrigin + inset
+        let w  = rect.width  - inset * 2
+        let h  = rect.height - inset * 2
+        let ox = rect.minX + inset
+        let oy = rect.minY + inset
+        let base = fontSize(w, h)
 
-        // Sober look: solid colour fill (no border, no secondary line)
-        // with the item name laid on top in white. Keeps the colour
-        // bold and immediately readable while removing the visual noise
-        // of the border + double opacity layers.
+        // Solid colour fill with the item name (and optional secondary label)
+        // laid on top in white. `opacity` lets a caller dim the fill so a
+        // coloured zone stays readable underneath.
         RoundedRectangle(cornerRadius: GridCornerRadius.item)
-            .fill(type.color.opacity(dimmed ? GridOpacity.itemDimmedFill : 1))
+            .fill(color.opacity((dimmed ? GridOpacity.itemDimmedFill : 1) * opacity))
             .overlay(
-                Text(type.name)
-                    .font(.system(size: fontSize(w, h), weight: .semibold))
-                    .foregroundStyle(.white.opacity(dimmed ? GridOpacity.itemTextDimmed : 1))
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.5)
-                    .padding(3)
+                VStack(spacing: 1) {
+                    Text(name)
+                        .font(.system(size: base, weight: .semibold))
+                    if !label.isEmpty {
+                        Text(label)
+                            .font(.system(size: base * 0.8, weight: .regular))
+                            .opacity(0.9)
+                    }
+                }
+                .foregroundStyle(.white.opacity(dimmed ? GridOpacity.itemTextDimmed : 1))
+                .multilineTextAlignment(.center)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .padding(3)
             )
             .frame(width: w, height: h)
             .offset(x: ox, y: oy)
