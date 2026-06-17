@@ -13,8 +13,9 @@ import Foundation
 extension GridEngine {
 	/// Returns `true` if an item of the given type can be placed at the anchor,
 	/// respecting bounds, occupancy, and zone rules.
-	public func canPlace(anchor: GridCell, type: Item.ItemType, rotated: Bool,
+	public func canPlace(anchor rawAnchor: GridCell, type: Item.ItemType, rotated: Bool,
 						 excluding: Item? = nil) -> Bool {
+		let anchor = zoneAnchor(for: rawAnchor)
 		let cells = footprint(anchor: anchor, type: type, rotated: rotated)
 		guard fitsBoundsAndZones(cells: cells, typeName: type.name),
 			  cells.allSatisfy({ map[$0] == nil || map[$0] === excluding }) else {
@@ -52,9 +53,10 @@ extension GridEngine {
 	/// Calls `insert` on success, or `onConflict` when the target cells are occupied.
 	/// When `uniqueTypes` is true and the type is already placed, the
 	/// existing item is moved instead of inserting a duplicate.
-	public func place(at anchor: GridCell, insert: InsertHandler,
+	public func place(at rawAnchor: GridCell, insert: InsertHandler,
 					  onConflict: ConflictHandler? = nil) {
 		guard let t = selectedType else { return }
+		let anchor = zoneAnchor(for: rawAnchor)
 		
 		// Unique-types fast path: relocate the existing item. The
 		// engine's current `rotated` flag drives both the validation
@@ -200,8 +202,9 @@ extension GridEngine {
 	
 	/// Commits the move if the target position is valid; otherwise reverts.
 	public func commitMove() {
-		guard case .moving(let item, let anchor, _) = interaction,
+		guard case .moving(let item, let rawAnchor, _) = interaction,
 			  let t = item.itemType else { interaction = .idle; return }
+		let anchor = zoneAnchor(for: rawAnchor)
 		if canPlace(anchor: anchor, type: t, rotated: item.rotated, excluding: item) {
 			item.anchorRow = anchor.r
 			item.anchorCol = anchor.c

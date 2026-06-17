@@ -148,6 +148,6 @@ struct GridDropDelegate<Item: GridPlaceable>: DropDelegate {
             engine.interaction = .idle
             return
         }
-        engine.interaction = .previewing(anchor: cell)
+        engine.interaction = .previewing(anchor: engine.zoneAnchor(for: cell))
     }
 }

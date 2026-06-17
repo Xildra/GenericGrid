@@ -49,8 +49,14 @@ public final class GridEngine<Item: GridPlaceable> {
 	/// seat). Default `false` for backward compatibility — multi-instance
 	/// types stay supported.
 	public var uniqueTypes: Bool = false
-	
-	
+
+	/// When `true`, a placement cell that falls inside a zone is snapped to
+	/// that zone's origin (top-left). An item can then be tapped or dropped
+	/// anywhere in the zone and still land on it. Generic — pairs naturally
+	/// with one-item-per-zone setups. Default `false`.
+	public var snapsToZoneOrigin: Bool = false
+
+
 	/// Label given to the 1×1 zones created by `toggleLocked`.
 	/// Override to localise or rename runtime locks.
 	public var lockLabel: String = "Locked"
@@ -117,5 +123,13 @@ public final class GridEngine<Item: GridPlaceable> {
             r += GridGesture.halfCell
         }
         return result
+    }
+
+    /// Resolves a raw placement cell to the anchor actually used: the
+    /// containing zone's origin when `snapsToZoneOrigin` is on, otherwise the
+    /// cell unchanged.
+    public func zoneAnchor(for cell: GridCell) -> GridCell {
+        guard snapsToZoneOrigin, let zone = config.zone(at: cell) else { return cell }
+        return GridCell(zone.rowStart, c: zone.colStart)
     }
 }
