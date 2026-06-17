@@ -53,7 +53,19 @@ public final class GridEngine<Item: GridPlaceable> {
 	
 	/// Label given to the 1×1 zones created by `toggleLocked`.
 	/// Override to localise or rename runtime locks.
-	public var lockLabel: String = "Bloqué"
+	public var lockLabel: String = "Locked"
+
+	/// Optional app-supplied placement rule, consulted by `canPlace` on top
+	/// of the built-in bounds / zone-acceptance / occupancy checks. The
+	/// engine stays domain-agnostic — it has no idea what the rule means;
+	/// the app decides. Return `true` to allow, `false` to reject.
+	/// `nil` (default) means no extra constraint.
+	///
+	/// - Parameters:
+	///   - anchor: candidate (snapped) anchor for the placement.
+	///   - cells: half-cell footprint the item would occupy.
+	///   - excluding: item to ignore — set when relocating an existing item.
+	public var placementRule: ((_ anchor: GridCell, _ cells: [GridCell], _ excluding: Item?) -> Bool)?
 	
     // MARK: - Init
 

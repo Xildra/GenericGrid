@@ -16,8 +16,11 @@ extension GridEngine {
 	public func canPlace(anchor: GridCell, type: Item.ItemType, rotated: Bool,
 						 excluding: Item? = nil) -> Bool {
 		let cells = footprint(anchor: anchor, type: type, rotated: rotated)
-		return fitsBoundsAndZones(cells: cells, typeName: type.name) &&
-		cells.allSatisfy { map[$0] == nil || map[$0] === excluding }
+		guard fitsBoundsAndZones(cells: cells, typeName: type.name),
+			  cells.allSatisfy({ map[$0] == nil || map[$0] === excluding }) else {
+			return false
+		}
+		return placementRule?(anchor, cells, excluding) ?? true
 	}
 	
 	/// `true` when every sub-cell is inside the grid and accepted by
