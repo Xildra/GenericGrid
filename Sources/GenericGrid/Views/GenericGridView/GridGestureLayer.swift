@@ -15,6 +15,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 @available(iOS 17.0, macOS 14.0, *)
 struct GridGestureLayer<Item: GridPlaceable>: View {
@@ -49,6 +50,13 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
             // quick swipes — our long-press only takes over when the finger
             // stays still, so plain scrolls still pass through.
             .simultaneousGesture(longPressDragGesture)
+            // Drag-and-drop placement: the app makes its list rows draggable
+            // and sets `engine.selectedType` on drag start; the grid drives a
+            // live preview during the hover and places on drop. Generic — the
+            // module never inspects the dragged payload.
+            .onDrop(of: [.text], delegate: GridDropDelegate(
+                engine: engine, cellSize: cellSize,
+                onInsert: onInsert, onConflict: onConflict))
     }
 
     // MARK: - Long-press + drag gesture
@@ -99,5 +107,52 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
     /// half-cell guide.
     private func toCell(_ pt: CGPoint) -> GridCell? {
         engine.config.cell(at: pt, cellSize: cellSize)
+    }
+}
+
+// MARK: - Drag & drop placement
+
+/// `DropDelegate` that turns a drag-and-drop session into a grid placement.
+/// During the hover it drives `engine.interaction = .previewing` (so the
+/// existing preview layer reacts, honouring `placementRule`); on drop it runs
+/// the standard `engine.place`. The dragged payload is ignored — the app sets
+/// `engine.selectedType` when the drag starts, keeping the module agnostic of
+/// the item being dragged.
+@available(iOS 17.0, macOS 14.0, *)
+struct GridDropDelegate<Item: GridPlaceable>: DropDelegate {
+    let engine: GridEngine<Item>
+    let cellSize: CGFloat
+    let onInsert: (Item.ItemType, Double, Double, Bool) -> Void
+    var onConflict: ((GridCell, Item) -> Void)?
+
+    func validateDrop(info: DropInfo) -> Bool {
+        engine.selectedType != nil
+    }
+
+    func dropEntered(info: DropInfo) { preview(at: info) }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        preview(at: info)
+        return DropProposal(operation: engine.selectedType == nil ? .forbidden : .copy)
+    }
+
+    func dropExited(info: DropInfo) { engine.cancelInteraction() }
+
+    func performDrop(info: DropInfo) -> Bool {
+        defer { engine.interaction = .idle }
+        guard engine.selectedType != nil,
+              let cell = engine.config.cell(at: info.location, cellSize: cellSize)
+        else { return false }
+        engine.place(at: cell, insert: onInsert, onConflict: onConflict)
+        return true
+    }
+
+    private func preview(at info: DropInfo) {
+        guard engine.selectedType != nil,
+              let cell = engine.config.cell(at: info.location, cellSize: cellSize) else {
+            engine.interaction = .idle
+            return
+        }
+        engine.interaction = .previewing(anchor: cell)
     }
 }
