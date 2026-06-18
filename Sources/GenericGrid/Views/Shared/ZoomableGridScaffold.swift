@@ -90,8 +90,10 @@ struct ZoomableGridScaffold<Content: View>: View {
                 topStripLabels(bands: bands.filter { $0.rowStart == topStrip.rowStart },
                                cellSize: cs, margin: margin)
                     .offset(x: margin, y: 0)
+                    .transaction { $0.animation = nil }
                 rowLabels(cellSize: cs, margin: margin)
                     .offset(x: 0, y: margin)
+                    .transaction { $0.animation = nil }
             }
             content(cs)
                 .frame(width: W, height: H)
@@ -100,6 +102,7 @@ struct ZoomableGridScaffold<Content: View>: View {
                 intermediateStripHeaders(bands: bands, strips: strips,
                                          cellSize: cs, width: W)
                     .offset(x: margin, y: margin)
+                    .transaction { $0.animation = nil }
             }
         }
     }
