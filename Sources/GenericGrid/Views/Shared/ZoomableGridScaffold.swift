@@ -131,12 +131,15 @@ struct ZoomableGridScaffold<Content: View>: View {
             .onEnded { _ in panStart = nil }
     }
 
-    /// Pinch zoom anchored on the focal point: the content point under the
-    /// fingers stays fixed while the scale changes.
+    /// Pinch zoom anchored on the viewport centre: the centre point stays put
+    /// while the scale changes (pan separately to position the grid).
     private func magnifyGesture(viewport: CGSize, baseCS: CGFloat, margin: CGFloat) -> some Gesture {
         MagnifyGesture()
             .onChanged { value in
-                let snap = pinchStart ?? PinchSnapshot(zoom: zoom, pan: pan, focal: value.startLocation)
+                // Central pinch: zoom about the viewport centre (not the fingers)
+                // — predictable for a clamped grid; pan to position, then zoom.
+                let center = CGPoint(x: viewport.width / 2, y: viewport.height / 2)
+                let snap = pinchStart ?? PinchSnapshot(zoom: zoom, pan: pan, focal: center)
                 if pinchStart == nil { pinchStart = snap }
                 let mag = 1 + (value.magnification - 1) * GridZoom.pinchSensitivity
                 let newZoom = min(max(snap.zoom * mag, GridZoom.min), GridZoom.max)
