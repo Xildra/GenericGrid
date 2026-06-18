@@ -21,6 +21,8 @@ public enum GridLayout {
     static let previewBottomInset: CGFloat = 30
     /// Padding around zoom controls overlay.
     static let zoomControlsPadding: CGFloat = 12
+    /// Minimum drag distance before a one-finger pan starts (keeps taps clean).
+    static let panMinDistance: CGFloat = 8
     /// Inset applied to each item block (offset & frame shrink).
     /// 0 = the block fills its whole cell edge-to-edge.
     static let itemBlockInset: CGFloat = 0

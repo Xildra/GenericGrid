@@ -6,10 +6,12 @@
 //
 //  Shared layout + zoom container reused by both the main grid
 //  (`GenericGridView`) and the config preview (`ConfigGridPreviewView`).
-//  Callers supply the inner grid content; the scaffold handles:
-//   - row / column labels and margin reservation,
-//   - scroll behaviour and centring of small grids,
-//   - base cell sizing and pinch-style zoom controls.
+//  The grid is laid out ONCE at a base cell size; zoom is a GPU
+//  `scaleEffect` (no re-layout, so compartment borders stay crisp and
+//  stable while zooming) and pan is a manual offset. Pinch zooms around
+//  the focal point. The caller's grid gestures (tap / long-press move)
+//  live on the inner content and keep priority — pan/pinch only handle
+//  touches the content doesn't consume.
 //
 
 import SwiftUI
@@ -19,10 +21,19 @@ struct ZoomableGridScaffold<Content: View>: View {
 
     let config: GridCanvasConfig
     @Binding var zoom: CGFloat
-    /// Disables scrolling while the caller is doing direct manipulation
-    /// (drag-to-place, drag-to-move…) to avoid scroll/drag conflicts.
+    /// Kept for source compatibility; with content-priority gestures the pan
+    /// no longer fights item manipulation, but callers may still suppress it.
     var scrollDisabled: Bool = false
     @ViewBuilder let content: (_ cellSize: CGFloat) -> Content
+
+    /// Current pan offset (screen points).
+    @State private var pan: CGSize = .zero
+    /// Pan snapshot captured at the start of a drag.
+    @State private var panStart: CGSize?
+    /// Zoom/pan/focal snapshot captured at the start of a pinch.
+    @State private var pinchStart: PinchSnapshot?
+
+    private struct PinchSnapshot { let zoom: CGFloat; let pan: CGSize; let focal: CGPoint }
 
     private var hasLabels: Bool {
         config.rowLabels != nil || config.colLabels != nil || config.columnBands != nil
@@ -31,45 +42,88 @@ struct ZoomableGridScaffold<Content: View>: View {
     var body: some View {
         GeometryReader { geo in
             let margin: CGFloat = hasLabels ? GridLayout.labelMargin : 0
-            let baseCS = config.baseCellSize(in: geo.size, margin: margin)
-            let cs = baseCS * zoom
+            // Base cell size at zoom == 1; visual zoom is applied via scaleEffect.
+            let cs = config.baseCellSize(in: geo.size, margin: margin)
             let W  = CGFloat(config.cols) * cs
             let H  = config.totalContentHeight(cellSize: cs)
             let bands = config.effectiveBands
             let strips = config.rowStrips
 
-            ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                ZStack(alignment: .topLeading) {
-                    if hasLabels, let topStrip = strips.first {
-                        topStripLabels(bands: bands.filter { $0.rowStart == topStrip.rowStart },
-                                       cellSize: cs, margin: margin)
-                            .offset(x: margin, y: 0)
-                        rowLabels(cellSize: cs, margin: margin)
-                            .offset(x: 0, y: margin)
-                    }
-                    content(cs)
-                        .frame(width: W, height: H)
-                        .offset(x: margin, y: margin)
-                    if hasLabels, strips.count > 1 {
-                        intermediateStripHeaders(bands: bands, strips: strips,
-                                                 cellSize: cs, width: W)
-                            .offset(x: margin, y: margin)
-                    }
+            gridBody(cellSize: cs, margin: margin, width: W, height: H, bands: bands, strips: strips)
+                .frame(width: W + margin, height: H + margin, alignment: .topLeading)
+                .scaleEffect(zoom, anchor: .topLeading)
+                .offset(pan)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .contentShape(Rectangle())
+                .gesture(panGesture)
+                .simultaneousGesture(magnifyGesture)
+                .clipped()
+                .overlay(alignment: .bottomTrailing) {
+                    ZoomControls(zoom: $zoom, onReset: { pan = .zero })
+                        .padding(GridLayout.zoomControlsPadding)
                 }
-                .frame(width: W + margin, height: H + margin)
-                .frame(
-                    minWidth: geo.size.width,
-                    minHeight: geo.size.height,
-                    alignment: .center
-                )
-                .padding(GridLayout.gridPadding)
-            }
-            .scrollDisabled(scrollDisabled)
-            .overlay(alignment: .bottomTrailing) {
-                ZoomControls(zoom: $zoom).padding(GridLayout.zoomControlsPadding)
-            }
         }
         .background(.background.secondary)
+    }
+
+    /// The grid + labels, laid out at the base cell size (pre-zoom).
+    @ViewBuilder
+    private func gridBody(cellSize cs: CGFloat, margin: CGFloat,
+                          width W: CGFloat, height H: CGFloat,
+                          bands: [ColumnBand],
+                          strips: [(rowStart: Int, rowEnd: Int)]) -> some View {
+        ZStack(alignment: .topLeading) {
+            if hasLabels, let topStrip = strips.first {
+                topStripLabels(bands: bands.filter { $0.rowStart == topStrip.rowStart },
+                               cellSize: cs, margin: margin)
+                    .offset(x: margin, y: 0)
+                rowLabels(cellSize: cs, margin: margin)
+                    .offset(x: 0, y: margin)
+            }
+            content(cs)
+                .frame(width: W, height: H)
+                .offset(x: margin, y: margin)
+            if hasLabels, strips.count > 1 {
+                intermediateStripHeaders(bands: bands, strips: strips,
+                                         cellSize: cs, width: W)
+                    .offset(x: margin, y: margin)
+            }
+        }
+    }
+
+    // MARK: - Pan / zoom gestures
+
+    /// One-finger pan. Attached on the container, so the inner grid gestures
+    /// (tap to place, long-press to move) take priority on touches that hit a
+    /// cell; only the leftover drags pan the canvas.
+    private var panGesture: some Gesture {
+        DragGesture(minimumDistance: GridLayout.panMinDistance)
+            .onChanged { value in
+                guard !scrollDisabled else { return }
+                let start = panStart ?? pan
+                if panStart == nil { panStart = pan }
+                pan = CGSize(width: start.width + value.translation.width,
+                             height: start.height + value.translation.height)
+            }
+            .onEnded { _ in panStart = nil }
+    }
+
+    /// Pinch zoom anchored on the focal point: the content point under the
+    /// fingers stays fixed while the scale changes.
+    private var magnifyGesture: some Gesture {
+        MagnifyGesture()
+            .onChanged { value in
+                let snap = pinchStart ?? PinchSnapshot(zoom: zoom, pan: pan, focal: value.startLocation)
+                if pinchStart == nil { pinchStart = snap }
+                let newZoom = min(max(snap.zoom * value.magnification, GridZoom.min), GridZoom.max)
+                // screen = content * zoom + pan  ⇒  content = (focal - pan) / zoom
+                let cx = (snap.focal.x - snap.pan.width) / snap.zoom
+                let cy = (snap.focal.y - snap.pan.height) / snap.zoom
+                pan = CGSize(width: snap.focal.x - cx * newZoom,
+                             height: snap.focal.y - cy * newZoom)
+                zoom = newZoom
+            }
+            .onEnded { _ in pinchStart = nil }
     }
 
     // MARK: - Labels
@@ -151,6 +205,8 @@ struct ZoomableGridScaffold<Content: View>: View {
 @available(iOS 17.0, macOS 14.0, *)
 struct ZoomControls: View {
     @Binding var zoom: CGFloat
+    /// Called by the "fit" button so the container can also reset the pan.
+    var onReset: (() -> Void)?
 
     var body: some View {
         VStack(spacing: GridLayout.statsSpacing) {
@@ -183,6 +239,7 @@ struct ZoomControls: View {
             Button {
                 withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) {
                     zoom = GridZoom.default
+                    onReset?()
                 }
             } label: {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
