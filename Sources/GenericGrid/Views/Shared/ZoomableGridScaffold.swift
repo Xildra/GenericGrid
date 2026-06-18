@@ -32,6 +32,10 @@ struct ZoomableGridScaffold<Content: View>: View {
     @State private var panStart: CGSize?
     /// Zoom/pan/focal snapshot captured at the start of a pinch.
     @State private var pinchStart: PinchSnapshot?
+    /// Live (transient) pinch scale applied on top of the laid-out zoom while a
+    /// pinch is in progress; committed into `zoom` on release so text/shapes
+    /// re-render crisp instead of staying a stretched bitmap.
+    @State private var liveScale: CGFloat = 1
 
     private struct PinchSnapshot { let zoom: CGFloat; let pan: CGSize; let focal: CGPoint }
 
@@ -42,8 +46,9 @@ struct ZoomableGridScaffold<Content: View>: View {
     var body: some View {
         GeometryReader { geo in
             let margin: CGFloat = hasLabels ? GridLayout.labelMargin : 0
-            // Base cell size at zoom == 1; visual zoom is applied via scaleEffect.
-            let cs = config.baseCellSize(in: geo.size, margin: margin)
+            // Lay out at the *actual* zoomed cell size so text/shapes stay
+            // crisp; an in-progress pinch adds a transient scaleEffect on top.
+            let cs = config.baseCellSize(in: geo.size, margin: margin) * zoom
             let W  = CGFloat(config.cols) * cs
             let H  = config.totalContentHeight(cellSize: cs)
             let bands = config.effectiveBands
@@ -51,7 +56,7 @@ struct ZoomableGridScaffold<Content: View>: View {
 
             gridBody(cellSize: cs, margin: margin, width: W, height: H, bands: bands, strips: strips)
                 .frame(width: W + margin, height: H + margin, alignment: .topLeading)
-                .scaleEffect(zoom, anchor: .topLeading)
+                .scaleEffect(liveScale, anchor: .topLeading)
                 .offset(pan)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .contentShape(Rectangle())
@@ -59,7 +64,7 @@ struct ZoomableGridScaffold<Content: View>: View {
                 .simultaneousGesture(magnifyGesture)
                 .clipped()
                 .overlay(alignment: .bottomTrailing) {
-                    ZoomControls(zoom: $zoom, onReset: { pan = .zero })
+                    ZoomControls(zoom: $zoom, onReset: { pan = .zero; liveScale = 1 })
                         .padding(GridLayout.zoomControlsPadding)
                 }
         }
@@ -115,15 +120,27 @@ struct ZoomableGridScaffold<Content: View>: View {
             .onChanged { value in
                 let snap = pinchStart ?? PinchSnapshot(zoom: zoom, pan: pan, focal: value.startLocation)
                 if pinchStart == nil { pinchStart = snap }
-                let newZoom = min(max(snap.zoom * value.magnification, GridZoom.min), GridZoom.max)
-                // screen = content * zoom + pan  ⇒  content = (focal - pan) / zoom
-                let cx = (snap.focal.x - snap.pan.width) / snap.zoom
-                let cy = (snap.focal.y - snap.pan.height) / snap.zoom
-                pan = CGSize(width: snap.focal.x - cx * newZoom,
-                             height: snap.focal.y - cy * newZoom)
-                zoom = newZoom
+                // Clamp the effective zoom, then express it as a live scale on
+                // top of the (fixed) laid-out zoom for the duration of the pinch.
+                let target = min(max(snap.zoom * value.magnification, GridZoom.min), GridZoom.max)
+                let scale = target / snap.zoom
+                liveScale = scale
+                // Keep the focal point fixed (scale from top-left, then pan):
+                //   screen = content * scale + pan
+                let cx = snap.focal.x - snap.pan.width
+                let cy = snap.focal.y - snap.pan.height
+                pan = CGSize(width: snap.focal.x - cx * scale,
+                             height: snap.focal.y - cy * scale)
             }
-            .onEnded { _ in pinchStart = nil }
+            .onEnded { _ in
+                // Commit the live scale into the layout zoom → crisp re-render.
+                // Top-left anchor keeps the origin fixed, so pan is unchanged.
+                if let snap = pinchStart {
+                    zoom = min(max(snap.zoom * liveScale, GridZoom.min), GridZoom.max)
+                }
+                liveScale = 1
+                pinchStart = nil
+            }
     }
 
     // MARK: - Labels
