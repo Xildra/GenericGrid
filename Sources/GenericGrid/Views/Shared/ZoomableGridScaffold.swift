@@ -32,11 +32,6 @@ struct ZoomableGridScaffold<Content: View>: View {
     @State private var panStart: CGSize?
     /// Zoom/pan/focal snapshot captured at the start of a pinch.
     @State private var pinchStart: PinchSnapshot?
-    /// Live pinch scale applied via a GPU `scaleEffect` (from the top-left)
-    /// during the gesture — smooth, every layer in sync, no text reflow;
-    /// committed into `zoom` on release. 1 when not pinching.
-    @State private var liveScale: CGFloat = 1
-
     private struct PinchSnapshot { let zoom: CGFloat; let pan: CGSize; let focal: CGPoint }
 
     private var hasLabels: Bool {
@@ -57,11 +52,11 @@ struct ZoomableGridScaffold<Content: View>: View {
 
             gridBody(cellSize: cs, margin: margin, width: W, height: H, bands: bands, strips: strips)
                 .frame(width: W + margin, height: H + margin, alignment: .topLeading)
-                // Live pinch zoom is a GPU scaleEffect from the top-left (smooth,
-                // all layers in sync, no text reflow); `pan` already holds the
-                // clamped target, so committing it into the layout on release is
-                // seamless.
-                .scaleEffect(liveScale, anchor: .topLeading)
+                // Flatten the grid into one GPU layer so the live (crisp) zoom
+                // re-renders smoothly each frame instead of re-laying out every
+                // SwiftUI view (which juddered) — and with no scaleEffect there's
+                // no blur and no commit "pop".
+                .drawingGroup()
                 .offset(pan)
                 // Pin the viewport (and the zoom controls overlay) to the
                 // container size, not the grid's frame which grows with zoom.
@@ -128,7 +123,18 @@ struct ZoomableGridScaffold<Content: View>: View {
                                  height: start.height + value.translation.height)
                 pan = clampedPan(raw, zoom: zoom, viewport: viewport, baseCS: baseCS, margin: margin)
             }
-            .onEnded { _ in panStart = nil }
+            .onEnded { value in
+                panStart = nil
+                // Kinetic scroll: fling the pan to a velocity-projected target
+                // (clamped), decelerating — instead of stopping dead at the finger.
+                let projected = CGSize(
+                    width: pan.width + value.velocity.width * GridLayout.momentumFactor,
+                    height: pan.height + value.velocity.height * GridLayout.momentumFactor)
+                let target = clampedPan(projected, zoom: zoom, viewport: viewport, baseCS: baseCS, margin: margin)
+                withAnimation(.easeOut(duration: GridAnimation.momentumDuration)) {
+                    pan = target
+                }
+            }
     }
 
     /// Pinch zoom anchored on the viewport centre: the centre point stays put
@@ -136,31 +142,22 @@ struct ZoomableGridScaffold<Content: View>: View {
     private func magnifyGesture(viewport: CGSize, baseCS: CGFloat, margin: CGFloat) -> some Gesture {
         MagnifyGesture()
             .onChanged { value in
-                // Central pinch: zoom about the viewport centre (not the fingers)
-                // — predictable for a clamped grid; pan to position, then zoom.
+                // Central pinch: zoom about the viewport centre. The real layout
+                // zoom is updated live (crisp — no blur, no commit "pop"); the
+                // grid's drawingGroup keeps it smooth.
                 let center = CGPoint(x: viewport.width / 2, y: viewport.height / 2)
                 let snap = pinchStart ?? PinchSnapshot(zoom: zoom, pan: pan, focal: center)
                 if pinchStart == nil { pinchStart = snap }
                 let mag = 1 + (value.magnification - 1) * GridZoom.pinchSensitivity
                 let newZoom = min(max(snap.zoom * mag, GridZoom.min), GridZoom.max)
                 let scale = newZoom / snap.zoom
-                // Focal-preserving pan for the target zoom, CLAMPED — identical to
-                // what the commit will set, so releasing causes no jump. The layout
-                // stays at the start zoom; scaleEffect(.topLeading) + offset(pan)
-                // show the target state as a GPU transform (no text reflow).
+                // Centre-preserving pan for the new zoom, clamped.
                 let raw = CGSize(width: snap.focal.x - (snap.focal.x - snap.pan.width) * scale,
                                  height: snap.focal.y - (snap.focal.y - snap.pan.height) * scale)
-                liveScale = scale
+                zoom = newZoom
                 pan = clampedPan(raw, zoom: newZoom, viewport: viewport, baseCS: baseCS, margin: margin)
             }
-            .onEnded { _ in
-                guard let snap = pinchStart else { return }
-                // Commit the live scale into the real layout zoom (crisp). `pan`
-                // already holds the clamped target, so the release is seamless.
-                zoom = min(max(snap.zoom * liveScale, GridZoom.min), GridZoom.max)
-                liveScale = 1
-                pinchStart = nil
-            }
+            .onEnded { _ in pinchStart = nil }
     }
 
     // MARK: - Pan clamping

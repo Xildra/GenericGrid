@@ -26,6 +26,9 @@ public enum GridLayout {
     /// How far past the edges the grid may be pushed (fraction of the viewport),
     /// so e.g. the last row isn't stuck against the screen edge.
     static let overscrollFraction: CGFloat = 0.4
+    /// Kinetic scroll: fraction of the release velocity (pts/s) projected into
+    /// the fling distance (higher = more momentum).
+    static let momentumFactor: CGFloat = 0.12
     /// Inset applied to each item block (offset & frame shrink).
     /// 0 = the block fills its whole cell edge-to-edge.
     static let itemBlockInset: CGFloat = 0
@@ -214,6 +217,8 @@ public enum GridAnimation {
     static let zoomDuration: Double = 0.2
     /// Delay before "Saved" badge resets.
     static let saveResetDelay: Double = 1.5
+    /// Deceleration time for a kinetic (inertial) pan fling.
+    static let momentumDuration: Double = 0.45
 }
 
 // MARK: - Gestures
