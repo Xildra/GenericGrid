@@ -69,6 +69,12 @@ struct ZoomableGridScaffold<Content: View>: View {
                 .onChange(of: zoom) {
                     pan = clampedPan(pan, zoom: zoom, viewport: geo.size, baseCS: baseCS, margin: margin)
                 }
+                // Re-centre on first layout and whenever the viewport changes
+                // (e.g. the side lists are collapsed), so the grid follows the
+                // new centre instead of staying pinned left.
+                .onChange(of: geo.size, initial: true) {
+                    pan = clampedPan(pan, zoom: zoom, viewport: geo.size, baseCS: baseCS, margin: margin)
+                }
         }
         .background(.background.secondary)
     }
@@ -155,7 +161,7 @@ struct ZoomableGridScaffold<Content: View>: View {
 
     private func clampAxis(_ v: CGFloat, content: CGFloat, viewport: CGFloat) -> CGFloat {
         content <= viewport
-            ? min(max(v, 0), viewport - content)      // smaller: keep fully inside
+            ? (viewport - content) / 2                // smaller: centered in the viewport
             : min(max(v, viewport - content), 0)      // larger: edge-to-edge, no gutter
     }
 
