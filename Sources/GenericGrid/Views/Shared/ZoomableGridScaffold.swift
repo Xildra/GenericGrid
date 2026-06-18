@@ -139,8 +139,13 @@ struct ZoomableGridScaffold<Content: View>: View {
                 let cy = snap.focal.y - snap.pan.height
                 let raw = CGSize(width: snap.focal.x - cx * scale,
                                  height: snap.focal.y - cy * scale)
-                zoom = newZoom
-                pan = clampedPan(raw, zoom: newZoom, viewport: viewport, baseCS: baseCS, margin: margin)
+                // Smooth the discrete pinch samples with an interactive spring so
+                // the motion reads as continuous (less judder / eye strain). zoom
+                // and pan animate together, so the focal point stays put.
+                withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.85)) {
+                    zoom = newZoom
+                    pan = clampedPan(raw, zoom: newZoom, viewport: viewport, baseCS: baseCS, margin: margin)
+                }
             }
             .onEnded { _ in pinchStart = nil }
     }
@@ -252,7 +257,7 @@ struct ZoomControls: View {
     var body: some View {
         VStack(spacing: GridLayout.statsSpacing) {
             Button {
-                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     zoom = min(zoom * GridZoom.step, GridZoom.max)
                 }
             } label: {
@@ -266,7 +271,7 @@ struct ZoomControls: View {
                 .foregroundStyle(.secondary)
 
             Button {
-                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     zoom = max(zoom / GridZoom.step, GridZoom.min)
                 }
             } label: {
@@ -278,7 +283,7 @@ struct ZoomControls: View {
             Divider().frame(width: GridLayout.zoomDividerWidth)
 
             Button {
-                withAnimation(.easeInOut(duration: GridAnimation.zoomDuration)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     zoom = GridZoom.default
                     onReset?()
                 }
