@@ -23,6 +23,9 @@ public enum GridLayout {
     static let zoomControlsPadding: CGFloat = 12
     /// Minimum drag distance before a one-finger pan starts (keeps taps clean).
     static let panMinDistance: CGFloat = 8
+    /// How far past the edges the grid may be pushed (fraction of the viewport),
+    /// so e.g. the last row isn't stuck against the screen edge.
+    static let overscrollFraction: CGFloat = 0.4
     /// Inset applied to each item block (offset & frame shrink).
     /// 0 = the block fills its whole cell edge-to-edge.
     static let itemBlockInset: CGFloat = 0

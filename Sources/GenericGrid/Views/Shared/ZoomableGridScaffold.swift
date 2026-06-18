@@ -160,9 +160,11 @@ struct ZoomableGridScaffold<Content: View>: View {
     }
 
     private func clampAxis(_ v: CGFloat, content: CGFloat, viewport: CGFloat) -> CGFloat {
-        content <= viewport
-            ? (viewport - content) / 2                // smaller: centered in the viewport
-            : min(max(v, viewport - content), 0)      // larger: edge-to-edge, no gutter
+        guard content > viewport else { return (viewport - content) / 2 }   // smaller: centered
+        // Allow pushing the grid past the edges (so e.g. the last row isn't
+        // stuck against the screen edge) while keeping most of it on screen.
+        let over = viewport * GridLayout.overscrollFraction
+        return min(max(v, viewport - content - over), over)
     }
 
     // MARK: - Labels
