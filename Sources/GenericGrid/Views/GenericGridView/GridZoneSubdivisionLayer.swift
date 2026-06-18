@@ -9,6 +9,9 @@
 //  origin — decoupled from the global guide, which is why the
 //  guide can be hidden while zone grids stay visible.
 //
+//  Drawn as a `Shape` (not a `Canvas`) so the internal lines animate in sync
+//  with the frame while zooming, instead of snapping to the target.
+//
 
 import SwiftUI
 
@@ -44,37 +47,46 @@ private struct ZoneInternalGridView: View {
     let yOrigin: CGFloat
 
     var body: some View {
-        let x = xOrigin
-        let y = yOrigin
         let w = CGFloat(zone.colSize) * bandCellWidth
         let h = CGFloat(zone.rowSize) * cellHeight
-        let rowCount = zone.rowCount
-        let colCount = zone.colCount
 
         ZStack {
-            // Mask the global guide lines that run under this zone so
-            // the zone's internal lines are the only ones visible inside.
+            // Mask the global guide lines that run under this zone so the
+            // zone's internal lines are the only ones visible inside.
             Rectangle().fill(.background)
 
-            Canvas { ctx, size in
-                let shading = GraphicsContext.Shading.color(.secondary.opacity(GridOpacity.subdivisionLine))
-                for i in 0...rowCount {
-                    var p = Path()
-                    let ly = CGFloat(i) * size.height / CGFloat(rowCount)
-                    p.move(to: CGPoint(x: 0, y: ly))
-                    p.addLine(to: CGPoint(x: size.width, y: ly))
-                    ctx.stroke(p, with: shading, lineWidth: GridLineWidth.gridLine)
-                }
-                for i in 0...colCount {
-                    var p = Path()
-                    let lx = CGFloat(i) * size.width / CGFloat(colCount)
-                    p.move(to: CGPoint(x: lx, y: 0))
-                    p.addLine(to: CGPoint(x: lx, y: size.height))
-                    ctx.stroke(p, with: shading, lineWidth: GridLineWidth.gridLine)
-                }
-            }
+            ZoneGridShape(rowCount: zone.rowCount, colCount: zone.colCount)
+                .stroke(.secondary.opacity(GridOpacity.subdivisionLine),
+                        lineWidth: GridLineWidth.gridLine)
         }
         .frame(width: w, height: h)
-        .offset(x: x, y: y)
+        .offset(x: xOrigin, y: yOrigin)
+    }
+}
+
+/// A `rowCount × colCount` grid of lines, positioned relative to the drawing
+/// `rect` so it animates with the frame while zooming.
+@available(iOS 17.0, macOS 14.0, *)
+private struct ZoneGridShape: Shape {
+    let rowCount: Int
+    let colCount: Int
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        if rowCount > 0 {
+            for i in 0...rowCount {
+                let y = CGFloat(i) * rect.height / CGFloat(rowCount)
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: rect.width, y: y))
+            }
+        }
+        if colCount > 0 {
+            for i in 0...colCount {
+                let x = CGFloat(i) * rect.width / CGFloat(colCount)
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: rect.height))
+            }
+        }
+        return path
     }
 }
