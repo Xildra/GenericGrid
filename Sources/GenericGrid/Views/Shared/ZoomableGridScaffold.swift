@@ -44,7 +44,8 @@ struct ZoomableGridScaffold<Content: View>: View {
             let margin: CGFloat = hasLabels ? GridLayout.labelMargin : 0
             // Lay out at the actual zoomed cell size so text and borders stay
             // crisp at every zoom level (the grid re-renders as zoom changes).
-            let cs = config.baseCellSize(in: geo.size, margin: margin) * zoom
+            let baseCS = config.baseCellSize(in: geo.size, margin: margin)
+            let cs = baseCS * zoom
             let W  = CGFloat(config.cols) * cs
             let H  = config.totalContentHeight(cellSize: cs)
             let bands = config.effectiveBands
@@ -57,12 +58,16 @@ struct ZoomableGridScaffold<Content: View>: View {
                 // container size, not the grid's frame which grows with zoom.
                 .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
                 .contentShape(Rectangle())
-                .gesture(panGesture)
-                .simultaneousGesture(magnifyGesture)
+                .gesture(panGesture(viewport: geo.size, baseCS: baseCS, margin: margin))
+                .simultaneousGesture(magnifyGesture(viewport: geo.size, baseCS: baseCS, margin: margin))
                 .clipped()
                 .overlay(alignment: .bottomTrailing) {
                     ZoomControls(zoom: $zoom, onReset: { pan = .zero })
                         .padding(GridLayout.zoomControlsPadding)
+                }
+                // Re-clamp after a button zoom so the grid can't sit off-screen.
+                .onChange(of: zoom) {
+                    pan = clampedPan(pan, zoom: zoom, viewport: geo.size, baseCS: baseCS, margin: margin)
                 }
         }
         .background(.background.secondary)
@@ -98,21 +103,22 @@ struct ZoomableGridScaffold<Content: View>: View {
     /// One-finger pan. Attached on the container, so the inner grid gestures
     /// (tap to place, long-press to move) take priority on touches that hit a
     /// cell; only the leftover drags pan the canvas.
-    private var panGesture: some Gesture {
+    private func panGesture(viewport: CGSize, baseCS: CGFloat, margin: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: GridLayout.panMinDistance)
             .onChanged { value in
                 guard !scrollDisabled else { return }
                 let start = panStart ?? pan
                 if panStart == nil { panStart = pan }
-                pan = CGSize(width: start.width + value.translation.width,
-                             height: start.height + value.translation.height)
+                let raw = CGSize(width: start.width + value.translation.width,
+                                 height: start.height + value.translation.height)
+                pan = clampedPan(raw, zoom: zoom, viewport: viewport, baseCS: baseCS, margin: margin)
             }
             .onEnded { _ in panStart = nil }
     }
 
     /// Pinch zoom anchored on the focal point: the content point under the
     /// fingers stays fixed while the scale changes.
-    private var magnifyGesture: some Gesture {
+    private func magnifyGesture(viewport: CGSize, baseCS: CGFloat, margin: CGFloat) -> some Gesture {
         MagnifyGesture()
             .onChanged { value in
                 let snap = pinchStart ?? PinchSnapshot(zoom: zoom, pan: pan, focal: value.startLocation)
@@ -125,11 +131,32 @@ struct ZoomableGridScaffold<Content: View>: View {
                 // its top-left origin, so screen = content * scale + pan.
                 let cx = snap.focal.x - snap.pan.width
                 let cy = snap.focal.y - snap.pan.height
-                pan = CGSize(width: snap.focal.x - cx * scale,
-                             height: snap.focal.y - cy * scale)
+                let raw = CGSize(width: snap.focal.x - cx * scale,
+                                 height: snap.focal.y - cy * scale)
                 zoom = newZoom
+                pan = clampedPan(raw, zoom: newZoom, viewport: viewport, baseCS: baseCS, margin: margin)
             }
             .onEnded { _ in pinchStart = nil }
+    }
+
+    // MARK: - Pan clamping
+
+    /// Keeps the grid from being panned/zoomed off-screen: when the content is
+    /// larger than the viewport it stays edge-to-edge (no empty gutter); when
+    /// smaller it stays fully inside.
+    private func clampedPan(_ p: CGSize, zoom: CGFloat, viewport: CGSize,
+                            baseCS: CGFloat, margin: CGFloat) -> CGSize {
+        let cs = baseCS * zoom
+        let contentW = CGFloat(config.cols) * cs + margin
+        let contentH = config.totalContentHeight(cellSize: cs) + margin
+        return CGSize(width:  clampAxis(p.width,  content: contentW, viewport: viewport.width),
+                      height: clampAxis(p.height, content: contentH, viewport: viewport.height))
+    }
+
+    private func clampAxis(_ v: CGFloat, content: CGFloat, viewport: CGFloat) -> CGFloat {
+        content <= viewport
+            ? min(max(v, 0), viewport - content)      // smaller: keep fully inside
+            : min(max(v, viewport - content), 0)      // larger: edge-to-edge, no gutter
     }
 
     // MARK: - Labels
