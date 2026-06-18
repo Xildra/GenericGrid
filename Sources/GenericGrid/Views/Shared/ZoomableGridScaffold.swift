@@ -53,7 +53,9 @@ struct ZoomableGridScaffold<Content: View>: View {
             gridBody(cellSize: cs, margin: margin, width: W, height: H, bands: bands, strips: strips)
                 .frame(width: W + margin, height: H + margin, alignment: .topLeading)
                 .offset(pan)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                // Pin the viewport (and the zoom controls overlay) to the
+                // container size, not the grid's frame which grows with zoom.
+                .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
                 .contentShape(Rectangle())
                 .gesture(panGesture)
                 .simultaneousGesture(magnifyGesture)
