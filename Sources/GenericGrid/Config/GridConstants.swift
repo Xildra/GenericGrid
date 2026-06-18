@@ -194,14 +194,17 @@ public enum GridCellSize {
 // MARK: - Zoom
 
 public enum GridZoom {
-    /// Minimum zoom factor.
-    static let min: CGFloat = 0.2
+    /// Minimum zoom factor. 1.0 = the fit-to-view size; there's no point
+    /// zooming out smaller than the grid already fits.
+    static let min: CGFloat = 1.0
     /// Maximum zoom factor.
     static let max: CGFloat = 5.0
     /// Multiplicative zoom step per tap.
     static let step: CGFloat = 1.3
     /// Default zoom level.
     static let `default`: CGFloat = 1.0
+    /// Pinch sensitivity (< 1 slows the zoom for a given finger spread).
+    static let pinchSensitivity: CGFloat = 0.6
 }
 
 // MARK: - Animation

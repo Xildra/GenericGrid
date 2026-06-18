@@ -90,10 +90,8 @@ struct ZoomableGridScaffold<Content: View>: View {
                 topStripLabels(bands: bands.filter { $0.rowStart == topStrip.rowStart },
                                cellSize: cs, margin: margin)
                     .offset(x: margin, y: 0)
-                    .transaction { $0.animation = nil }
                 rowLabels(cellSize: cs, margin: margin)
                     .offset(x: 0, y: margin)
-                    .transaction { $0.animation = nil }
             }
             content(cs)
                 .frame(width: W, height: H)
@@ -102,7 +100,6 @@ struct ZoomableGridScaffold<Content: View>: View {
                 intermediateStripHeaders(bands: bands, strips: strips,
                                          cellSize: cs, width: W)
                     .offset(x: margin, y: margin)
-                    .transaction { $0.animation = nil }
             }
         }
     }
@@ -134,7 +131,9 @@ struct ZoomableGridScaffold<Content: View>: View {
                 if pinchStart == nil { pinchStart = snap }
                 // Update the real layout zoom continuously so the grid re-renders
                 // crisp as it scales (no bitmap stretching).
-                let newZoom = min(max(snap.zoom * value.magnification, GridZoom.min), GridZoom.max)
+                // Soften the finger spread so the zoom changes more gently.
+                let mag = 1 + (value.magnification - 1) * GridZoom.pinchSensitivity
+                let newZoom = min(max(snap.zoom * mag, GridZoom.min), GridZoom.max)
                 let scale = newZoom / snap.zoom
                 // Keep the focal point fixed: the content scales uniformly from
                 // its top-left origin, so screen = content * scale + pan.
@@ -142,10 +141,11 @@ struct ZoomableGridScaffold<Content: View>: View {
                 let cy = snap.focal.y - snap.pan.height
                 let raw = CGSize(width: snap.focal.x - cx * scale,
                                  height: snap.focal.y - cy * scale)
-                // Smooth the discrete pinch samples with an interactive spring so
-                // the motion reads as continuous (less judder / eye strain). zoom
-                // and pan animate together, so the focal point stays put.
-                withAnimation(.interactiveSpring(response: 0.2, dampingFraction: 0.85)) {
+                // Smooth the discrete pinch samples with a critically damped
+                // spring (no overshoot → labels/headers don't swing) so the
+                // motion reads continuous. zoom and pan animate together, so the
+                // focal point stays put and every layer moves in sync.
+                withAnimation(.interactiveSpring(response: 0.25, dampingFraction: 1.0)) {
                     zoom = newZoom
                     pan = clampedPan(raw, zoom: newZoom, viewport: viewport, baseCS: baseCS, margin: margin)
                 }
@@ -260,7 +260,7 @@ struct ZoomControls: View {
     var body: some View {
         VStack(spacing: GridLayout.statsSpacing) {
             Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
                     zoom = min(zoom * GridZoom.step, GridZoom.max)
                 }
             } label: {
@@ -274,7 +274,7 @@ struct ZoomControls: View {
                 .foregroundStyle(.secondary)
 
             Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
                     zoom = max(zoom / GridZoom.step, GridZoom.min)
                 }
             } label: {
@@ -286,7 +286,7 @@ struct ZoomControls: View {
             Divider().frame(width: GridLayout.zoomDividerWidth)
 
             Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
                     zoom = GridZoom.default
                     onReset?()
                 }

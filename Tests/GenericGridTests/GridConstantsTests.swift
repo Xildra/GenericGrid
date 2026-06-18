@@ -11,9 +11,11 @@ struct GridConstantsTests {
 
     @Test("zoom limits are coherent")
     func zoomLimits() {
-        #expect(GridZoom.min < GridZoom.default)
+        // min may equal default: there's no zoom-out below the fit-to-view size.
+        #expect(GridZoom.min <= GridZoom.default)
         #expect(GridZoom.default < GridZoom.max)
         #expect(GridZoom.step > 1.0)
+        #expect(GridZoom.pinchSensitivity > 0 && GridZoom.pinchSensitivity <= 1)
     }
 
     @Test("cell size limits are coherent")
