@@ -32,12 +32,10 @@ struct ZoomableGridScaffold<Content: View>: View {
     @State private var panStart: CGSize?
     /// Zoom/pan/focal snapshot captured at the start of a pinch.
     @State private var pinchStart: PinchSnapshot?
-    /// Live pinch scale applied via a GPU `scaleEffect` during the gesture
-    /// (smooth, every layer in sync, no text reflow); committed into `zoom` on
-    /// release. 1 when not pinching.
+    /// Live pinch scale applied via a GPU `scaleEffect` (from the top-left)
+    /// during the gesture — smooth, every layer in sync, no text reflow;
+    /// committed into `zoom` on release. 1 when not pinching.
     @State private var liveScale: CGFloat = 1
-    /// Anchor (focal point, in content-frame unit coords) for `liveScale`.
-    @State private var pinchAnchor: UnitPoint = .center
 
     private struct PinchSnapshot { let zoom: CGFloat; let pan: CGSize; let focal: CGPoint }
 
@@ -59,9 +57,11 @@ struct ZoomableGridScaffold<Content: View>: View {
 
             gridBody(cellSize: cs, margin: margin, width: W, height: H, bands: bands, strips: strips)
                 .frame(width: W + margin, height: H + margin, alignment: .topLeading)
-                // Live pinch zoom is a GPU scaleEffect (smooth, all layers in
-                // sync, no text reflow); committed into the layout on release.
-                .scaleEffect(liveScale, anchor: pinchAnchor)
+                // Live pinch zoom is a GPU scaleEffect from the top-left (smooth,
+                // all layers in sync, no text reflow); `pan` already holds the
+                // clamped target, so committing it into the layout on release is
+                // seamless.
+                .scaleEffect(liveScale, anchor: .topLeading)
                 .offset(pan)
                 // Pin the viewport (and the zoom controls overlay) to the
                 // container size, not the grid's frame which grows with zoom.
@@ -136,39 +136,26 @@ struct ZoomableGridScaffold<Content: View>: View {
     private func magnifyGesture(viewport: CGSize, baseCS: CGFloat, margin: CGFloat) -> some Gesture {
         MagnifyGesture()
             .onChanged { value in
-                if pinchStart == nil {
-                    let snap = PinchSnapshot(zoom: zoom, pan: pan, focal: value.startLocation)
-                    pinchStart = snap
-                    // Anchor the scaleEffect on the focal point, in the content
-                    // frame's unit coords (the frame is sized at the start zoom).
-                    let snapCS = baseCS * snap.zoom
-                    let contentW = CGFloat(config.cols) * snapCS + margin
-                    let contentH = config.totalContentHeight(cellSize: snapCS) + margin
-                    pinchAnchor = UnitPoint(
-                        x: contentW > 0 ? (snap.focal.x - snap.pan.width) / contentW : 0.5,
-                        y: contentH > 0 ? (snap.focal.y - snap.pan.height) / contentH : 0.5)
-                }
-                guard let snap = pinchStart else { return }
-                // Live zoom is a GPU scaleEffect around the focal point: smooth,
-                // every layer scales together, no text reflow. The layout stays
-                // crisp at the start zoom; it is committed on release.
+                let snap = pinchStart ?? PinchSnapshot(zoom: zoom, pan: pan, focal: value.startLocation)
+                if pinchStart == nil { pinchStart = snap }
                 let mag = 1 + (value.magnification - 1) * GridZoom.pinchSensitivity
                 let newZoom = min(max(snap.zoom * mag, GridZoom.min), GridZoom.max)
-                liveScale = newZoom / snap.zoom
+                let scale = newZoom / snap.zoom
+                // Focal-preserving pan for the target zoom, CLAMPED — identical to
+                // what the commit will set, so releasing causes no jump. The layout
+                // stays at the start zoom; scaleEffect(.topLeading) + offset(pan)
+                // show the target state as a GPU transform (no text reflow).
+                let raw = CGSize(width: snap.focal.x - (snap.focal.x - snap.pan.width) * scale,
+                                 height: snap.focal.y - (snap.focal.y - snap.pan.height) * scale)
+                liveScale = scale
+                pan = clampedPan(raw, zoom: newZoom, viewport: viewport, baseCS: baseCS, margin: margin)
             }
             .onEnded { _ in
                 guard let snap = pinchStart else { return }
-                // Commit the live scale into the real layout zoom (crisp) and
-                // fold it into pan so the focal point stays put. The post-commit
-                // layout matches the scaled visual exactly → seamless.
-                let newZoom = min(max(snap.zoom * liveScale, GridZoom.min), GridZoom.max)
-                let scale = newZoom / snap.zoom
-                let raw = CGSize(width: snap.focal.x - (snap.focal.x - snap.pan.width) * scale,
-                                 height: snap.focal.y - (snap.focal.y - snap.pan.height) * scale)
-                zoom = newZoom
-                pan = clampedPan(raw, zoom: newZoom, viewport: viewport, baseCS: baseCS, margin: margin)
+                // Commit the live scale into the real layout zoom (crisp). `pan`
+                // already holds the clamped target, so the release is seamless.
+                zoom = min(max(snap.zoom * liveScale, GridZoom.min), GridZoom.max)
                 liveScale = 1
-                pinchAnchor = .center
                 pinchStart = nil
             }
     }
