@@ -226,6 +226,20 @@ public struct GridCanvasConfig: Codable, Sendable {
         return GridCell(GridCell.snapHalf(cell.r), c: GridCell.snapHalf(cell.c))
     }
 
+    /// Pixel rect of a zone's box, using the band-aware column width so it
+    /// lines up with the zone overlay and any item/preview drawn to fill it.
+    public func zoneRect(_ zone: GridZoneDefinition, cellSize: CGFloat) -> CGRect {
+        let band = band(forZoneID: zone.id)
+            ?? band(forRow: Int(zone.rowStart.rounded(.down)), atCol: zone.colStart)
+        let bandCellW = bandCellWidth(band, baseCellSize: cellSize)
+        return CGRect(
+            x: xForBand(band, baseCellSize: cellSize)
+                + CGFloat(zone.colStart - Double(band.colStart)) * bandCellW,
+            y: yForRow(zone.rowStart, cellSize: cellSize),
+            width: CGFloat(zone.colEnd - zone.colStart) * bandCellW,
+            height: CGFloat(zone.rowEnd - zone.rowStart) * cellSize)
+    }
+
     // MARK: - Cell sizing
 
     /// Minimum cell width required so the widest column label fits.

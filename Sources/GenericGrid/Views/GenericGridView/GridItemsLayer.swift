@@ -45,15 +45,7 @@ struct GridItemsLayer<Item: GridPlaceable>: View {
     private func itemRect(for item: Item) -> CGRect {
         if fillZone,
            let zone = config.zone(at: GridCell(item.anchorRow, c: item.anchorCol)) {
-            let band = config.band(forZoneID: zone.id)
-                ?? config.band(forRow: Int(zone.rowStart.rounded(.down)), atCol: zone.colStart)
-            let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)
-            return CGRect(
-                x: config.xForBand(band, baseCellSize: cellSize)
-                    + CGFloat(zone.colStart - Double(band.colStart)) * bandCellW,
-                y: config.yForRow(zone.rowStart, cellSize: cellSize),
-                width: CGFloat(zone.colEnd - zone.colStart) * bandCellW,
-                height: CGFloat(zone.rowEnd - zone.rowStart) * cellSize)
+            return config.zoneRect(zone, cellSize: cellSize)
         }
         let band = config.band(forRow: Int(item.anchorRow.rounded(.down)), atCol: item.anchorCol)
         let bandCellW = config.bandCellWidth(band, baseCellSize: cellSize)

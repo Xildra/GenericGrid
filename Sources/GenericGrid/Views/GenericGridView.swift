@@ -76,7 +76,9 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                 GridItemsLayer(config: engine.config, items: items, cellSize: cs,
                                movingItem: engine.movingItem,
                                fillZone: itemsFillZone, opacity: itemOpacity)
-                GridPreviewLayer(config: engine.config, cells: engine.previewCells, isValid: engine.isPreviewValid, cellSize: cs)
+                GridPreviewLayer(config: engine.config, cells: engine.previewCells,
+                                 isValid: engine.isPreviewValid, cellSize: cs,
+                                 fillZone: itemsFillZone)
                 GridGestureLayer(engine: engine, cellSize: cs,
                                  onInsert: onInsert, onConflict: onConflict,
                                  onLock: onLock, onUnlock: onUnlock)
