@@ -77,7 +77,7 @@ struct ZoomableGridScaffold<Content: View>: View {
                 // (e.g. the side lists are collapsed), so the grid follows the
                 // new centre instead of staying pinned left.
                 .onChange(of: geo.size, initial: true) {
-                    pan = clampedPan(pan, zoom: zoom, viewport: geo.size, baseCS: baseCS, margin: margin)
+                    pan = settledPan(pan, zoom: zoom, viewport: geo.size, baseCS: baseCS, margin: margin)
                 }
         }
         .background(.background.secondary)
@@ -130,7 +130,7 @@ struct ZoomableGridScaffold<Content: View>: View {
                 let projected = CGSize(
                     width: pan.width + value.velocity.width * GridLayout.momentumFactor,
                     height: pan.height + value.velocity.height * GridLayout.momentumFactor)
-                let target = clampedPan(projected, zoom: zoom, viewport: viewport, baseCS: baseCS, margin: margin)
+                let target = settledPan(projected, zoom: zoom, viewport: viewport, baseCS: baseCS, margin: margin)
                 withAnimation(.easeOut(duration: GridAnimation.momentumDuration)) {
                     pan = target
                 }
@@ -165,21 +165,41 @@ struct ZoomableGridScaffold<Content: View>: View {
     /// Keeps the grid from being panned/zoomed off-screen: when the content is
     /// larger than the viewport it stays edge-to-edge (no empty gutter); when
     /// smaller it stays fully inside.
+    /// Clamp used while dragging/pinching: allows overscroll past the resting
+    /// bounds, so the grid can be nudged even at 100% (where it exactly fits).
     private func clampedPan(_ p: CGSize, zoom: CGFloat, viewport: CGSize,
                             baseCS: CGFloat, margin: CGFloat) -> CGSize {
+        let (cw, ch) = contentSize(zoom: zoom, baseCS: baseCS, margin: margin)
+        return CGSize(width:  clampAxis(p.width,  content: cw, viewport: viewport.width),
+                      height: clampAxis(p.height, content: ch, viewport: viewport.height))
+    }
+
+    /// Resting clamp (no overscroll): where the grid settles after a fling and
+    /// on appear/resize — centred when it fits, edge-aligned when larger.
+    private func settledPan(_ p: CGSize, zoom: CGFloat, viewport: CGSize,
+                            baseCS: CGFloat, margin: CGFloat) -> CGSize {
+        let (cw, ch) = contentSize(zoom: zoom, baseCS: baseCS, margin: margin)
+        return CGSize(width:  settleAxis(p.width,  content: cw, viewport: viewport.width),
+                      height: settleAxis(p.height, content: ch, viewport: viewport.height))
+    }
+
+    private func contentSize(zoom: CGFloat, baseCS: CGFloat, margin: CGFloat) -> (CGFloat, CGFloat) {
         let cs = baseCS * zoom
-        let contentW = CGFloat(config.cols) * cs + margin
-        let contentH = config.totalContentHeight(cellSize: cs) + margin
-        return CGSize(width:  clampAxis(p.width,  content: contentW, viewport: viewport.width),
-                      height: clampAxis(p.height, content: contentH, viewport: viewport.height))
+        return (CGFloat(config.cols) * cs + margin, config.totalContentHeight(cellSize: cs) + margin)
     }
 
     private func clampAxis(_ v: CGFloat, content: CGFloat, viewport: CGFloat) -> CGFloat {
-        guard content > viewport else { return (viewport - content) / 2 }   // smaller: centered
-        // Allow pushing the grid past the edges (so e.g. the last row isn't
-        // stuck against the screen edge) while keeping most of it on screen.
         let over = viewport * GridLayout.overscrollFraction
-        return min(max(v, viewport - content - over), over)
+        if content > viewport {
+            return min(max(v, viewport - content - over), over)
+        }
+        // Fits: allow nudging around the centre (so panning works at 100% too).
+        let center = (viewport - content) / 2
+        return min(max(v, center - over), center + over)
+    }
+
+    private func settleAxis(_ v: CGFloat, content: CGFloat, viewport: CGFloat) -> CGFloat {
+        content <= viewport ? (viewport - content) / 2 : min(max(v, viewport - content), 0)
     }
 
     // MARK: - Labels
