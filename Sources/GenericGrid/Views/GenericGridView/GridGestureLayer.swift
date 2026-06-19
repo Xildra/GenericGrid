@@ -38,7 +38,7 @@ struct GridGestureLayer<Item: GridPlaceable>: View {
                 guard let cell = toCell(location) else { return }
                 if engine.selectedType != nil {
                     engine.place(at: cell, insert: onInsert, onConflict: onConflict)
-                } else {
+                } else if engine.tapTogglesLock {
                     switch engine.toggleLocked(at: cell) {
                     case .locked(let c):   onLock?(c)
                     case .unlocked(let c): onUnlock?(c)

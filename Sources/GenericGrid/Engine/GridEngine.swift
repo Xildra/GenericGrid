@@ -56,6 +56,11 @@ public final class GridEngine<Item: GridPlaceable> {
 	/// with one-item-per-zone setups. Default `false`.
 	public var snapsToZoneOrigin: Bool = false
 
+	/// When `true`, tapping an empty cell with no selected type toggles a
+	/// runtime lock on it (operational grids). Set `false` to disable cell
+	/// locking entirely (e.g. a placement-only grid). Default `true`.
+	public var tapTogglesLock: Bool = true
+
 
 	/// Label given to the 1×1 zones created by `toggleLocked`.
 	/// Override to localise or rename runtime locks.
