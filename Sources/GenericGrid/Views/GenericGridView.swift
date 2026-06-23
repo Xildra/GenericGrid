@@ -38,6 +38,9 @@ public struct GenericGridView<Item: GridPlaceable>: View {
     /// Fill opacity for placed items (1 = opaque). Lets a caller dim items so
     /// the zone colour stays readable underneath.
     var itemOpacity: CGFloat = 1
+    /// Optional business hook: zones for which this returns `true` are greyed
+    /// out (unavailable). The module stays domain-agnostic. `nil` = none.
+    var zoneDisabled: ((GridZoneDefinition) -> Bool)?
 
     @State private var zoom: CGFloat = GridZoom.default
 
@@ -45,6 +48,7 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                 items: [Item],
                 itemsFillZone: Bool = false,
                 itemOpacity: CGFloat = 1,
+                zoneDisabled: ((GridZoneDefinition) -> Bool)? = nil,
                 onInsert: @escaping (Item.ItemType, Double, Double, Bool) -> Void,
                 onDelete: ((Item) -> Void)? = nil,
                 onConflict: ((GridCell, Item) -> Void)? = nil,
@@ -54,6 +58,7 @@ public struct GenericGridView<Item: GridPlaceable>: View {
         self.items = items
         self.itemsFillZone = itemsFillZone
         self.itemOpacity = itemOpacity
+        self.zoneDisabled = zoneDisabled
         self.onInsert = onInsert
         self.onDelete = onDelete
         self.onConflict = onConflict
@@ -71,7 +76,8 @@ public struct GenericGridView<Item: GridPlaceable>: View {
                 GridBackgroundLayer(config: engine.config, cellSize: cs,
                                     showLines: engine.config.showMainGrid)
                 GridZoneSubdivisionLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
-                GridZoneOverlayLayer(config: engine.config, zones: engine.config.zones, cellSize: cs)
+                GridZoneOverlayLayer(config: engine.config, zones: engine.config.zones, cellSize: cs,
+                                     isDisabled: zoneDisabled)
                 GridCompartmentBordersLayer(config: engine.config, cellSize: cs)
                 GridItemsLayer(config: engine.config, items: items, cellSize: cs,
                                movingItem: engine.movingItem,

@@ -109,6 +109,8 @@ public enum GridOpacity {
 
     // Zone fill
     static let zoneFill: Double = 0.12
+    /// Grey scrim over a zone marked unavailable by the caller's rule.
+    static let zoneDisabledScrim: Double = 0.5
     static let zoneFillPreview: Double = 0.15
 
     // Zone stroke by rule

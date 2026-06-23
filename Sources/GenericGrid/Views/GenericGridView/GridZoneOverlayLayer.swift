@@ -13,6 +13,9 @@ struct GridZoneOverlayLayer: View {
     let config: GridCanvasConfig
     let zones: [GridZoneDefinition]
     let cellSize: CGFloat
+    /// Optional: zones for which this returns `true` are greyed out (made
+    /// unavailable by a caller's business rule). `nil` = none disabled.
+    var isDisabled: ((GridZoneDefinition) -> Bool)? = nil
 
     var body: some View {
         ForEach(zones) { zone in
@@ -49,6 +52,11 @@ struct GridZoneOverlayLayer: View {
                             .font(.system(size: iconSize))
                             .foregroundStyle(.red.opacity(GridOpacity.ruleIconForbidden))
                     }
+                }
+
+                if isDisabled?(zone) == true {
+                    RoundedRectangle(cornerRadius: GridCornerRadius.zone)
+                        .fill(Color.gray.opacity(GridOpacity.zoneDisabledScrim))
                 }
             }
             .frame(width: w, height: h)
