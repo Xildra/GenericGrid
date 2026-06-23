@@ -45,16 +45,19 @@ public struct GenericStatsBlock<Item: GridPlaceable>: View {
 
     // MARK: - Values per mode
 
-    /// Occupied count: filled cells, or zones holding at least one item.
+    /// Occupied count: filled cells, or placeable zones holding at least one
+    /// item (locked / forbidden zones are excluded — they can't be filled).
     private var used: Int {
         switch mode {
         case .cells: engine.usedCells
-        case .zones: engine.config.zones.count(where: { !engine.isZoneEmpty($0) })
+        case .zones: engine.placeableZones.count(where: { !engine.isZoneEmpty($0) })
         }
     }
 
+    /// Total count: placeable cells, or placeable zones (excludes locked /
+    /// forbidden so `free = total - used` is correct).
     private var total: Int {
-        mode == .cells ? engine.totalCells : engine.totalZones
+        mode == .cells ? engine.totalCells : engine.placeableZones.count
     }
 
     private var free: Int { max(0, total - used) }

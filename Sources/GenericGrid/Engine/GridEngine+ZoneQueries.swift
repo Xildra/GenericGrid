@@ -18,6 +18,13 @@ public extension GridEngine {
     /// Total number of zones across all compartments.
     var zoneCount: Int { config.zones.count }
 
+    /// Zones that can host a placement — i.e. not `.locked` or `.forbidden`.
+    /// `.restricted` counts as placeable (it only filters which types fit).
+    /// Used by occupancy stats so locked/forbidden zones aren't counted "free".
+    var placeableZones: [GridZoneDefinition] {
+        config.zones.filter { $0.rule != .locked && $0.rule != .forbidden }
+    }
+
     /// `true` when no placed item occupies any cell of the given zone.
     /// Short-circuits on the first occupied sub-cell.
     func isZoneEmpty(_ zone: GridZoneDefinition) -> Bool {
