@@ -45,6 +45,11 @@ public struct GridConfigGeneratorView: View {
     /// Callback after a successful save — receives the URL of the written file.
     public var onExport: ((URL) -> Void)?
 
+    /// When set, the Save button writes the JSON **directly** to this URL
+    /// (creating intermediate directories) and skips the file picker. Lets a
+    /// host app enforce a fixed save location instead of asking the user.
+    public var directSaveURL: URL?
+
     // MARK: - Init
 
     /// Creates the generator with an empty default config.
@@ -61,6 +66,16 @@ public struct GridConfigGeneratorView: View {
         let loaded = url.flatMap { GridCanvasConfig.load(url: $0) } ?? .default
         config = loaded
         sourceURL = url
+        self.onExport = onExport
+    }
+
+    /// Creates the generator bound to a fixed destination URL. Loads the file
+    /// at that URL if it exists (else a default config); the Save button writes
+    /// **directly** to it — no file picker, the user does not choose a location.
+    public init(directSaveURL: URL, onExport: ((URL) -> Void)? = nil) {
+        config = GridCanvasConfig.load(url: directSaveURL) ?? .default
+        sourceURL = directSaveURL
+        self.directSaveURL = directSaveURL
         self.onExport = onExport
     }
 
@@ -154,8 +169,13 @@ public struct GridConfigGeneratorView: View {
 
     private var saveButton: some View {
         Button {
-            exportDocument = ConfigDocument(config: config)
-            showExporter = true
+            if let directSaveURL {
+                // Fixed destination: write directly, no location picker.
+                saveDirectly(to: directSaveURL)
+            } else {
+                exportDocument = ConfigDocument(config: config)
+                showExporter = true
+            }
         } label: {
             Label(
                 saveSuccess ? "Saved" : "Save",
@@ -166,6 +186,28 @@ public struct GridConfigGeneratorView: View {
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
         .padding()
+    }
+
+    /// Writes the current config as pretty-printed JSON straight to `url`
+    /// (creating intermediate directories), then reports success — bypasses
+    /// the file picker. Used when `directSaveURL` is set.
+    private func saveDirectly(to url: URL) {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let data = try encoder.encode(config)
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try data.write(to: url, options: .atomic)
+            sourceURL = url
+            withAnimation { saveSuccess = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + GridAnimation.saveResetDelay) {
+                withAnimation { saveSuccess = false }
+            }
+            onExport?(url)
+        } catch {
+            importError = "Save failed: \(error.localizedDescription)"
+        }
     }
 }
 
