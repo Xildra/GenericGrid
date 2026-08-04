@@ -24,6 +24,8 @@ struct ZoomableGridScaffold<Content: View>: View {
     /// Kept for source compatibility; with content-priority gestures the pan
     /// no longer fights item manipulation, but callers may still suppress it.
     var scrollDisabled: Bool = false
+    /// Set to `false` to hide the +/−/fit overlay (pinch and pan still work).
+    var showZoomControls: Bool = true
     @ViewBuilder let content: (_ cellSize: CGFloat) -> Content
 
     /// Current pan offset (screen points).
@@ -66,8 +68,10 @@ struct ZoomableGridScaffold<Content: View>: View {
                 .simultaneousGesture(magnifyGesture(viewport: geo.size, baseCS: baseCS, margin: margin))
                 .clipped()
                 .overlay(alignment: .bottomTrailing) {
-                    ZoomControls(zoom: $zoom, onReset: { pan = .zero })
-                        .padding(GridLayout.zoomControlsPadding)
+                    if showZoomControls {
+                        ZoomControls(zoom: $zoom, onReset: { pan = .zero })
+                            .padding(GridLayout.zoomControlsPadding)
+                    }
                 }
                 // Re-clamp after a button zoom so the grid can't sit off-screen.
                 .onChange(of: zoom) {

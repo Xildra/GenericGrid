@@ -59,6 +59,43 @@ GenericGridView(
 
 Sélectionnez un type (`engine.selectedType = …`, `engine.rotated = true` pour pivoter) puis tapez une cellule pour placer. Un appui long déplace un objet existant. Sans type sélectionné, un tap sur une cellule libre la verrouille/déverrouille (`engine.lockLabel` personnalise le libellé du verrou).
 
+### Vue personnalisée pour les items
+
+Sans rien préciser, chaque item est dessiné par `GridDefaultItemView` : rectangle à la couleur du type, avec `type.name` (et `type.label` en seconde ligne). Pour reprendre totalement la main, passez votre vue en closure finale : la grille garde la **position et la taille** du bloc, vous décidez de **tout le contenu**.
+
+```swift
+GenericGridView(engine: engine, items: seats, onInsert: { … }) { seat, ctx in
+    VStack(spacing: 2) {
+        Text(seat.number)
+            .font(.system(size: ctx.size.height * 0.35, weight: .bold))
+        if let name = seat.passenger?.lastName {
+            Text(name).font(.system(size: ctx.size.height * 0.22))
+        }
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(seat.itemType?.color.opacity(ctx.opacity) ?? .gray, in: .rect(cornerRadius: 4))
+    .opacity(ctx.isMoving ? 0.3 : 1)
+}
+```
+
+`GridItemContext` fournit ce que la grille sait du bloc :
+
+| Champ | Rôle |
+| --- | --- |
+| `size` | taille en points du bloc (dépend du footprint, du zoom et de `itemsFillZone`) — c'est ce qui sert à dimensionner le texte |
+| `isMoving` | `true` pendant le déplacement de l'item (à vous de le griser si besoin) |
+| `opacity` | l'opacité demandée via `itemOpacity` |
+
+La taille de police n'est donc plus un réglage du module : elle se déduit de `ctx.size` côté implémentation (`ctx.size.height * 0.35`, `.font(.caption)`, peu importe). `GridDefaultItemView(item:context:)` reste public si vous voulez le réutiliser ou l'habiller.
+
+### Masquer les contrôles de zoom
+
+```swift
+GenericGridView(engine: engine, items: seats, showZoomControls: false, onInsert: { … })
+```
+
+Les boutons +/−/ajuster disparaissent ; le pinch et le pan restent actifs.
+
 ### Mode « un type = un emplacement »
 
 ```swift
