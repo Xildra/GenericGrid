@@ -260,12 +260,9 @@ extension GridEngine {
 		let bandCols = band.effectiveCols(default: config.cols)
 		var count = 0
 		for r in band.rowStart...band.rowEnd {
-			let rd = Double(r)
 			for c in 0..<bandCols {
-				let cd = Double(band.colStart + c)
 				if blockers.contains(where: {
-					rd >= $0.rowStart && rd + 1 <= $0.rowEnd &&
-					cd >= $0.colStart && cd + 1 <= $0.colEnd
+					$0.containsWholeCell(row: r, col: band.colStart + c)
 				}) {
 					count += 1
 				}

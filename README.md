@@ -108,6 +108,33 @@ Placer un type déjà présent **déplace** l'objet existant au lieu d'en insér
 
 `engine.usedCells`, `engine.totalCells` (les zones `locked`/`forbidden` sont exclues), `engine.freeCells`, `engine.fillPct`.
 
+### Énumérer les cases disponibles
+
+Pour créer vos propres emplacements (sièges, places de parking…) à partir d'une config, `freeCellSlots()` liste les cases entières couvertes par une zone `.free`, ligne par ligne :
+
+```swift
+let config = GridCanvasConfig.load(from: "cabine_a320") ?? .default
+
+let positions = config.freeCellSlots().map { slot in
+    CabinPosition(label: slot.label,        // "12A"
+                  row: slot.row, col: slot.col,
+                  zone: slot.zoneLabel)
+}
+
+config.freeCellLabels()          // ["12A", "12B", "12C", …]
+config.cellLabel(row: 11, col: 0) // "12A"
+```
+
+| Membre de `GridCellSlot` | Rôle |
+| --- | --- |
+| `row` / `col` | coordonnées absolues de la case |
+| `rowLabel` / `colLabel` | libellés issus de la config (`rowLabels`, titres du compartiment) |
+| `label` | `rowLabel + colLabel` — composez autrement si vous voulez un séparateur |
+| `cell` | ancre `GridCell` prête pour `anchorRow` / `anchorCol` |
+| `zoneID` / `zoneLabel` | zone qui couvre la case, si elle existe |
+
+Une case verrouillée à la volée (zone `.locked` 1×1 posée par-dessus la zone `.free`) sort automatiquement de la liste. Les cases hors de toute zone acceptent les placements mais n'ont pas de règle explicite : elles sont exclues par défaut, `freeCellSlots(includingUnzoned: true)` les rajoute. `allCellSlots()` renvoie toute la grille.
+
 ## Éditeur de configuration
 
 `GridConfigGeneratorView` est un éditeur visuel complet : dimensions, split/merge de compartiments (horizontal et vertical), zones déplaçables/redimensionnables, labels, bordures, import/export JSON.

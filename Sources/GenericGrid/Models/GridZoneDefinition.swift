@@ -57,6 +57,16 @@ public struct GridZoneDefinition: Codable, Identifiable, Hashable, Sendable {
         cell.c >= colStart && cell.c + GridGesture.halfCell <= colEnd
     }
 
+    /// Returns `true` if the whole cell at `(row, col)` — the full 1×1
+    /// square, not a half-cell sub-cell — lies inside this zone. Used
+    /// when reasoning per grid cell (occupancy stats, cell enumeration)
+    /// rather than per placement sub-cell.
+    public func containsWholeCell(row r: Int, col c: Int) -> Bool {
+        let rd = Double(r), cd = Double(c)
+        return rd >= rowStart && rd + 1 <= rowEnd &&
+               cd >= colStart && cd + 1 <= colEnd
+    }
+
     /// Returns `true` if the raw anchor point lies inside the zone bounds.
     /// Used for snap lookups where the anchor itself — not a half-cell
     /// sub-cell — must be located.
