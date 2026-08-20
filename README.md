@@ -135,6 +135,48 @@ config.cellLabel(row: 11, col: 0) // "12A"
 
 Une case verrouillée à la volée (zone `.locked` 1×1 posée par-dessus la zone `.free`) sort automatiquement de la liste. Les cases hors de toute zone acceptent les placements mais n'ont pas de règle explicite : elles sont exclues par défaut, `freeCellSlots(includingUnzoned: true)` les rajoute. `allCellSlots()` renvoie toute la grille.
 
+## Emplacements fixes (`GridSlot`)
+
+Deux modèles de placement coexistent. Avec `GridPlaceable`, l'objet est **créé pour son item** et le porte à vie : poser, c'est insérer ; retirer, c'est supprimer. Avec `GridSlot`, l'emplacement **préexiste** à son occupant : il est dérivé de la configuration (un siège, une position de soute), reste à une ancre fixe, et se remplit ou se vide en changeant d'occupant.
+
+```swift
+@Model
+final class Seat: GridSlot {
+    var label: String            // "12A", issu de la conf
+    var slotRow: Double          // coordonnées figées
+    var slotCol: Double
+    var rotated: Bool = false
+
+    @Relationship(inverse: \Passenger.seat) var passenger: Passenger?
+
+    // GridSlot : l'occupant est la seule chose qui change.
+    var occupant: Passenger? {
+        get { passenger }
+        set { passenger = newValue }
+    }
+
+    // Une place ne se déplace pas : les écritures d'ancre sont ignorées.
+    var anchorRow: Double { get { slotRow } set { } }
+    var anchorCol: Double { get { slotCol } set { } }
+}
+```
+
+`itemType` est fourni par le protocole (`occupant`), il n'y a rien à écrire. Le moteur expose alors deux opérations à la place du cycle insertion / suppression :
+
+```swift
+engine.assign(passenger, to: seat)   // remplit, en libérant la place précédente
+engine.free(seat)                    // vide, sans détruire la place
+engine.slot(occupiedBy: passenger)   // la place occupée par cet item, s'il y en a une
+```
+
+Trois points à respecter :
+
+- **Ne synchronisez que les places occupées** : `engine.sync(seats.filter { $0.occupant != nil })`. Passer les places libres remplirait la carte d'occupation et ferait refuser tout placement.
+- **Laissez `uniqueTypes` à `false`** : `assign` garantit déjà « un item = une place », alors que le chemin `uniqueTypes` déplace un item en réécrivant son ancre — qu'une place ignore.
+- **Le déplacement par appui long ne s'applique pas** : `commitMove` repositionne en écrivant l'ancre. Sur une grille de places, le re-placement passe par `assign`.
+
+`slot(occupiedBy:)` interroge la carte du moteur. Si votre stockage porte un lien inverse plus fiable (une relation SwiftData, par exemple), vous pouvez libérer l'ancienne place vous-même avant d'appeler `assign`.
+
 ## Éditeur de configuration
 
 `GridConfigGeneratorView` est un éditeur visuel complet : dimensions, split/merge de compartiments (horizontal et vertical), zones déplaçables/redimensionnables, labels, bordures, import/export JSON.
