@@ -15,6 +15,12 @@
 import Foundation
 
 extension GridCanvasConfig {
+	
+	/// Zones pouvant accueillir un placement — ni `.locked` ni `.forbidden`.
+	/// `.restricted` en fait partie : elle filtre les types, elle n'interdit pas.
+	public var placeableZones: [GridZoneDefinition] {
+		zones.filter { $0.rule != .locked && $0.rule != .forbidden }
+	}
 
     /// Inserts a zone into the compartment containing its absolute
     /// `(rowStart, colStart)` origin. Use the `toBandID:` overload when
